@@ -5,9 +5,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
     flex-shrink: 0;
-     padding-top: env(safe-area-inset-top);
+    /* iOS Safe Area - handled by container padding */
 }
 
 /* Título principal do header e de outras páginas */

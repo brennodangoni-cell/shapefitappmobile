@@ -1,226 +1,303 @@
 /**
- * bottom-nav.js - Controle de Ativação do Menu SPA
- * + Efeito Auto-Hide (estilo Twitter)
+ * bottom-nav.js - Bottom Navigation Controller
+ * Animação que ACOMPANHA O DEDO durante o arrasto
  */
 
 (function() {
-    // CORREÇÃO CRÍTICA: Impede re-execução se o script for carregado 2x
+    'use strict';
+    
+    // Prevenir re-execução
     if (window.BottomNavInitialized) return;
     window.BottomNavInitialized = true;
 
     // ============================================
-    // AUTO-HIDE DO MENU (Acompanha o dedo suavemente)
+    // CONFIGURAÇÃO
     // ============================================
-    let lastScrollY = 0;
-    let navOffset = 0;
-    let navHeight = 0;
-    let ticking = false;
-    let isScrolling = null;
-    
-    function handleNavScroll() {
-        const navContainer = document.getElementById('bottom-nav-container');
-        const scrollContainer = document.getElementById('app-container');
-        
-        if (!navContainer || !scrollContainer) return;
-        if (navContainer.style.display === 'none') return;
-        
-        const currentScrollY = scrollContainer.scrollTop;
-        const scrollDiff = currentScrollY - lastScrollY;
-        
-        // No topo da página - sempre mostrar completamente
-        if (currentScrollY < 20) {
-            navOffset = 0;
-        } else {
-            // Acompanhar o movimento do dedo
-            // scrollDiff positivo = scrollando pra baixo = esconder
-            // scrollDiff negativo = scrollando pra cima = mostrar
-            navOffset += scrollDiff * 0.8; // 0.8 = fator de suavização
-            
-            // Limitar entre 0 (visível) e navHeight (escondido)
-            navOffset = Math.max(0, Math.min(navOffset, navHeight));
-        }
-        
-        // Aplicar transform SEM transição (movimento direto)
-        navContainer.style.transform = `translateY(${navOffset}px)`;
-        
-        lastScrollY = currentScrollY;
-        
-        // Detectar quando parou de scrollar pra "encaixar" na posição final
-        clearTimeout(isScrolling);
-        isScrolling = setTimeout(function() {
-            // Snap: se passou de metade, esconde; senão, mostra
-            const targetOffset = navOffset > navHeight / 2 ? navHeight : 0;
-            if (targetOffset !== navOffset) {
-                navContainer.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                navContainer.style.transform = `translateY(${targetOffset}px)`;
-                navOffset = targetOffset;
-                // Remover transição após o snap
-                setTimeout(() => {
-                    navContainer.style.transition = 'none';
-                }, 260);
-            }
-        }, 100);
-    }
-    
-    function initAutoHide() {
-        const scrollContainer = document.getElementById('app-container');
-        const navContainer = document.getElementById('bottom-nav-container');
-        
-        if (!scrollContainer || !navContainer) {
-            setTimeout(initAutoHide, 100);
-            return;
-        }
-        
-        // Calcular altura do nav após renderização
-        requestAnimationFrame(() => {
-            navHeight = navContainer.offsetHeight || 80;
-            console.log('[BottomNav] Altura:', navHeight);
-        });
-        
-        // SEM transição inicial - movimento direto
-        navContainer.style.transition = 'none';
-        
-        console.log('[BottomNav] Auto-hide fluido ativado!');
-        
-        scrollContainer.addEventListener('scroll', function() {
-            if (!ticking) {
-                window.requestAnimationFrame(function() {
-                    handleNavScroll();
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        }, { passive: true });
-    }
-    
-    // Iniciar quando DOM estiver pronto
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initAutoHide);
-    } else {
-        setTimeout(initAutoHide, 150);
-    }
-    
-    // Páginas que NÃO devem mostrar o bottom nav
-    const pagesWithoutNav = ['auth_login', 'auth_register', 'login', 'register', 'onboarding'];
-    
-    function shouldHideNav(pageName) {
-        return pagesWithoutNav.some(p => pageName.includes(p));
-    }
-    
-    // Reset ao mudar de página
-    window.addEventListener('pageLoaded', function(e) {
-        const navContainer = document.getElementById('bottom-nav-container');
-        if (!navContainer) return;
-        
-        // Verificar se deve esconder o nav nesta página
-        const pageName = e.detail?.pageName || window.location.pathname;
-        if (shouldHideNav(pageName)) {
-            navContainer.style.display = 'none';
-        } else {
-            navContainer.style.display = 'block';
-            navContainer.style.transform = 'translateY(0)';
-            navOffset = 0;
-        }
-        lastScrollY = 0;
-    });
+    const CONFIG = {
+        followFactor: 1.0,
+        velocityThreshold: 0.25,
+        hiddenPages: ['auth_login', 'auth_register', 'login', 'register', 'onboarding', 'bem-vindo']
+    };
 
     // ============================================
-    // MAPEAMENTO DE PÁGINAS
+    // MAPA DE PÁGINAS -> TAB ATIVA
     // ============================================
     const pageMap = {
-        // HOME
         'main_app': 'home',
         'dashboard': 'home',
         'ranking': 'home',
-
-        // STATS
         'progress': 'stats',
         'measurements_progress': 'stats',
         'points_history': 'stats',
-
-        // DIARY
         'diary': 'diary',
         'add_food_to_diary': 'diary',
-        'meal_types_overview': 'diary',
-
-        // EXPLORE
+        'edit_meal': 'diary',
+        'create_custom_food': 'diary',
         'explore_recipes': 'explore',
         'favorite_recipes': 'explore',
         'view_recipe': 'explore',
-
-        // SETTINGS
         'more_options': 'settings',
         'profile_overview': 'settings',
         'edit_profile': 'settings',
-        'routine': 'settings'
+        'routine': 'settings',
+        'content': 'settings',
+        'view_content': 'settings'
     };
 
-    function updateActiveMenuItem() {
-        let currentPath = window.location.pathname;
-        let pageName = currentPath.split('/').pop().replace('.html', '');
+    // ============================================
+    // ESTADO
+    // ============================================
+    let state = {
+        offset: 0,
+        navHeight: 0,
+        touchStartY: 0,
+        touchStartOffset: 0,
+        lastTouchY: 0,
+        lastTouchTime: 0,
+        velocity: 0,
+        isTouching: false,
+        scrollContainer: null,
+        navContainer: null,
+        lastScrollY: 0
+    };
+
+    // ============================================
+    // FUNÇÕES DE CONTROLE DO NAV
+    // ============================================
+    
+    function setNavOffset(offset, animate = false) {
+        if (!state.navContainer) return;
         
-        // Se for URL bonita (ex: /diario), mapear para nome do arquivo
-        const urlToFileMap = {
-            '/diario': 'diary',
-            '/dashboard': 'main_app',
-            '/evolucao': 'progress',
-            '/explorar': 'explore_recipes',
-            '/mais-opcoes': 'more_options',
-            '/perfil': 'profile_overview',
-            '/ranking': 'ranking',
-            '/': 'main_app',
-            '': 'main_app'
-        };
+        const clampedOffset = Math.max(0, Math.min(offset, state.navHeight));
+        state.offset = clampedOffset;
         
-        // Se a URL está no mapa, usar o nome do arquivo correspondente
-        if (urlToFileMap[currentPath]) {
-            pageName = urlToFileMap[currentPath];
+        if (animate) {
+            state.navContainer.classList.add('smooth-transition');
+        } else {
+            state.navContainer.classList.remove('smooth-transition');
         }
         
-        // Se ainda não encontrou, tentar extrair do pathname
-        if (!pageName || pageName === 'index') {
+        state.navContainer.style.transform = `translateY(${clampedOffset}px) translateZ(0)`;
+    }
+
+    function showNav(animate = true) {
+        setNavOffset(0, animate);
+    }
+
+    function hideNav(animate = true) {
+        setNavOffset(state.navHeight, animate);
+    }
+
+    function snapToPosition() {
+        const shouldHide = state.velocity > CONFIG.velocityThreshold || 
+                          (state.offset > state.navHeight * 0.4 && state.velocity >= 0);
+        
+        if (shouldHide) {
+            hideNav(true);
+        } else {
+            showNav(true);
+        }
+    }
+
+    // ============================================
+    // HANDLERS DE TOUCH
+    // ============================================
+    
+    function handleTouchStart(e) {
+        if (!state.navContainer) return;
+        
+        state.isTouching = true;
+        state.touchStartY = e.touches[0].clientY;
+        state.touchStartOffset = state.offset;
+        state.lastTouchY = state.touchStartY;
+        state.lastTouchTime = performance.now();
+        state.velocity = 0;
+        
+        state.navContainer.classList.remove('smooth-transition');
+    }
+
+    function handleTouchMove(e) {
+        if (!state.isTouching || !state.navContainer) return;
+        
+        const currentY = e.touches[0].clientY;
+        const currentTime = performance.now();
+        const deltaFromStart = state.touchStartY - currentY;
+        const deltaTime = currentTime - state.lastTouchTime;
+        const deltaY = state.lastTouchY - currentY;
+        
+        if (deltaTime > 0) {
+            state.velocity = deltaY / deltaTime;
+        }
+        
+        let newOffset = state.touchStartOffset + (deltaFromStart * CONFIG.followFactor);
+        newOffset = Math.max(0, Math.min(newOffset, state.navHeight));
+        
+        setNavOffset(newOffset, false);
+        
+        state.lastTouchY = currentY;
+        state.lastTouchTime = currentTime;
+    }
+
+    function handleTouchEnd() {
+        if (!state.isTouching) return;
+        state.isTouching = false;
+        snapToPosition();
+    }
+
+    // ============================================
+    // HANDLER DE SCROLL
+    // ============================================
+    
+    function handleScroll() {
+        if (!state.scrollContainer || !state.navContainer) return;
+        if (state.navContainer.classList.contains('hidden')) return;
+        if (state.isTouching) return;
+        
+        const currentScrollY = state.scrollContainer.scrollTop;
+        const deltaY = currentScrollY - state.lastScrollY;
+        
+        if (currentScrollY < 30) {
+            showNav(true);
+        } else if (deltaY > 10) {
+            hideNav(true);
+        } else if (deltaY < -10) {
+            showNav(true);
+        }
+        
+        state.lastScrollY = currentScrollY;
+    }
+
+    // ============================================
+    // EXTRAIR NOME DA PÁGINA
+    // ============================================
+    
+    function getPageNameFromPath(path) {
+        if (!path) path = window.location.pathname;
+        
+        // Remover query string
+        path = path.split('?')[0];
+        
+        // Extrair nome do arquivo
+        let pageName = path.split('/').pop().replace('.html', '');
+        
+        // Se for vazio ou index, é main_app
+        if (!pageName || pageName === '' || pageName === 'index') {
             pageName = 'main_app';
         }
+        
+        // Se vier de fragments, pegar só o nome
+        if (path.includes('/fragments/')) {
+            pageName = path.split('/fragments/').pop().replace('.html', '');
+        }
+        
+        return pageName;
+    }
 
+    // ============================================
+    // ATUALIZAR ITEM ATIVO
+    // ============================================
+    
+    function updateActiveMenuItem(path) {
+        const pageName = getPageNameFromPath(path);
         const activeTab = pageMap[pageName] || 'home';
         
-        console.log('[BottomNav] Página atual:', pageName, '-> Tab ativa:', activeTab);
-
+        console.log('[BottomNav] Página:', pageName, '-> Tab:', activeTab);
+        
         const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+        
         navItems.forEach(item => {
             item.classList.remove('active');
             if (item.getAttribute('data-page') === activeTab) {
                 item.classList.add('active');
-                console.log('[BottomNav] Item ativado:', activeTab);
             }
         });
     }
 
-    window.addEventListener('pageLoaded', function(event) {
-        // Usar pageName do evento se disponível
-        if (event.detail && event.detail.pageName) {
-            const pageName = event.detail.pageName;
-            const activeTab = pageMap[pageName] || 'home';
-            
-            const navItems = document.querySelectorAll('.bottom-nav .nav-item');
-            navItems.forEach(item => {
-                item.classList.remove('active');
-                if (item.getAttribute('data-page') === activeTab) {
-                    item.classList.add('active');
-                    console.log('[BottomNav] Item ativado via pageLoaded:', activeTab);
-                }
-            });
-        } else {
-            updateActiveMenuItem();
-        }
-    });
-    window.addEventListener('popstate', updateActiveMenuItem);
-    // Também atualizar quando o router dispara fragmentReady
-    window.addEventListener('fragmentReady', updateActiveMenuItem);
+    function shouldHideNav(pageName) {
+        return CONFIG.hiddenPages.some(p => pageName && pageName.includes(p));
+    }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', updateActiveMenuItem);
-    } else {
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+    
+    function init() {
+        state.scrollContainer = document.getElementById('app-container');
+        state.navContainer = document.getElementById('bottom-nav-container');
+        
+        if (!state.scrollContainer || !state.navContainer) {
+            setTimeout(init, 100);
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            state.navHeight = state.navContainer.offsetHeight || 70;
+        });
+
+        // Touch events
+        state.scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+        state.scrollContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
+        state.scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
+        state.scrollContainer.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+        // Scroll event
+        let scrollTicking = false;
+        state.scrollContainer.addEventListener('scroll', () => {
+            if (!scrollTicking && !state.isTouching) {
+                requestAnimationFrame(() => {
+                    handleScroll();
+                    scrollTicking = false;
+                });
+                scrollTicking = true;
+            }
+        }, { passive: true });
+
+        // Atualizar item ativo inicial
         updateActiveMenuItem();
+        
+        console.log('[BottomNav] ✅ Inicializado');
+    }
+
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+    
+    // Quando página carrega via router
+    window.addEventListener('pageLoaded', (e) => {
+        const path = e.detail?.path || window.location.pathname;
+        const pageName = getPageNameFromPath(path);
+        
+        if (shouldHideNav(pageName)) {
+            if (state.navContainer) {
+                state.navContainer.classList.add('hidden');
+            }
+        } else {
+            if (state.navContainer) {
+                state.navContainer.classList.remove('hidden');
+                showNav(false);
+            }
+            updateActiveMenuItem(path);
+        }
+        
+        state.lastScrollY = 0;
+        state.offset = 0;
+    });
+
+    // Quando fragmento está pronto
+    window.addEventListener('fragmentReady', (e) => {
+        const path = e.detail?.path || window.location.pathname;
+        updateActiveMenuItem(path);
+    });
+
+    // Navegação browser
+    window.addEventListener('popstate', () => {
+        updateActiveMenuItem();
+    });
+
+    // Iniciar
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 })();

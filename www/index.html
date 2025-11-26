@@ -29,304 +29,126 @@
     <link rel="stylesheet" href="/assets/css/style.css">
     
     <style>
-        /* === VIEW TRANSITIONS API (Login <-> Register) === */
-        @view-transition {
-            navigation: auto;
-        }
+        /* ============================================
+           INDEX.HTML - CSS MINIMALISTA PARA iOS
+           Estilos principais estão em style.css
+           ============================================ */
         
-        /* Logo transiciona suavemente de posição */
+        /* === VIEW TRANSITIONS (Auth pages) === */
+        @view-transition { navigation: auto; }
         ::view-transition-old(auth-logo),
         ::view-transition-new(auth-logo) {
             animation-duration: 0.35s;
             animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        /* Desabilitar animação padrão da logo - só mover */
-        ::view-transition-old(auth-logo) {
-            animation: none;
-        }
-        
-        ::view-transition-new(auth-logo) {
-            animation: none;
-        }
-        
-        /* Root (fundo) não anima - evita o flash */
         ::view-transition-old(root),
         ::view-transition-new(root) {
             animation: none;
             mix-blend-mode: normal;
         }
         
-        /* Grupo da logo mantém posição durante transição */
-        ::view-transition-group(auth-logo) {
-            animation-duration: 0.35s;
-            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        /* Título e Formulário - apenas crossfade suave, sem movimento */
-        ::view-transition-old(auth-title),
-        ::view-transition-old(auth-form) {
-            animation: simpleFadeOut 0.25s ease-out forwards;
-        }
-        
-        ::view-transition-new(auth-title),
-        ::view-transition-new(auth-form) {
-            animation: simpleFadeIn 0.35s ease-out forwards;
-        }
-        
-        @keyframes simpleFadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        
-        @keyframes simpleFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        /* === CORREÇÕES GERAIS DO SPA (SCROLL & LAYOUT) === */
-        html, body {
-            height: 100%;
-            overflow-y: auto !important;
-            overflow-x: hidden;
-            position: static !important;
-            -webkit-overflow-scrolling: touch;
-            background-color: var(--bg-color, #121212);
-            margin: 0;
-            padding: 0;
-            /* Esconder scrollbar */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-        }
-        
-        /* Esconder scrollbar no Chrome/Safari */
-        html::-webkit-scrollbar,
-        body::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Container Padrão - TELA CHEIA */
+        /* === APP CONTAINER (Scroll principal) === */
         #app-container {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            /* FUNDO TRANSPARENTE - mostra o body por trás */
-            background: transparent !important;
-            /* SEM padding fixo - o conteúdo vai até as bordas */
-            padding: 0 !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            padding: 0;
             z-index: 1;
             box-sizing: border-box;
-            /* SCROLL */
-            overflow-y: scroll !important;
+            /* iOS Scroll nativo */
+            overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y !important;
             overscroll-behavior: contain;
+            /* Esconder scrollbar */
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
+        #app-container::-webkit-scrollbar { display: none; }
         
-        /* Esconder scrollbar no Chrome/Safari */
-        #app-container::-webkit-scrollbar {
-            display: none;
-        }
-        
-        /* Remover espaço extra apenas da última section.dashboard-grid na main_app */
-        #app-container .page-root section.dashboard-grid:last-of-type {
-            margin-bottom: 0 !important;
-            padding-bottom: 0 !important;
-        }
-        
-        /* Remover espaço extra do último card dentro da última dashboard-grid */
-        #app-container .page-root section.dashboard-grid:last-of-type > .card-challenges:last-child {
-            margin-bottom: 0 !important;
-        }
-
-        /* Classe de Controle: Quando o menu some, remove o buraco no final */
-        #bottom-nav-container.hidden ~ #app-container, 
-        body.auth-mode #app-container {
-            padding-bottom: 0 !important;
-        }
-        
-        /* Remover padding-bottom dos .app-container dentro dos fragments 
-           O #app-container principal já cuida do espaçamento do menu */
-        #app-container .page-root .app-container {
-            padding-bottom: 0 !important;
-            margin-bottom: 0 !important;
-            /* IMPORTANTE: Não definir altura - deixar o conteúdo determinar */
-            height: auto !important;
-            min-height: auto !important;
-            overflow: visible !important;
-        }
-        
-        /* Page root precisa permitir que o conteúdo flua */
-        #app-container .page-root {
-            margin-bottom: 0 !important;
-            /* NÃO remover padding-bottom aqui - deixar os grids definirem */
-            overflow: visible !important;
-            min-height: auto !important;
-        }
-        
-        /* Esconder scrollbar em todos os elementos com scroll */
-        * {
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-        }
-        
-        *::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
-        }
-        
-        .hidden { display: none !important; }
-        .page-loading { opacity: 0; }
-        .page-loaded { opacity: 1; }
-        
-        /* Otimização de camada para evitar flick */
-        #app-container {
-            will-change: scroll-position;
-            /* REMOVIDO contain: layout style - quebrava scroll em alguns casos */
-        }
-
-        /* === BOTTOM NAV === */
-        #bottom-nav-container {
-            position: fixed !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            width: 100% !important;
-            z-index: 1000 !important;
-            /* Fundo do container (área da safe area) */
-            background: rgba(18, 18, 18, 0.98) !important;
-            will-change: transform;
-            transform: translateY(0);
-        }
-
-        .bottom-nav {
-            position: relative !important;
-            display: flex !important;
-            justify-content: space-around !important;
-            align-items: center !important;
-            width: 100% !important;
-            margin: 0 !important;
-            background: transparent !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-            /* Padding simples: 10px em cima, safe area em baixo */
-            padding: 10px 8px !important;
-            padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
-        }
-
-        .nav-item {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            color: var(--text-secondary, #8E8E93);
-            transition: color 0.2s ease;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .nav-item i { font-size: 1.5rem; }
-        .nav-item.active { color: var(--accent-orange, #ff6b00) !important; }
-
-        /* === CORREÇÃO DE LOGIN E REGISTRO (MODO AUTH) === */
-        
-        /* Padrão: Bloco normal (Dashboard) */
+        /* === PAGE ROOT === */
         .page-root {
             display: block;
             width: 100%;
-            height: auto;
+            min-height: 100%;
             margin: 0;
             padding: 0;
         }
-
-        /* Modo Auth: Centraliza tudo na tela */
-        body.auth-mode .page-root {
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            align-items: center !important;
-            min-height: 100vh !important;
-            width: 100% !important;
+        
+        /* === CLASSES UTILITÁRIAS === */
+        .hidden { display: none !important; }
+        .page-loading { opacity: 0; }
+        .page-loaded { opacity: 1; transition: opacity 0.2s ease; }
+        
+        /* === MODAIS === */
+        .modal {
+            z-index: 9999;
+            position: fixed;
         }
-
-        /* Ajustes dos containers internos de login */
+        .modal.is-visible,
+        .modal.modal-visible {
+            pointer-events: auto;
+        }
+        
+        /* === AUTH MODE (Login/Register) === */
+        body.auth-mode .page-root {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px);
+        }
+        
+        body.auth-mode #bottom-nav-container {
+            display: none !important;
+        }
+        
         .login-container, .register-container, .auth-container {
             width: 100%;
             max-width: 350px;
             padding: 20px;
             margin: 0 auto;
         }
-
-        /* Ícones e Inputs (FontAwesome) */
+        
+        /* Form inputs com ícones */
         .form-group, .input-group {
-            position: relative !important;
+            position: relative;
             margin-bottom: 15px;
             width: 100%;
         }
-
-        .form-group i, .input-group i, .input-icon {
-            position: absolute !important;
-            left: 15px !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            z-index: 10 !important;
-            font-style: normal !important; 
-            font-family: "Font Awesome 5 Free" !important;
-            font-weight: 900 !important;
-            font-size: 16px !important;
-            color: #888 !important;
+        
+        .form-group i:first-child,
+        .input-group i:first-child {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            font-size: 16px;
+            color: #888;
             pointer-events: none;
-            display: block !important;
-        }
-
-        .form-group input, .input-group input {
-            padding-left: 45px !important;
-            height: 50px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
         }
         
-        /* === CORREÇÃO DE MODAIS === */
-        /* Garantir que modais funcionem corretamente no SPA */
-        /* Modais devem estar acima de tudo quando visíveis */
-        .modal {
-            z-index: 9999 !important;
-            position: fixed !important;
+        .form-group input,
+        .input-group input {
+            padding-left: 45px;
+            height: 50px;
+            width: 100%;
+            box-sizing: border-box;
         }
         
-        /* Quando visível, garantir interatividade */
-        .modal.is-visible {
-            pointer-events: auto !important;
+        /* === ESCONDER SCROLLBAR GLOBAL === */
+        * {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        
-        /* Conteúdo do modal sempre interativo quando modal está visível */
-        .modal.is-visible .modal-content {
-            pointer-events: auto !important;
-            position: relative !important;
-            z-index: 10000 !important;
-        }
-        
-        /* Garantir que app-container não bloqueie modais */
-        #app-container {
-            z-index: 1 !important;
-        }
-        
-        /* Bottom nav deve ficar abaixo dos modais */
-        #bottom-nav-container {
-            z-index: 1000 !important;
-        }
-
-        /* Logo */
-        body.auth-mode .page-root img {
-            max-width: 150px;
-            margin-bottom: 30px;
-            display: block;
-        }
+        *::-webkit-scrollbar { display: none; }
     </style>
     <script>
         // Esconder menu IMEDIATAMENTE se for página de auth (antes do DOM carregar)

@@ -9,7 +9,6 @@
   "ios": {
     "allowsLinkPreview": false,
     "scrollEnabled": true,
-    "contentInset": "always",
     "backgroundColor": "#121212",
     "preferredContentMode": "mobile",
     "limitsNavigationsToAppBoundDomains": false,
@@ -41,6 +40,10 @@
       "style": "Dark",
       "backgroundColor": "#121212",
       "overlaysWebView": true
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
     }
   }
 }

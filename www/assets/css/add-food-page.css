@@ -72,7 +72,23 @@
 .add-food-interface .current-meal-totals span { color: var(--accent-orange); font-weight: 700; }
 
 /* --- Footer Fixo --- */
-.add-food-interface .form-actions-fixed { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: linear-gradient(180deg, rgba(28, 28, 30, 0) 0%, #1C1C1E 40%); padding: 30px 15px 15px 15px; display: flex; gap: 15px; z-index: 500; border: none; box-shadow: none; }
+.add-food-interface .form-actions-fixed { 
+    position: fixed; 
+    bottom: 0; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 100%; 
+    max-width: 480px; 
+    background: linear-gradient(180deg, rgba(28, 28, 30, 0) 0%, #1C1C1E 40%); 
+    padding: 30px 15px 15px 15px; 
+    /* iOS Safe Area */
+    padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+    display: flex; 
+    gap: 15px; 
+    z-index: 500; 
+    border: none; 
+    box-shadow: none; 
+}
 .add-food-interface .form-actions-fixed .btn { flex: 1; }
 
 /* --- Modal do Scanner --- */
@@ -165,44 +181,7 @@
     margin-left: 10px;
 }
 
-/* --- NAVEGAÇÃO INFERIOR (RESTaurada) --- */
-.bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    width: 100%;
-    max-width: 480px;
-    margin: 0 auto;
-    background-color: #1E1E1E;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    height: 65px;
-    padding: 0 10px;
-    border-top-left-radius: 0 !important;
-    border-top-right-radius: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.25);
-    border-top: 1px solid var(--border-color);
-    z-index: 1000;
-}
-
-.nav-item {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: var(--secondary-text-color);
-    text-decoration: none;
-    font-size: 11px;
-    font-weight: 500;
-    flex: 1;
-    text-align: center;
-    transition: color 0.2s ease, transform 0.2s ease;
-    height: 100%;
-    position: relative;
-}
-
-.nav-item i.fas { font-size: 22px; margin-bottom: 4px; }
-.nav-item.active,
-.nav-item:hover { color: var(--accent-orange); }
-.nav-item:active { transform: scale(0.95); }
+/* Bottom nav styles moved to _navigation.css */
 
 #barcode-scanner-modal .modal-content {
     background-color: var(--surface-color);

@@ -1,64 +1,125 @@
 /* assets/css/components/_navigation.css */
+/* BOTTOM NAV - iOS Glassmorphism Style */
 
-/* O container #bottom-nav-container é fixed no index.html */
-/* .bottom-nav é o elemento visual dentro dele */
+/* ============================================
+   CONTAINER DO BOTTOM NAV
+   ============================================ */
+#bottom-nav-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    
+    /* === GLASSMORPHISM === */
+    background: rgba(25, 25, 25, 0.75);
+    -webkit-backdrop-filter: saturate(180%) blur(25px);
+    backdrop-filter: saturate(180%) blur(25px);
+    
+    /* Borda sutil no topo */
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+    
+    /* Sombra suave */
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+    
+    /* PREENCHER ATÉ A BORDA INFERIOR (safe area) */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    
+    /* GPU acceleration */
+    will-change: transform;
+    transform: translateY(0) translateZ(0);
+    -webkit-transform: translateY(0) translateZ(0);
+    
+    /* Sem transição por padrão */
+    transition: none;
+}
 
+/* Classe para transição suave (snap) */
+#bottom-nav-container.smooth-transition {
+    transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ============================================
+   BARRA DE NAVEGAÇÃO INTERNA
+   ============================================ */
 .bottom-nav {
-    /* Relativo ao container fixed (não precisa ser fixed) */
     position: relative;
     width: 100%;
-    height: auto;
-    /* Fundo transparente pra herdar do container */
-    background: transparent;
-    border-top: 1px solid var(--glass-border);
+    max-width: 500px;
+    margin: 0 auto;
     display: flex;
     justify-content: space-around;
     align-items: center;
     
-    /* SEM border-radius */
-    border-radius: 0 !important;
+    /* Altura fixa */
+    height: 50px;
+    padding: 6px 16px;
     
-    /* Padding: espaço pros ícones + safe area embaixo */
-    padding: 12px 10px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    padding-left: calc(10px + env(safe-area-inset-left, 0px));
-    padding-right: calc(10px + env(safe-area-inset-right, 0px));
+    /* Background transparente */
+    background: transparent;
 }
 
+/* ============================================
+   ITENS DE NAVEGAÇÃO
+   ============================================ */
 .nav-item {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    flex-basis: 20%;
-    height: 100%;
     text-decoration: none;
+    color: rgba(255, 255, 255, 0.45);
+    height: 100%;
+    min-height: 44px; /* iOS minimum touch target */
+    min-width: 44px;
+    padding: 8px 0;
+    
+    /* CRÍTICO: Garantir que receba toques */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    
+    /* Transição suave */
+    transition: color 0.15s ease;
 }
 
-.nav-item img {
-    width: 28px;
-    height: 28px;
-    transition: transform 0.2s ease, filter 0.3s ease;
-    filter: grayscale(100%) brightness(0.8);
+/* Ícone */
+.nav-item i {
+    font-size: 1.4rem;
+    line-height: 1;
+    pointer-events: none; /* Deixa o parent receber o touch */
 }
 
-.nav-item:hover img {
-    transform: scale(1.1);
+/* Estado Ativo - SEM GLOW */
+.nav-item.active {
+    color: #FF6B00;
 }
 
-.nav-item.active img {
-    filter: grayscale(0%) brightness(1);
-    transform: scale(1.05);
+/* Estado Pressionado */
+.nav-item:active {
+    opacity: 0.6;
 }
 
-/* Estilo especial para o botão de "Adicionar" central */
-#add-button-item img {
-    width: 40px;
-    height: 40px;
-    filter: none; /* Remove o filtro cinza */
+/* ============================================
+   ESTADOS ESPECIAIS
+   ============================================ */
+
+/* Esconder completamente */
+#bottom-nav-container.hidden {
+    display: none !important;
 }
 
-#add-button-item:active img {
-    transform: scale(0.95);
+
+/* ============================================
+   RESPONSIVO
+   ============================================ */
+@media (max-width: 360px) {
+    .nav-item i {
+        font-size: 1.25rem;
+    }
+    
+    .bottom-nav {
+        padding: 5px 12px;
+        height: 46px;
+    }
 }

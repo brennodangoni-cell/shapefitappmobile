@@ -71,20 +71,7 @@
 
 .form-actions { margin-top: 15px; }
 #edit-profile-form .btn-primary { width: 100%; padding: 16px; font-size: 1em; font-weight: 600; letter-spacing: .5px; }
-.bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; background-color: #1A1A1A;
-    display: flex; justify-content: space-around; align-items: center;
-    padding: 6px 0; box-shadow: 0 -2px 8px rgba(0,0,0,0.35);
-    z-index: 1000; border-top: 1px solid #282828;
-}
-.nav-item {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: var(--secondary-text-color); text-decoration: none; font-size: 10px;
-    padding: 4px 5px; flex: 1; text-align: center; transition: color 0.2s ease; min-height: 48px;
-}
-.nav-item i.fas { font-size: 20px; margin-bottom: 2px; line-height: 1; }
-.nav-item.active,
-.nav-item:hover { color: var(--accent-orange); }
+/* Bottom nav styles moved to _navigation.css */
 
 
 /* --- Media Queries para main_app_specific.css --- */
@@ -137,9 +124,4 @@
     .meal-list-item a i.fas { font-size: 16px; width: 18px;}
     .meal-list-item .meal-kcal { font-size: 0.85em; }
 
-    .bottom-nav { padding: 4px 0; }
-    .nav-item { font-size: 9px; min-height: 45px; padding: 3px 4px;}
-    .nav-item i.fas { font-size: 18px; margin-bottom: 1px; }
-    .nav-item .add-btn-circle { width: 44px; height: 44px; margin-top: -18px; border-width: 2px; }
-    .nav-item .add-btn-circle i.fas { font-size: 20px; }
 }

@@ -3,45 +3,19 @@
 /* Ajustes específicos para Android Mobile */
 /* Estes estilos só se aplicam quando a classe 'android-mobile' está presente no body */
 
-/* Ajuste para o topo - adiciona padding extra para não ficar colado na status bar */
+/* Android geralmente não precisa de ajustes especiais de safe-area,
+   mas alguns dispositivos com notch ou barra de navegação virtual podem precisar */
+
 .android-mobile .app-container,
 .android-mobile .container {
-    padding-top: calc(env(safe-area-inset-top) + 20px) !important;
+    /* Android: padding extra no topo para status bar */
+    padding-top: calc(16px + env(safe-area-inset-top, 24px));
+    /* Bottom: espaço para nav bar */
+    padding-bottom: calc(var(--bottom-nav-height, 60px) + env(safe-area-inset-bottom, 0px) + 20px);
 }
 
-/* Ajuste para o header - adiciona padding extra no topo quando não há safe-area */
-.android-mobile .header,
-.android-mobile .header-nav {
-    padding-top: calc(env(safe-area-inset-top) + 20px) !important;
+/* Ajuste para a navegação inferior em Android */
+.android-mobile #bottom-nav-container .bottom-nav {
+    /* Android pode ter navigation bar virtual */
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
 }
-
-/* Ajuste para a navegação inferior - adiciona padding extra na parte inferior */
-.android-mobile .bottom-nav {
-    padding-bottom: calc(12px + env(safe-area-inset-bottom) + 20px) !important;
-    margin-bottom: 0; /* Remove qualquer margem que possa existir */
-}
-
-/* Ajuste adicional para o container principal - garante espaço na parte inferior */
-.android-mobile .app-container,
-.android-mobile .container {
-    padding-bottom: calc(60px + 20px + env(safe-area-inset-bottom) + 20px) !important;
-}
-
-/* Ajuste específico para páginas que usam o header */
-.android-mobile .header + *,
-.android-mobile .header-nav + * {
-    margin-top: 8px;
-}
-
-/* Garante que o primeiro elemento dentro do container tenha espaço no topo */
-.android-mobile .app-container > *:first-child,
-.android-mobile .container > *:first-child {
-    margin-top: 0; /* Remove margem superior do primeiro elemento já que o container tem padding */
-}
-
-/* Ajuste para cards que aparecem primeiro - adiciona um pouco mais de espaço no topo */
-.android-mobile .app-container > .glass-card:first-child,
-.android-mobile .container > .glass-card:first-child {
-    margin-top: 0;
-}
-
