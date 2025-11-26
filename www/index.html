@@ -105,9 +105,8 @@
             display: none;
         }
 
-        /* Container Padrão (Dashboard, etc): Scrollável e TELA CHEIA */
+        /* Container Padrão - TELA CHEIA */
         #app-container {
-            /* TELA CHEIA - vai de borda a borda */
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -115,23 +114,23 @@
             bottom: 0 !important;
             width: 100% !important;
             height: 100% !important;
-            /* Padding: safe area em cima + espaço pro menu em baixo */
-            padding-top: env(safe-area-inset-top, 0px);
-            padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-            padding-left: env(safe-area-inset-left, 0px);
-            padding-right: env(safe-area-inset-right, 0px);
+            /* FUNDO TRANSPARENTE - mostra o body por trás */
+            background: transparent !important;
+            /* Padding MÍNIMO - só pro menu em baixo */
+            padding-top: 0;
+            padding-bottom: 80px; /* Espaço pro bottom nav */
+            padding-left: 0;
+            padding-right: 0;
             z-index: 1;
             box-sizing: border-box;
-            /* SCROLL - Essencial! */
+            /* SCROLL */
             overflow-y: scroll !important;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            /* TOUCH - Crítico para mobile */
             touch-action: pan-y !important;
             overscroll-behavior: contain;
-            /* Esconder scrollbar */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         
         /* Esconder scrollbar no Chrome/Safari */
@@ -195,20 +194,18 @@
             /* REMOVIDO contain: layout style - quebrava scroll em alguns casos */
         }
 
-        /* === ESTILO DO MENU (GLASSMORPHISM) - TELA CHEIA === */
+        /* === BOTTOM NAV === */
         #bottom-nav-container {
             position: fixed !important;
-            /* Cola na borda inferior - SEM GAPS */
             bottom: 0 !important;
             left: 0 !important;
             right: 0 !important;
             width: 100% !important;
             z-index: 1000 !important;
+            /* Fundo do container (área da safe area) */
+            background: rgba(18, 18, 18, 0.98) !important;
             will-change: transform;
             transform: translateY(0);
-            -webkit-transform: translateY(0);
-            /* Container transparente - o .bottom-nav tem o fundo */
-            background: transparent !important;
         }
 
         .bottom-nav {
@@ -217,18 +214,12 @@
             justify-content: space-around !important;
             align-items: center !important;
             width: 100% !important;
-            max-width: none !important;
             margin: 0 !important;
-            /* Fundo do menu */
-            background: rgba(18, 18, 18, 0.95) !important;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
+            background: transparent !important;
             border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-            /* Padding: ícones em cima, safe area embaixo */
-            padding-top: 12px !important;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
-            padding-left: calc(10px + env(safe-area-inset-left, 0px)) !important;
-            padding-right: calc(10px + env(safe-area-inset-right, 0px)) !important;
+            /* Padding simples: 10px em cima, safe area em baixo */
+            padding: 10px 8px !important;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
         }
 
         .nav-item {

@@ -9,12 +9,10 @@
     window.BottomNavInitialized = true;
 
     // ============================================
-    // AUTO-HIDE DO MENU (Acompanha o scroll)
+    // AUTO-HIDE DO MENU (Simples e fluido)
     // ============================================
     let lastScrollY = 0;
-    let navOffset = 0; // Quanto o nav está "escondido" (0 = visível, navHeight = escondido)
-    let navHeight = 70; // Altura aproximada do nav
-    let safeAreaBottom = 0; // Safe area do iPhone
+    let isNavVisible = true;
     let ticking = false;
     
     function handleNavScroll() {
@@ -22,28 +20,28 @@
         const scrollContainer = document.getElementById('app-container');
         
         if (!navContainer || !scrollContainer) return;
-        if (navContainer.classList.contains('hidden')) return;
+        if (navContainer.style.display === 'none') return;
         
         const currentScrollY = scrollContainer.scrollTop;
         const scrollDiff = currentScrollY - lastScrollY;
         
-        // Altura total a esconder = altura do nav + safe area bottom
-        const totalHeight = navHeight + safeAreaBottom;
-        
-        // Calcular novo offset baseado na direção do scroll
-        if (currentScrollY < 30) {
-            // No topo - sempre mostrar
-            navOffset = 0;
-        } else {
-            // Adiciona ou subtrai do offset baseado na direção
-            navOffset += scrollDiff;
-            
-            // Limitar entre 0 e totalHeight (nav + safe area)
-            navOffset = Math.max(0, Math.min(navOffset, totalHeight));
+        // No topo - sempre mostrar
+        if (currentScrollY < 50) {
+            if (!isNavVisible) {
+                navContainer.style.transform = 'translateY(0)';
+                isNavVisible = true;
+            }
+        } 
+        // Scrollando pra baixo - esconder
+        else if (scrollDiff > 5 && isNavVisible) {
+            navContainer.style.transform = 'translateY(100%)';
+            isNavVisible = false;
         }
-        
-        // Aplicar transform diretamente (fluido)
-        navContainer.style.transform = `translateY(${navOffset}px)`;
+        // Scrollando pra cima - mostrar
+        else if (scrollDiff < -5 && !isNavVisible) {
+            navContainer.style.transform = 'translateY(0)';
+            isNavVisible = true;
+        }
         
         lastScrollY = currentScrollY;
     }
@@ -57,16 +55,10 @@
             return;
         }
         
-        // Aguardar um frame pra garantir que o layout foi calculado
-        requestAnimationFrame(() => {
-            // Pegar altura REAL do nav (JÁ INCLUI o padding da safe area)
-            navHeight = navContainer.offsetHeight || 100;
-            
-            // Não precisa de safe area extra - offsetHeight já inclui tudo
-            safeAreaBottom = 0;
-            
-            console.log('[BottomNav] Auto-hide ativado! Altura:', navHeight);
-        });
+        // Transição suave
+        navContainer.style.transition = 'transform 0.3s ease';
+        
+        console.log('[BottomNav] Auto-hide ativado!');
         
         scrollContainer.addEventListener('scroll', function() {
             if (!ticking) {

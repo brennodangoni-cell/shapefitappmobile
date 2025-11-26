@@ -19,98 +19,54 @@
 
 /* assets/css/base/_global.css */
 
-/* O HTML agora serve apenas como uma garantia final, um fundo preto sólido. */
+/* HTML - Fundo sólido que vai até as bordas */
 html {
     height: 100%;
     width: 100%;
-    overflow-x: hidden;
-    overflow-y: hidden; /* Scroll acontece no #app-container */
-    background-color: #121212;
-    background-image: 
-        radial-gradient(circle at 90% 90%, var(--bg-gradient-start) 0%, transparent 40%),
-        radial-gradient(circle at 10% 10%, var(--bg-gradient-start) 0%, transparent 40%);
-    background-attachment: fixed;
-    overscroll-behavior-y: contain;
-    /* CRÍTICO: Permitir touch events passarem para filhos */
+    overflow: hidden;
+    /* FUNDO SÓLIDO - sempre visível */
+    background: #121212 !important;
+    overscroll-behavior: contain;
     touch-action: pan-y;
 }
 
 /* Removido - o ruído agora vai para o body::after */
 
-/* O BODY se torna o nosso palco principal e recebe todo o estilo. */
+/* BODY - Fundo principal */
 body {
-    position: relative; /* container principal */
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
-    height: 100vh; /* robusto para PWA iOS */
-    /* iOS - TELA CHEIA SEM PADDING (conteúdo vai até as bordas) */
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    /* SEM padding no body - safe areas são tratadas nos elementos internos */
-    padding: 0;
+    height: 100%;
     margin: 0;
-    overflow: hidden; /* scroll só no app-container */
-    background-color: #121212;
+    padding: 0;
+    overflow: hidden;
+    /* FUNDO - vai de borda a borda */
+    background: #121212 !important;
     background-image: 
-        radial-gradient(circle at 90% 90%, var(--bg-gradient-start) 0%, transparent 40%),
-        radial-gradient(circle at 10% 10%, var(--bg-gradient-start) 0%, transparent 40%);
-    background-attachment: fixed;
-    overscroll-behavior-y: contain;
+        radial-gradient(circle at 90% 90%, rgba(255, 107, 0, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 10% 10%, rgba(255, 107, 0, 0.05) 0%, transparent 40%) !important;
     color: var(--text-primary);
     font-family: 'Montserrat', sans-serif; 
     -webkit-font-smoothing: antialiased;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
-    display: flex; /* centraliza o container */
-    justify-content: center;
-    align-items: flex-start; /* Começa no topo, não no centro */
-    /* CRÍTICO: Permitir touch events passarem para filhos */
     touch-action: pan-y;
 }
 
-/* O RUÍDO agora é aplicado sobre o BODY, não mais sobre o HTML */
-body::after {
-    content: "";
-    position: fixed; 
-    top: 0; 
-    left: 0;
-    width: 100vw; 
-    height: 100vh;
-    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><filter id="f"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="1" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23f)"/></svg>');
-    opacity: 0.03;
-    z-index: -1;
-    pointer-events: none;
-}
-
+/* Classes de container dentro dos fragments */
 .app-container, .container {
     width: 100%;
     max-width: 480px;
-    height: auto; /* Mudado de 100% para auto - permite scroll natural */
-    min-height: 100vh; /* Garante altura mínima */
-    overflow-y: auto;
-    overflow-x: hidden;
-    position: relative; /* dentro do body flex */
-    -webkit-overflow-scrolling: touch; 
-    overscroll-behavior-y: contain;
-    overscroll-behavior-x: none;
-    /* CRÍTICO: Permitir scroll por touch */
-    touch-action: pan-y !important;
-    /* Padding mínimo sempre presente + safe-area quando disponível */
-    padding-top: calc(20px + env(safe-area-inset-top, 0px));
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-    /* Remover espaço extra no final */
-    margin-bottom: 0;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    background-color: transparent;
-    /* GARANTIR que começa no topo */
-    align-self: flex-start !important;
-    margin-top: 0 !important;
+    margin: 0 auto;
+    padding: 16px;
+    /* Safe area no topo */
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    background: transparent;
 }
 .app-container::-webkit-scrollbar, .container::-webkit-scrollbar { 
     display: none; 
