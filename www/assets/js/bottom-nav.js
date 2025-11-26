@@ -9,11 +9,13 @@
     window.BottomNavInitialized = true;
 
     // ============================================
-    // AUTO-HIDE DO MENU (Simples e fluido)
+    // AUTO-HIDE DO MENU (Acompanha o dedo suavemente)
     // ============================================
     let lastScrollY = 0;
-    let isNavVisible = true;
+    let navOffset = 0;
+    let navHeight = 0;
     let ticking = false;
+    let isScrolling = null;
     
     function handleNavScroll() {
         const navContainer = document.getElementById('bottom-nav-container');
@@ -25,25 +27,39 @@
         const currentScrollY = scrollContainer.scrollTop;
         const scrollDiff = currentScrollY - lastScrollY;
         
-        // No topo - sempre mostrar
-        if (currentScrollY < 50) {
-            if (!isNavVisible) {
-                navContainer.style.transform = 'translateY(0)';
-                isNavVisible = true;
-            }
-        } 
-        // Scrollando pra baixo - esconder
-        else if (scrollDiff > 5 && isNavVisible) {
-            navContainer.style.transform = 'translateY(100%)';
-            isNavVisible = false;
-        }
-        // Scrollando pra cima - mostrar
-        else if (scrollDiff < -5 && !isNavVisible) {
-            navContainer.style.transform = 'translateY(0)';
-            isNavVisible = true;
+        // No topo da página - sempre mostrar completamente
+        if (currentScrollY < 20) {
+            navOffset = 0;
+        } else {
+            // Acompanhar o movimento do dedo
+            // scrollDiff positivo = scrollando pra baixo = esconder
+            // scrollDiff negativo = scrollando pra cima = mostrar
+            navOffset += scrollDiff * 0.8; // 0.8 = fator de suavização
+            
+            // Limitar entre 0 (visível) e navHeight (escondido)
+            navOffset = Math.max(0, Math.min(navOffset, navHeight));
         }
         
+        // Aplicar transform SEM transição (movimento direto)
+        navContainer.style.transform = `translateY(${navOffset}px)`;
+        
         lastScrollY = currentScrollY;
+        
+        // Detectar quando parou de scrollar pra "encaixar" na posição final
+        clearTimeout(isScrolling);
+        isScrolling = setTimeout(function() {
+            // Snap: se passou de metade, esconde; senão, mostra
+            const targetOffset = navOffset > navHeight / 2 ? navHeight : 0;
+            if (targetOffset !== navOffset) {
+                navContainer.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                navContainer.style.transform = `translateY(${targetOffset}px)`;
+                navOffset = targetOffset;
+                // Remover transição após o snap
+                setTimeout(() => {
+                    navContainer.style.transition = 'none';
+                }, 260);
+            }
+        }, 100);
     }
     
     function initAutoHide() {
@@ -55,10 +71,16 @@
             return;
         }
         
-        // Transição suave
-        navContainer.style.transition = 'transform 0.3s ease';
+        // Calcular altura do nav após renderização
+        requestAnimationFrame(() => {
+            navHeight = navContainer.offsetHeight || 80;
+            console.log('[BottomNav] Altura:', navHeight);
+        });
         
-        console.log('[BottomNav] Auto-hide ativado!');
+        // SEM transição inicial - movimento direto
+        navContainer.style.transition = 'none';
+        
+        console.log('[BottomNav] Auto-hide fluido ativado!');
         
         scrollContainer.addEventListener('scroll', function() {
             if (!ticking) {
