@@ -34,17 +34,26 @@
            Estilos principais estão em style.css
            ============================================ */
         
-        /* === VIEW TRANSITIONS (Auth pages) === */
+        /* === VIEW TRANSITIONS (Todas as páginas) === */
         @view-transition { navigation: auto; }
+        
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 0.25s;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Transições específicas para auth */
         ::view-transition-old(auth-logo),
         ::view-transition-new(auth-logo) {
             animation-duration: 0.35s;
             animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
-        ::view-transition-old(root),
-        ::view-transition-new(root) {
-            animation: none;
-            mix-blend-mode: normal;
+        
+        /* Ambiente nativo: transições mais rápidas */
+        html.native-app ::view-transition-old(root),
+        html.native-app ::view-transition-new(root) {
+            animation-duration: 0.2s;
         }
         
         /* === APP CONTAINER (Scroll principal) === */
@@ -82,8 +91,56 @@
         
         /* === CLASSES UTILITÁRIAS === */
         .hidden { display: none !important; }
-        .page-loading { opacity: 0; }
-        .page-loaded { opacity: 1; transition: opacity 0.2s ease; }
+        .page-loading { opacity: 0; pointer-events: none; }
+        .page-loaded { opacity: 1; transition: opacity 0.15s ease-out; }
+        
+        /* Ambiente nativo: transição mais rápida */
+        html.native-app .page-loaded { transition: opacity 0.1s ease-out; }
+        
+        /* === BOTTOM NAV - NUNCA ANIMA === */
+        #bottom-nav-container {
+            transition: none !important;
+            transform: none !important;
+        }
+        
+        /* === SKELETON BASE (inline para carregamento rápido) === */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.4s ease-in-out infinite;
+            border-radius: 12px;
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .page-skeleton {
+            position: absolute;
+            inset: 0;
+            z-index: 100;
+            background: #121212;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .skeleton-safe-area { height: env(safe-area-inset-top, 0px); }
+        .skel-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+        .skel-header-right { display: flex; gap: 12px; align-items: center; }
+        .skel-spacer { flex: 1; }
+        .skel-badge { width: 70px; height: 40px; border-radius: 20px; }
+        .skel-avatar { width: 44px; height: 44px; border-radius: 50%; }
+        .skel-banner { height: 160px; border-radius: 16px; }
+        .skel-card { border-radius: 16px; }
+        .skel-page-header { display: flex; align-items: center; gap: 16px; padding: 12px 0; }
+        .skel-back { width: 40px; height: 40px; border-radius: 50%; }
+        .skel-title { height: 28px; width: 180px; border-radius: 8px; }
+        .skel-list { display: flex; flex-direction: column; gap: 12px; }
+        .skel-list-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: rgba(255,255,255,0.02); border-radius: 14px; }
+        .skel-item-icon { width: 48px; height: 48px; border-radius: 12px; }
+        .skel-item-content { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .skel-text { height: 14px; border-radius: 4px; }
+        .skel-item-action { width: 32px; height: 32px; border-radius: 50%; }
 
         /* === MODAIS === */
         .modal {
@@ -186,8 +243,10 @@
         </nav>
     </div>
     
+    <script src="/assets/js/logger.js"></script>
     <script src="/assets/js/common.js"></script>
     <script src="/assets/js/config.js"></script>
+    <script src="/assets/js/page-loader.js"></script>
     <script src="/assets/js/capacitor-init.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script type="module" src="/assets/js/toast-helper.js"></script> 

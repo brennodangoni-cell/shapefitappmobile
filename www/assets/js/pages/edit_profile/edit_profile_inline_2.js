@@ -187,9 +187,14 @@
                 renderRestrictionsModal();
                 updateRestrictionsCount();
                 
+                // ✅ PÁGINA PRONTA - Remover skeleton
+                if (window.PageLoader) window.PageLoader.ready();
+                
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
                 showStatus('Erro ao carregar dados do perfil.', false);
+                // ✅ Mesmo com erro, remover skeleton
+                if (window.PageLoader) window.PageLoader.ready();
             }
         }
         

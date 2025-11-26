@@ -2,7 +2,7 @@
 // Correções globais para Modais, Água e Interações em ambiente SPA
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🔧 [SPA Fixes] Inicializado');
+    // ✅ Log removido para performance
 
     // ============================================================
     // 1. SISTEMA UNIVERSAL DE MODAIS (Peso, etc)

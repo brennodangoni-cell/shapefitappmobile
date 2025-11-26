@@ -10,8 +10,7 @@
         (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
         window.location.port === '8100';
     
-    console.log('🔧 [Config] isCapacitor:', isCapacitor);
-    console.log('🔧 [Config] isRealDevelopment:', isRealDevelopment);
+    // ✅ Logs removidos para performance
     
     // 1. Definição da URL Base (para redirecionamentos internos)
     // SEMPRE definir, não verificar se já existe (outros scripts podem ter definido errado)
@@ -32,8 +31,7 @@
         configurable: false
     });
     
-    console.log('🔧 [Config] BASE_APP_URL:', window.BASE_APP_URL);
-    console.log('🔧 [Config] API_BASE_URL:', window.API_BASE_URL);
+    // ✅ Logs removidos para performance
 
     // 3. INTERCEPTADOR DE FETCH (A Mágica)
     const originalFetch = window.fetch;
@@ -43,7 +41,7 @@
 
         // Se a URL já é completa (https://), usar diretamente
         if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
-            console.log(`🔀 [Fetch] URL completa: ${url}`);
+            // ✅ Log removido para performance
             try {
                 return await originalFetch(url, init);
             } catch (error) {
@@ -62,7 +60,7 @@
         if (typeof url === 'string' && url.startsWith('/api')) {
             if (isRealDevelopment) {
                 // Desenvolvimento local com proxy Node.js
-                console.log(`🔀 [API] Dev local (proxy): ${url}`);
+                // ✅ Log removido para performance
             } else {
                 // Produção ou Capacitor - usar API remota diretamente
                 url = window.API_BASE_URL + url.replace('/api', '');

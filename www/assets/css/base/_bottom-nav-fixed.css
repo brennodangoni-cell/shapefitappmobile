@@ -1,0 +1,100 @@
+/* ============================================
+   BOTTOM NAV - 100% FIXO E INDEPENDENTE
+   NUNCA MEXE, NUNCA PULA, NUNCA SOME
+   ============================================ */
+
+/* === FORÇAR BOTTOM NAV 100% ESTÁTICO === */
+#bottom-nav-container {
+    /* ✅ POSIÇÃO ABSOLUTAMENTE FIXA */
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    
+    /* ✅ SEMPRE VISÍVEL */
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    z-index: 1000 !important;
+    
+    /* ✅ SEM QUALQUER TRANSFORMAÇÃO */
+    transform: none !important;
+    -webkit-transform: none !important;
+    translate: none !important;
+    
+    /* ✅ SEM TRANSIÇÕES */
+    transition: none !important;
+    animation: none !important;
+    
+    /* ✅ SEM WILL-CHANGE (causa pulos) */
+    will-change: auto !important;
+    
+    /* ✅ FORÇAR LAYOUT ESTÁTICO */
+    contain: strict !important;
+    
+    /* ✅ SEM MARGIN/PADDING QUE CAUSE MOVIMENTO */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* === DURANTE QUALQUER TRANSIÇÃO === */
+body.page-transitioning #bottom-nav-container,
+html.page-transitioning #bottom-nav-container,
+body.page-loading #bottom-nav-container,
+html.page-loading #bottom-nav-container,
+body.page-ready #bottom-nav-container,
+html.page-ready #bottom-nav-container,
+body.page-loaded #bottom-nav-container,
+html.page-loaded #bottom-nav-container {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    will-change: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    contain: strict !important;
+}
+
+/* === DESABILITAR COMPLETAMENTE O SISTEMA DE SCROLL HIDE/SHOW === */
+/* Durante transições, o bottom nav NUNCA deve ser afetado */
+body.page-transitioning #bottom-nav-container,
+body.page-loading #bottom-nav-container {
+    /* ✅ FORÇAR POSIÇÃO FIXA - IGNORAR QUALQUER JS */
+    position: fixed !important;
+    bottom: 0 !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+}
+
+/* === BOTTOM NAV INTERNO === */
+.bottom-nav {
+    /* ✅ SEM TRANSIÇÕES */
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+}
+
+/* === ITENS DO NAV === */
+.bottom-nav .nav-item {
+    /* ✅ SEM TRANSIÇÕES QUE CAUSAM PULOS */
+    transition: color 0.15s ease !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+}
+
+/* === PREVENIR QUALQUER MOVIMENTO VIA JS === */
+#bottom-nav-container[style*="transform"],
+#bottom-nav-container[style*="translateY"] {
+    /* ✅ SOBRESCREVER QUALQUER TRANSFORM VIA JS */
+    transform: none !important;
+    -webkit-transform: none !important;
+}
+

@@ -33,6 +33,17 @@
             const isMainAppPage = document.querySelector('.main-app-container') || document.querySelector('.dashboard-container');
             if (!isMainAppPage) return;
             
+            // ✅ PERMITIR SCROLL HORIZONTAL NO CARROSSEL DE SUGESTÕES (IGUAL AO EXPLORE_RECIPES)
+            // Verificar se está dentro do carrossel - se estiver, NÃO BLOQUEAR
+            const target = event.target;
+            if (target.closest('.suggestions-carousel') || 
+                target.closest('.carousel-wrapper') || 
+                target.closest('.suggestion-item') ||
+                target.closest('.card-suggestions')) {
+                // ✅ PERMITIR SCROLL HORIZONTAL - NÃO BLOQUEAR
+                return;
+            }
+            
             const checkinModal = document.getElementById('checkinModal');
             const isModalOpen = checkinModal && checkinModal.classList.contains('active');
             
@@ -51,6 +62,7 @@
                 }
             }
             
+            // ✅ IGUAL AO EXPLORE_RECIPES: só bloquear se NÃO estiver dentro de .app-container
             const scrollable = event.target.closest('.app-container, .container');
             if (!scrollable) {
                 event.preventDefault();

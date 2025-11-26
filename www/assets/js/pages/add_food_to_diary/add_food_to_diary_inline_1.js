@@ -923,8 +923,22 @@ async function loadPageData() {
             mealTypeSelect.appendChild(option);
         }
         
-        // Atualizar botão de voltar
-        document.getElementById('back-btn').href = `${BASE_URL}/diary.php?date=${pageData.date}`;
+        // Atualizar botão de voltar - usar rota do SPA
+        const backBtn = document.getElementById('back-btn');
+        if (backBtn) {
+            // Usar SPA router se disponível, senão usar href direto
+            backBtn.onclick = (e) => {
+                e.preventDefault();
+                const dateParam = pageData.date ? `?date=${encodeURIComponent(pageData.date)}` : '';
+                if (window.SPARouter) {
+                    window.SPARouter.navigate(`/diario${dateParam}`, { isBack: true });
+                } else {
+                    window.location.href = `/diario${dateParam}`;
+                }
+            };
+            // Manter href como fallback
+            backBtn.href = `/diario${pageData.date ? `?date=${encodeURIComponent(pageData.date)}` : ''}`;
+        }
         
         // Renderizar receitas favoritas
         if (pageData.favorite_recipes.length > 0) {

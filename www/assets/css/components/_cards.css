@@ -3,8 +3,9 @@
 /* --- Efeito Glassmorphism Base --- */
 .glass-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
+    /* ✅ BLUR REDUZIDO (40px → 5px) para evitar glitches iOS */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     border-radius: 24px;
     border: 1px solid var(--glass-border);
     padding: 20px;
@@ -16,8 +17,13 @@
                 
     margin-bottom: 20px;
     
-    /* OTIMIZAÇÃO DE PERFORMANCE: Aviso ao navegador para otimizar */
+    /* ✅ GPU ACCELERATION para evitar glitches */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
     will-change: transform;
+    /* ✅ Isolar blur do border-radius */
+    isolation: isolate;
+    contain: paint;
 }
 
 /* --- Elementos Comuns de Cards --- */
@@ -310,33 +316,96 @@
     margin-bottom: 20px;
 }
 
-/* --- Card: Sugestões (VERSÃO FINAL SEM SOMBRA NO TÍTULO) --- */
+/* ======================================================= */
+/* --- CARROSSEL DE SUGESTÕES - SOLUÇÃO DEFINITIVA --- */
+/* ======================================================= */
+
+/* Card principal - container estrutural limpo */
 .card-suggestions {
-    /* Ocupa a largura total do grid */
-    grid-column: 1 / -1; 
-    
-    /* Removemos todos os estilos de card (background, box-shadow, padding, etc.) */
-    /* Agora é apenas um container estrutural */
-    margin-bottom: 20px; /* Mantém o espaçamento inferior */
-}
-/* Container para posicionar o fade corretamente */
-.carousel-wrapper {
+    grid-column: 1 / -1;
     position: relative;
+    margin-bottom: 20px;
+    padding: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0 !important;
+    width: 100%;
+    /* CRÍTICO: Remove contain que bloqueia */
+    contain: none !important;
+    isolation: auto !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    /* Z-index normal para não sobrepor outros cards */
+    z-index: 0;
+    /* GARANTE que não há clip ou mask */
+    clip: unset !important;
+    clip-path: none !important;
+    mask: none !important;
 }
 
+/* Header - alinhado com outros cards */
+.card-suggestions .card-header {
+    padding: 0 24px;
+    margin-bottom: 1rem;
+    margin-top: 0;
+    position: relative;
+    z-index: 2;
+    /* GARANTE que não corta nada */
+    overflow: visible !important;
+}
+
+/* Wrapper - POSICIONAMENTO RELATIVO COM MARGIN NEGATIVO */
+.carousel-wrapper {
+    /* Position relative para não cortar conteúdo acima */
+    position: relative;
+    width: 100vw;
+    /* Calcula offset baseado no container pai */
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    /* Remove qualquer padding/margin que interfira */
+    padding: 0;
+    margin-top: 0 !important;
+    margin-bottom: 0;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    /* Remove contain */
+    contain: none !important;
+    isolation: auto !important;
+    /* Z-index baixo para não sobrepor outros cards */
+    z-index: 0;
+    /* GARANTE que não há clip ou mask */
+    clip: unset !important;
+    clip-path: none !important;
+    mask: none !important;
+}
+
+/* Carrossel - scroll horizontal */
 .suggestions-carousel {
     display: flex;
     overflow-x: auto;
-    gap: 15px;
-    margin: 0 -24px;
-    padding: 5px 24px 20px 24px;
+    overflow-y: visible !important;
+    gap: 16px;
+    /* Padding com espaço superior MUITO GENEROSO para mostrar borda dos cards */
+    padding: 20px 24px 20px 24px;
+    margin-top: 0 !important;
+    margin-bottom: 0;
     scroll-snap-type: x mandatory;
-    scroll-padding-right: 30px; 
+    scroll-padding-right: 30px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior-x: auto;
+    width: 100%;
+    contain: none !important;
 }
 
-/* Esconde a barra de rolagem */
-.suggestions-carousel::-webkit-scrollbar { display: none; }
-.suggestions-carousel { -ms-overflow-style: none; scrollbar-width: none; }
+/* Esconde barra de rolagem */
+.suggestions-carousel::-webkit-scrollbar {
+    display: none;
+}
+
 
 /* O elemento de FADE à direita */
 .carousel-fade {
@@ -345,7 +414,8 @@
     right: 0;
     height: 100%;
     width: 60px;
-    background: linear-gradient(to right, rgba(var(--bg-color-rgb), 0), var(--bg-color) 80%);
+    /* ✅ REMOVIDO: gradient que causava linha diagonal */
+    background: none !important;
     pointer-events: none;
     z-index: 5;
 }
@@ -357,14 +427,25 @@
     min-width: 160px;
     flex-shrink: 0;
     padding: 0; /* REMOVE o padding do .glass-card */
+    margin-top: 0 !important;
     margin-bottom: 0; /* REMOVE a margem do .glass-card */
     scroll-snap-align: start;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Garante que a imagem respeite o border-radius */
+    /* CRÍTICO: overflow visible para não cortar borda superior do card */
+    overflow: visible !important;
     position: relative; 
     z-index: 1; 
     transition: transform 0.2s ease;
+    /* CRÍTICO: Remove contain: paint que está cortando a parte superior */
+    contain: none !important;
+    isolation: auto !important;
+    /* GARANTE que não há clip ou mask cortando */
+    clip: unset !important;
+    clip-path: none !important;
+    mask: none !important;
+    /* Border-radius mantido */
+    border-radius: 24px;
 }
 
 
@@ -380,6 +461,10 @@
     width: 100%;
     height: 100px;
     overflow: hidden;
+    border-radius: 24px 24px 0 0; /* Apenas bordas superiores arredondadas */
+    /* GARANTE que não corta a parte superior */
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
 
 .suggestion-item img {
@@ -574,7 +659,7 @@
 
 /*
 .glass-card-optimized {
-    /* Substitui o backdrop-filter por um fundo semi-transparente mais sólido */
+    Substitui o backdrop-filter por um fundo semi-transparente mais sólido
     background: rgba(38, 38, 38, 0.75);
     border-radius: 24px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -583,36 +668,10 @@
     margin-bottom: 20px;
     will-change: transform;
     
-    /* Remove completamente o backdrop-filter pesado */
-    /* backdrop-filter: none; */
-    /* -webkit-backdrop-filter: none; */
+    Remove completamente o backdrop-filter pesado
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
-/* Para usar esta otimização, substitua todas as classes .glass-card por .glass-card-optimized */
-*/
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-/* ====================================================================== */
-/* SOLUÇÃO ALTERNATIVA DE PERFORMANCE - DESCOMENTE SE AINDA HOUVER LAGS */
-/* ====================================================================== */
-
-/*
-.glass-card-optimized {
-    /* Substitui o backdrop-filter por um fundo semi-transparente mais sólido */
-    background: rgba(38, 38, 38, 0.75);
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    margin-bottom: 20px;
-    will-change: transform;
-    
-    /* Remove completamente o backdrop-filter pesado */
-    /* backdrop-filter: none; */
-    /* -webkit-backdrop-filter: none; */
-}
-
-/* Para usar esta otimização, substitua todas as classes .glass-card por .glass-card-optimized */
+Para usar esta otimização, substitua todas as classes .glass-card por .glass-card-optimized
 */

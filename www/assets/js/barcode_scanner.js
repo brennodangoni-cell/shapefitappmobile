@@ -6,12 +6,12 @@ import { configure, DataCaptureContext, Camera, FrameSourceState, DataCaptureVie
 import { BarcodeCapture, BarcodeCaptureSettings, Symbology, barcodeCaptureLoader } from "@scandit/web-datacapture-barcode";
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("barcode_scanner.js: Script e Módulos Scandit iniciados.");
+    // ✅ Log removido para performance
 
     // Seleciona apenas os elementos necessários para o scanner
     const scanBarcodeBtn = document.getElementById('scan-barcode-btn');
     if (!scanBarcodeBtn) {
-        console.log("barcode_scanner.js: Botão de scanner não encontrado nesta página. Encerrando script do scanner.");
+        // ✅ Log removido para performance
         return; 
     }
 

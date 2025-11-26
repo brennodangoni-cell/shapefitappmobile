@@ -35,15 +35,10 @@
         async function loadContent() {
             try {
                 const apiUrl = `/api/get_view_content_data.php?id=${contentId}`;
-                console.log('Carregando conteúdo de:', apiUrl);
                 
                 const response = await authenticatedFetch(apiUrl);
                 
                 if (!response.ok) {
-                    const text = await response.text();
-                    console.error('Erro HTTP:', response.status);
-                    console.error('Resposta do servidor:', text.substring(0, 1000));
-                    
                     if (response.status === 404) {
                         throw new Error('API não encontrada. Verifique se o arquivo existe no servidor.');
                     }
@@ -53,8 +48,6 @@
                 // Verificar se a resposta é JSON
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
-                    const text = await response.text();
-                    console.error('Resposta não é JSON:', text.substring(0, 500));
                     throw new Error('Resposta do servidor não é JSON');
                 }
                 
@@ -86,7 +79,6 @@
                 registerContentView(contentId);
                 
             } catch (error) {
-                console.error('Erro ao carregar conteúdo:', error);
                 renderError();
             }
         }
@@ -184,8 +176,39 @@
             const statusEl = cardElement.querySelector('.pdf-download-status');
             const labelEl = cardElement.querySelector('.content-pdf-label span');
             
-            // Log para debug
-            console.log('Iniciando download PDF:', { fileUrl, fileName });
+            // Verificar se está rodando em Capacitor (app mobile)
+            const isCapacitor = window.Capacitor !== undefined || window.CapacitorWeb !== undefined;
+            const isIOS = isCapacitor && (window.Capacitor?.getPlatform() === 'ios' || /iPad|iPhone|iPod/.test(navigator.userAgent));
+            
+            // ✅ NO iOS: ABRIR PDF NO NAVEGADOR EXTERNO (Safari)
+            if (isIOS) {
+                // Abrir diretamente no navegador externo
+                // No iOS WebView, window.location.href abre no Safari
+                window.location.href = fileUrl;
+                
+                // Atualizar status
+                if (statusEl) {
+                    statusEl.innerHTML = '<i class="fas fa-external-link-alt"></i> <span>Abrindo no navegador...</span>';
+                    statusEl.style.color = '#4CAF50';
+                }
+                if (labelEl) {
+                    labelEl.textContent = 'Abrindo...';
+                }
+                
+                // Resetar após 2 segundos
+                setTimeout(() => {
+                    if (statusEl) {
+                        statusEl.style.display = 'none';
+                    }
+                    if (labelEl) {
+                        labelEl.textContent = 'Abrir PDF';
+                    }
+                    cardElement.style.pointerEvents = '';
+                    cardElement.style.opacity = '1';
+                }, 2000);
+                
+                return; // Sair da função
+            }
             
             // Mostrar status de download
             if (statusEl) {
@@ -201,11 +224,8 @@
             cardElement.style.opacity = '0.7';
             
             try {
-                // Verificar se está rodando em Capacitor (app mobile)
-                const isCapacitor = window.Capacitor !== undefined || window.CapacitorWeb !== undefined;
-                
                 if (isCapacitor) {
-                    // Usar Capacitor para download no mobile
+                    // Usar Capacitor para download no mobile (Android)
                     await downloadPdfWithCapacitor(fileUrl, fileName);
                 } else {
                     // Usar método web padrão
@@ -274,7 +294,6 @@
                         const { Filesystem: FS } = await import('@capacitor/filesystem');
                         Filesystem = FS;
                     } catch (e) {
-                        console.log('Filesystem plugin não disponível via import');
                     }
                 }
                 
@@ -319,7 +338,6 @@
                     return;
                 }
             } catch (error) {
-                console.error('Erro com Capacitor plugins:', error);
                 // Fallback para método web
             }
             
@@ -329,8 +347,6 @@
         
         async function downloadPdfWeb(fileUrl, fileName) {
             try {
-                console.log('Tentando baixar PDF (web):', fileUrl);
-                
                 // Verificar se a URL está completa
                 let fullUrl = fileUrl;
                 if (!fullUrl.match(/^https?:\/\//)) {
@@ -342,20 +358,15 @@
                     }
                 }
                 
-                console.log('URL completa para download:', fullUrl);
-                
                 // Buscar o arquivo com autenticação
                 // O endpoint serve_content_file.php já lida com autenticação e permissões
                 const response = await authenticatedFetch(fullUrl);
                 
                 if (!response.ok) {
                     const text = await response.text();
-                    console.error('Erro HTTP ao baixar PDF:', response.status);
-                    console.error('Resposta do servidor:', text.substring(0, 1000));
                     
                     // Verificar se é uma página 404 do servidor (HTML)
                     if (response.status === 404 && text.includes('<!DOCTYPE')) {
-                        console.error('⚠️ Endpoint não encontrado! Verifique se api/serve_content_file.php foi enviado para o servidor.');
                         throw new Error('Endpoint de download não encontrado. Verifique se o arquivo foi enviado para o servidor.');
                     }
                     
@@ -378,8 +389,6 @@
                     throw new Error('Arquivo vazio ou inválido');
                 }
                 
-                console.log('Blob criado com sucesso, tamanho:', blob.size);
-                
                 // Criar URL temporária
                 const blobUrl = window.URL.createObjectURL(blob);
                 
@@ -400,7 +409,6 @@
                 }, 100);
                 
             } catch (error) {
-                console.error('Erro ao baixar PDF (web):', error);
                 // Não fazer fallback para abrir em nova aba, pois o endpoint requer autenticação
                 throw error;
             }
@@ -423,16 +431,24 @@
         }
         
         function renderVideoFile(file) {
-            // Usar file_url se disponível, senão file_path
-            let fileUrl = file.file_url || file.file_path || '';
+            // ✅ USAR API PARA SERVIR VÍDEO (com autenticação e streaming)
+            let fileUrl = '';
             
-            // Garantir URL completa para funcionar no Capacitor/iOS
-            if (fileUrl && !fileUrl.match(/^https?:\/\//)) {
-                if (!fileUrl.startsWith('/')) {
-                    fileUrl = '/' + fileUrl;
-                }
-                // Usar BASE_APP_URL para URL completa
-                fileUrl = 'https://appshapefit.com' + fileUrl;
+            // Priorizar ID do arquivo, senão usar path
+            if (file.id) {
+                fileUrl = `${window.BASE_APP_URL}/api/serve_video.php?id=${file.id}`;
+            } else if (file.file_path) {
+                // Se não tem ID, usar path
+                const encodedPath = encodeURIComponent(file.file_path);
+                fileUrl = `${window.BASE_APP_URL}/api/serve_video.php?path=${encodedPath}`;
+            } else {
+                return '';
+            }
+            
+            // ✅ ADICIONAR TOKEN À URL PARA AUTENTICAÇÃO
+            const token = getAuthToken();
+            if (token) {
+                fileUrl += (fileUrl.includes('?') ? '&' : '?') + `token=${encodeURIComponent(token)}`;
             }
             
             let poster = '';
@@ -442,20 +458,32 @@
                     if (!poster.startsWith('/')) {
                         poster = '/' + poster;
                     }
-                    poster = 'https://appshapefit.com' + poster;
+                    poster = window.BASE_APP_URL + poster;
+                }
+            } else if (file.thumbnail_path) {
+                // ✅ TENTAR thumbnail_path SE thumbnail_url NÃO EXISTIR
+                poster = file.thumbnail_path;
+                if (!poster.match(/^https?:\/\//)) {
+                    if (!poster.startsWith('/')) {
+                        poster = '/' + poster;
+                    }
+                    poster = window.BASE_APP_URL + poster;
                 }
             }
             
             const title = file.video_title || 'Sem título';
             const mimeType = file.mime_type || 'video/mp4';
             
-            console.log('[ViewContent] Renderizando vídeo:', { fileUrl, poster, title });
+            
+            // ✅ GARANTIR QUE POSTER ESTÁ NO ATRIBUTO CORRETO
+            const posterAttr = poster ? ` poster="${escapeHtml(poster)}"` : '';
+            const posterStyle = poster ? ` style="--poster-bg: url('${escapeHtml(poster)}');"` : '';
             
             return `
                 <div class="file-container">
                     <h3 class="file-title">${escapeHtml(title)}</h3>
                     <div class="content-media">
-                        <video class="content-video" controls preload="metadata" playsinline webkit-playsinline ${poster ? `poster="${escapeHtml(poster)}"` : ''}>
+                        <video class="content-video" controls preload="metadata" playsinline webkit-playsinline crossorigin="anonymous"${posterAttr}${posterStyle}>
                             <source src="${escapeHtml(fileUrl)}" type="${escapeHtml(mimeType)}">
                             Seu navegador não suporta a reprodução de vídeos.
                         </video>
@@ -470,7 +498,6 @@
             
             // Construir URL completa
             if (!fileUrl) {
-                console.error('Arquivo PDF sem URL:', file);
                 return '';
             }
             
@@ -489,14 +516,20 @@
             const fileName = file.file_name || title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
             const fileId = `pdf-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             
+            // ✅ DETECTAR SE É iOS PARA MUDAR O TEXTO DO BOTÃO
+            const isCapacitor = window.Capacitor !== undefined || window.CapacitorWeb !== undefined;
+            const isIOS = isCapacitor && (window.Capacitor?.getPlatform() === 'ios' || /iPad|iPhone|iPod/.test(navigator.userAgent));
+            const buttonText = isIOS ? 'Abrir PDF' : 'Baixar PDF';
+            const buttonIcon = isIOS ? 'fa-external-link-alt' : 'fa-download';
+            
             return `
                 <div class="file-container">
                     <h3 class="file-title">${escapeHtml(title)}</h3>
                     <div class="content-pdf-card" id="${fileId}" data-file-url="${escapeHtml(fileUrl)}" data-file-name="${escapeHtml(fileName)}" style="cursor: pointer;">
                         <i class="fas fa-file-pdf content-pdf-icon"></i>
                         <div class="content-pdf-label">
-                            <span>Baixar PDF</span>
-                            <i class="fas fa-download"></i>
+                            <span>${escapeHtml(buttonText)}</span>
+                            <i class="fas ${buttonIcon}"></i>
                         </div>
                         <div class="pdf-download-status" style="display: none; margin-top: 12px; font-size: 0.875rem; color: var(--accent-orange);">
                             <i class="fas fa-spinner fa-spin"></i>
@@ -534,7 +567,6 @@
                 });
             } catch (error) {
                 // Ignorar erro de registro de visualização
-                console.error('Erro ao registrar visualização:', error);
             }
         }
         

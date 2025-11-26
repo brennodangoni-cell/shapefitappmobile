@@ -8,7 +8,7 @@ let currentCarouselElement = null;
 
 // Função para limpar carrossel anterior (IMPORTANTE para SPA)
 function cleanupCarousel() {
-  console.log('[Banner Carousel] Limpando carrossel anterior...');
+  // ✅ Log removido para performance
   
   // Parar intervalo
   if (carouselInterval) {
@@ -43,16 +43,27 @@ async function loadBannersFromAPI() {
       ? 'https://appshapefit.com/api/get_banners.php'
       : '/api/get_banners.php';
     
-    console.log('[Banner Carousel] Carregando banners de:', apiUrl);
+    // ✅ Log removido para performance
     
     const response = await fetch(apiUrl);
     const result = await response.json();
     
     if (result.success && result.banners && result.banners.length > 0) {
-      console.log('[Banner Carousel] Banners carregados:', result.banners.length);
+      // ✅ OTIMIZADO: Ordenar banners - mais leves primeiro, receitas por último
+      let banners = result.banners;
+      
+      // Ordenar: receitas por último, resto mantém ordem
+      banners.sort((a, b) => {
+        const aIsReceitas = a.json_path && a.json_path.includes('receitas');
+        const bIsReceitas = b.json_path && b.json_path.includes('receitas');
+        
+        if (aIsReceitas && !bIsReceitas) return 1; // receitas vai pro final
+        if (!aIsReceitas && bIsReceitas) return -1; // receitas vai pro final
+        return 0; // mantém ordem original
+      });
       
       if (isDev) {
-        return result.banners.map(b => ({
+        return banners.map(b => ({
           ...b,
           json_path: b.json_path.startsWith('http') 
             ? b.json_path 
@@ -60,7 +71,7 @@ async function loadBannersFromAPI() {
         }));
       }
       
-      return result.banners;
+      return banners;
     } else {
       console.warn('[Banner Carousel] API vazia, usando fallback');
       return getFallbackBanners();
@@ -75,34 +86,52 @@ function getFallbackBanners() {
   const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const baseUrl = isDev ? 'https://appshapefit.com' : '';
   
+  // ✅ OTIMIZADO: Receitas por último (mais pesado)
   return [
-    { json_path: `${baseUrl}/assets/banners/banner_receitas.json`, link_url: '/explorar' },
     { json_path: `${baseUrl}/assets/banners/banner2.json`, link_url: null },
     { json_path: `${baseUrl}/assets/banners/banner3.json`, link_url: null },
-    { json_path: `${baseUrl}/assets/banners/banner4.json`, link_url: null }
+    { json_path: `${baseUrl}/assets/banners/banner4.json`, link_url: null },
+    { json_path: `${baseUrl}/assets/banners/banner_receitas.json`, link_url: '/explorar' } // Por último
   ];
+}
+
+// ✅ CARREGAR LOTTIE APENAS QUANDO NECESSÁRIO (lazy load)
+async function loadLottieIfNeeded() {
+    if (typeof lottie !== 'undefined') {
+        return true; // Já carregado
+    }
+    
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
+        script.onload = () => resolve(true);
+        script.onerror = () => {
+            console.error('[Banner Carousel] Erro ao carregar Lottie');
+            resolve(false);
+        };
+        document.head.appendChild(script);
+    });
 }
 
 async function initLottieCarousel() {
   // Primeiro, limpar qualquer carrossel anterior
   cleanupCarousel();
   
-  console.log('[Banner Carousel] Inicializando...');
-  
-  if (typeof lottie === 'undefined') {
-    console.error('[Banner Carousel] Lottie não carregado!');
+  // ✅ CARREGAR LOTTIE APENAS SE NECESSÁRIO
+  const lottieLoaded = await loadLottieIfNeeded();
+  if (!lottieLoaded) {
     return;
   }
   
   const carousel = document.querySelector('.main-carousel');
   if (!carousel) {
-    console.log('[Banner Carousel] Container não encontrado nesta página.');
+    // ✅ Log removido para performance
     return;
   }
   
   // Verificar se JÁ foi inicializado (evitar duplicação)
   if (carousel.dataset.initialized === 'true') {
-    console.log('[Banner Carousel] Já inicializado, pulando...');
+    // ✅ Log removido para performance
     return;
   }
   
@@ -129,10 +158,12 @@ async function initLottieCarousel() {
   
   // Limpar e criar slides
   track.innerHTML = '';
+  
   bannerData.forEach((banner, index) => {
     const slide = document.createElement('div');
     slide.className = 'lottie-slide';
     slide.dataset.link = banner.link_url || '#';
+    // ✅ LARGURA RELATIVA (não absoluta) - CSS já define 100%
     slide.innerHTML = '<div class="lottie-animation-container"></div>';
     track.appendChild(slide);
   });
@@ -170,6 +201,7 @@ async function initLottieCarousel() {
   }
   
   const progressFills = [];
+  const paginationItems = [];
   slides.forEach(() => {
     const item = document.createElement('div');
     item.className = 'pagination-item';
@@ -180,7 +212,21 @@ async function initLottieCarousel() {
     item.appendChild(fill);
     if (paginationContainer) paginationContainer.appendChild(item);
     progressFills.push(fill);
+    paginationItems.push(item);
   });
+
+  // ✅ Função para carregar slides visíveis (lazy load) - DEFINIR ANTES DE goToSlide
+  function loadVisibleSlides() {
+    const toLoad = [currentIndex];
+    if (currentIndex + 1 < slides.length) toLoad.push(currentIndex + 1);
+    if (currentIndex + 2 < slides.length) toLoad.push(currentIndex + 2);
+    
+    toLoad.forEach(index => {
+      if (!loadedAnimations[index]) {
+        loadLottieForSlide(index);
+      }
+    });
+  }
 
   // Funções de controle
   function goToSlide(index, withAnimation = true, startTimer = true) {
@@ -190,13 +236,17 @@ async function initLottieCarousel() {
       track.classList.add('no-transition');
     }
 
-    const slideWidth = slides[0].offsetWidth;
+    // ✅ LARGURA RELATIVA - slide sempre 100% do container
+    const slideWidth = carousel.offsetWidth;
     track.style.transform = `translateX(-${currentIndex * slideWidth}px)`;
     
     if (!withAnimation) {
       track.offsetHeight;
       track.classList.remove('no-transition');
     }
+
+    // ✅ OTIMIZADO: Carregar Lottie lazy quando mudar de slide
+    loadVisibleSlides();
 
     // Controlar animações Lottie
     loadedAnimations.forEach((anim, i) => {
@@ -231,7 +281,17 @@ async function initLottieCarousel() {
       fill.style.transition = 'none';
       fill.style.width = '0%';
       
+      // Remover classe active de todos os itens
+      if (paginationItems[i]) {
+        paginationItems[i].classList.remove('active');
+      }
+      
       if (i === currentIndex) {
+        // Adicionar classe active apenas no item atual
+        if (paginationItems[i]) {
+          paginationItems[i].classList.add('active');
+        }
+        
         // Usar requestAnimationFrame para garantir reset antes de animar
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -334,7 +394,10 @@ async function initLottieCarousel() {
   carousel.addEventListener('touchmove', handleMove, { passive: false });
   carousel.addEventListener('touchend', handleEnd, { passive: false });
   
-  window.addEventListener('resize', () => goToSlide(currentIndex, false, false));
+  // ✅ Recalcular posição no resize (largura é relativa, não precisa recalcular)
+  window.addEventListener('resize', () => {
+    goToSlide(currentIndex, false, false);
+  });
   
   // Click handler
   carousel.addEventListener('click', (e) => {
@@ -351,33 +414,82 @@ async function initLottieCarousel() {
     }
   });
 
-  // Carregar animações Lottie
-  slides.forEach((slide, index) => {
+  // ✅ OTIMIZADO: Carregar Lottie apenas quando slide estiver visível (lazy load)
+  // Carregar apenas o primeiro slide imediatamente
+  function loadLottieForSlide(index) {
+    if (loadedAnimations[index]) return; // Já carregado
+    
+    const slide = slides[index];
+    if (!slide) return;
+    
     const container = slide.querySelector('.lottie-animation-container');
     if (!container) return;
     
     const bannerPath = bannerData[index]?.json_path;
     if (!bannerPath) return;
     
-    console.log(`[Banner Carousel] Carregando animação ${index}`);
-    
+    // ✅ OTIMIZADO: Usar renderer mais leve e reduzir qualidade
     const anim = lottie.loadAnimation({
       container, 
-      renderer: 'svg', 
+      renderer: 'svg', // SVG é mais leve que canvas para animações simples
       loop: true, 
-      autoplay: (index === 0),
-      path: bannerPath
+      autoplay: false, // ✅ Não autoplay - controlar manualmente
+      path: bannerPath,
+      // ✅ OTIMIZAÇÕES DE PERFORMANCE
+      rendererSettings: {
+        preserveAspectRatio: 'xMidYMid slice',
+        clearCanvas: true,
+        progressiveLoad: true, // ✅ Carregar progressivamente
+        hideOnTransparent: true
+      }
     });
     
     loadedAnimations[index] = anim;
     
     anim.addEventListener('DOMLoaded', () => {
-      console.log(`[Banner Carousel] Animação ${index} carregada.`);
-      if (index === 0 && currentIndex === 0) {
+      // ✅ Só tocar se for o slide atual
+      if (index === currentIndex) {
         anim.play();
       }
     });
+  }
+  
+  // ✅ OTIMIZADO: Carregar banners apenas quando visíveis (IntersectionObserver)
+  const observerOptions = {
+    root: null,
+    rootMargin: '50px', // Começar a carregar 50px antes de ficar visível
+    threshold: 0.1
+  };
+  
+  const bannerObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const slideIndex = slides.indexOf(entry.target);
+        if (slideIndex !== -1 && !loadedAnimations[slideIndex]) {
+          loadLottieForSlide(slideIndex);
+        }
+      }
+    });
+  }, observerOptions);
+  
+  // Observar todos os slides
+  slides.forEach(slide => {
+    bannerObserver.observe(slide);
   });
+  
+  // ✅ Carregar primeiro banner após delay (só se ainda não carregou)
+  setTimeout(() => {
+    if (!loadedAnimations[0]) {
+      loadLottieForSlide(0);
+    }
+  }, 2000); // ✅ Delay de 2s para não travar página inicial
+  
+  // ✅ Carregar quando mudar de slide
+  const originalGoToSlide = goToSlide;
+  goToSlide = function(index, smooth, updateTimer) {
+    originalGoToSlide(index, smooth, updateTimer);
+    loadVisibleSlides();
+  };
 
   // Iniciar no primeiro slide
   goToSlide(0, false, false);
@@ -385,10 +497,19 @@ async function initLottieCarousel() {
   // Aguardar um pouco e iniciar timer
   setTimeout(() => {
     // Garantir barras em 0%
-    progressFills.forEach(fill => {
+    progressFills.forEach((fill, i) => {
       fill.style.transition = 'none';
       fill.style.width = '0%';
+      // Remover active de todos
+      if (paginationItems[i]) {
+        paginationItems[i].classList.remove('active');
+      }
     });
+    
+    // Adicionar active no primeiro item
+    if (paginationItems[0]) {
+      paginationItems[0].classList.add('active');
+    }
     
     // Iniciar
     startCarouselTimer();
@@ -396,34 +517,44 @@ async function initLottieCarousel() {
   }, 100);
 }
 
-// Função para tentar inicializar
-function tryInitCarousel() {
+// ✅ Função para tentar inicializar - AGUARDA LOTTIE CARREGAR E PÁGINA PRONTA
+async function tryInitCarousel() {
   const carousel = document.querySelector('.main-carousel');
   
   if (!carousel) {
-    console.log('[Banner Carousel] Container não existe nesta página.');
     return;
   }
   
   // Se já está inicializado E é o mesmo elemento, não fazer nada
   if (carousel.dataset.initialized === 'true' && carousel === currentCarouselElement) {
-    console.log('[Banner Carousel] Já inicializado (mesmo elemento).');
     return;
   }
   
-  // Se é um novo elemento ou não está inicializado, limpar e reiniciar
-  if (typeof lottie !== 'undefined') {
-    initLottieCarousel();
-  } else {
-    console.warn('[Banner Carousel] Lottie não encontrado, tentando em 500ms...');
+  // ✅ ADIAR INICIALIZAÇÃO - Só iniciar após página estar totalmente carregada
+  // Aguardar que a página termine de renderizar antes de carregar banners
+  await new Promise(resolve => {
+    if (document.readyState === 'complete') {
+      // Página já carregou, aguardar um pouco mais para garantir
+      setTimeout(resolve, 500);
+    } else {
+      window.addEventListener('load', () => {
+        setTimeout(resolve, 500);
+      }, { once: true });
+    }
+  });
+  
+  // ✅ AGUARDAR LOTTIE CARREGAR ANTES DE INICIALIZAR
+  const lottieLoaded = await loadLottieIfNeeded();
+  if (!lottieLoaded) {
+    // Se não conseguiu carregar, tentar novamente depois
     setTimeout(() => {
-      if (typeof lottie !== 'undefined') {
-        initLottieCarousel();
-      } else {
-        console.error('[Banner Carousel] Lottie não encontrado após delay.');
-      }
-    }, 500);
+      tryInitCarousel();
+    }, 1000);
+    return;
   }
+  
+  // ✅ LOTTIE CARREGADO - INICIALIZAR (mas banners só carregam depois)
+  initLottieCarousel();
 }
 
 // Inicialização
@@ -433,15 +564,15 @@ if (document.readyState === 'loading') {
   tryInitCarousel();
 }
 
-// Para SPA: limpar e reinicializar quando mudar de página
+// ✅ OTIMIZADO: Adiar inicialização em SPA para não travar
 window.addEventListener('pageLoaded', (e) => {
-  // Se a nova página tem carrossel, inicializar
-  // Se não tem, apenas limpar o anterior
-  setTimeout(tryInitCarousel, 50);
+  // ✅ Delay maior para não travar durante transição (2s após página carregar)
+  setTimeout(tryInitCarousel, 2000);
 });
 
 window.addEventListener('fragmentReady', (e) => {
-  setTimeout(tryInitCarousel, 50);
+  // ✅ Delay maior para não travar durante transição (2s após fragmento carregar)
+  setTimeout(tryInitCarousel, 2000);
 });
 
 // Limpar ao sair da página (para navegação tradicional)

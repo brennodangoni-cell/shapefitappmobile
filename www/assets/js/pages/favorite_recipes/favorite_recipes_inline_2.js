@@ -16,6 +16,55 @@
             let pageData = null;
             let allCategories = [];
             
+            // Função para mostrar skeleton durante carregamento de filtros
+            function showFilterSkeleton() {
+                const appContainer = document.querySelector('.app-container');
+                if (!appContainer) return;
+                
+                // Esconder conteúdo atual
+                const recipesList = document.getElementById('recipes-list');
+                const loadingState = document.getElementById('loading-state');
+                const emptyState = document.getElementById('empty-state');
+                
+                if (recipesList) recipesList.style.display = 'none';
+                if (loadingState) loadingState.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'none';
+                
+                // Criar ou atualizar skeleton
+                let skeleton = appContainer.querySelector('.filter-skeleton');
+                if (!skeleton) {
+                    skeleton = document.createElement('div');
+                    skeleton.className = 'filter-skeleton';
+                    appContainer.appendChild(skeleton);
+                }
+                
+                // Skeleton para lista de receitas favoritas
+                skeleton.innerHTML = `
+                    <div style="padding: 0 1rem; display: flex; flex-direction: column; gap: 8px;">
+                        ${Array.from({ length: 6 }, () => `
+                            <div style="display: flex; gap: 1rem; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px;">
+                                <div class="skeleton" style="width: 64px; height: 64px; border-radius: 12px; flex-shrink: 0;"></div>
+                                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                                    <div class="skeleton" style="height: 16px; width: 70%; border-radius: 8px;"></div>
+                                    <div class="skeleton" style="height: 14px; width: 50%; border-radius: 8px;"></div>
+                                </div>
+                                <div class="skeleton" style="width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                skeleton.style.display = 'block';
+            }
+            
+            // Função para esconder skeleton
+            function hideFilterSkeleton() {
+                const skeleton = document.querySelector('.filter-skeleton');
+                if (skeleton) {
+                    skeleton.style.display = 'none';
+                }
+            }
+            
             // Carregar dados da página
             async function loadPageData(customParams = null) {
                 try {
@@ -32,12 +81,20 @@
                         categories = urlParams.get('categories') || '';
                     }
                     
+                    // Mostrar skeleton durante carregamento (só se for atualização dinâmica)
+                    if (customParams) {
+                        showFilterSkeleton();
+                    }
+                    
                     const recipesList = document.getElementById('recipes-list');
                     
                     const apiUrl = `/api/get_favorite_recipes_data.php?q=${encodeURIComponent(query)}&sort=${encodeURIComponent(sort)}&categories=${encodeURIComponent(categories)}`;
                     const response = await authenticatedFetch(apiUrl);
                     
-                    if (!response) return; // Token inválido, já redirecionou
+                    if (!response) {
+                        hideFilterSkeleton();
+                        return; // Token inválido, já redirecionou
+                    }
                     
                     const result = await response.json();
                     
@@ -60,6 +117,11 @@
                     // Renderizar receitas
                     renderRecipes();
                     
+                    // Esconder skeleton após renderizar
+                    if (customParams) {
+                        hideFilterSkeleton();
+                    }
+                    
                     // Restaurar estado dos filtros (só na primeira vez)
                     if (!customParams) {
                         restoreFiltersState();
@@ -76,10 +138,15 @@
                     
                 } catch (error) {
                     console.error('Erro ao carregar dados:', error);
-                    document.getElementById('loading-state').innerHTML = `
-                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px; color: var(--accent-orange);"></i>
-                        <p>Erro ao carregar receitas favoritas. Tente novamente.</p>
-                    `;
+                    hideFilterSkeleton();
+                    const loadingState = document.getElementById('loading-state');
+                    if (loadingState) {
+                        loadingState.innerHTML = `
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px; color: var(--accent-orange);"></i>
+                            <p>Erro ao carregar receitas favoritas. Tente novamente.</p>
+                        `;
+                        loadingState.style.display = 'block';
+                    }
                 }
             }
             
@@ -175,14 +242,45 @@
                 
                 if (filterButton && filterModal) {
                     const modalContent = filterModal.querySelector('.modal-content');
+                    let savedScrollPosition = 0;
+                    
                     const closeModal = () => {
                         filterModal.classList.remove('visible');
+                        // Restaurar posição do scroll
+                        document.body.style.top = '';
+                        document.body.style.left = '';
+                        document.body.style.right = '';
+                        document.body.style.position = '';
+                        document.body.style.width = '';
+                        document.body.style.height = '';
+                        document.body.style.maxWidth = '';
+                        document.body.style.maxHeight = '';
+                        document.body.style.overflow = '';
+                        document.body.style.touchAction = '';
+                        document.body.style.overscrollBehavior = '';
+                        document.documentElement.style.overflow = '';
+                        document.documentElement.style.touchAction = '';
+                        document.documentElement.style.overscrollBehavior = '';
+                        document.body.classList.remove('modal-open');
+                        // Restaurar container
+                        const appContainer = document.querySelector('.app-container');
+                        if (appContainer) {
+                            appContainer.style.overflow = '';
+                            appContainer.style.overflowY = '';
+                            appContainer.style.overflowX = '';
+                            appContainer.style.touchAction = '';
+                            appContainer.style.overscrollBehavior = '';
+                            appContainer.style.pointerEvents = '';
+                        }
+                        window.scrollTo(0, savedScrollPosition);
                         // Resetar transform quando fechar
-                        setTimeout(() => {
-                            modalContent.style.transform = '';
-                            modalContent.style.transition = '';
-                        }, 350);
-                        // Usar API do bottom nav
+                        modalContent.style.transform = '';
+                        modalContent.style.transition = '';
+                        // Mostrar bottom nav
+                        const bottomNav = document.getElementById('bottom-nav-container');
+                        if (bottomNav) {
+                            bottomNav.style.transform = '';
+                        }
                         if (window.BottomNavAPI) {
                             window.BottomNavAPI.show();
                         }
@@ -194,21 +292,86 @@
                         
                         // Resetar transform quando abrir
                         if (isOpening) {
+                            // Salvar posição do scroll atual
+                            savedScrollPosition = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+                            // Fixar body na posição atual
+                            document.body.style.top = `-${savedScrollPosition}px`;
+                            document.body.style.left = '0';
+                            document.body.style.right = '0';
+                            document.body.style.position = 'fixed';
+                            document.body.style.width = '100%';
+                            document.body.style.height = '100%';
+                            document.body.style.maxWidth = '100vw';
+                            document.body.style.maxHeight = '100vh';
+                            document.body.style.overflow = 'hidden';
+                            document.body.style.touchAction = 'none';
+                            document.body.style.overscrollBehavior = 'none';
+                            document.documentElement.style.overflow = 'hidden';
+                            document.documentElement.style.touchAction = 'none';
+                            document.documentElement.style.overscrollBehavior = 'none';
                             modalContent.style.transform = '';
                             modalContent.style.transition = '';
+                            document.body.classList.add('modal-open');
+                            // Prevenir scroll no container também
+                            const appContainer = document.querySelector('.app-container');
+                            if (appContainer) {
+                                appContainer.style.overflow = 'hidden';
+                                appContainer.style.overflowY = 'hidden';
+                                appContainer.style.overflowX = 'hidden';
+                                appContainer.style.touchAction = 'none';
+                                appContainer.style.overscrollBehavior = 'none';
+                                appContainer.style.pointerEvents = 'none';
+                            }
                         } else {
+                            // Restaurar posição do scroll
+                            document.body.style.top = '';
+                            document.body.style.left = '';
+                            document.body.style.right = '';
+                            document.body.style.position = '';
+                            document.body.style.width = '';
+                            document.body.style.height = '';
+                            document.body.style.maxWidth = '';
+                            document.body.style.maxHeight = '';
+                            document.body.style.overflow = '';
+                            document.body.style.touchAction = '';
+                            document.body.style.overscrollBehavior = '';
+                            document.documentElement.style.overflow = '';
+                            document.documentElement.style.touchAction = '';
+                            document.documentElement.style.overscrollBehavior = '';
+                            document.body.classList.remove('modal-open');
+                            // Restaurar container
+                            const appContainer = document.querySelector('.app-container');
+                            if (appContainer) {
+                                appContainer.style.overflow = '';
+                                appContainer.style.overflowY = '';
+                                appContainer.style.overflowX = '';
+                                appContainer.style.touchAction = '';
+                                appContainer.style.overscrollBehavior = '';
+                                appContainer.style.pointerEvents = '';
+                            }
+                            window.scrollTo(0, savedScrollPosition);
                             // Resetar transform quando fechar
-                            setTimeout(() => {
-                                modalContent.style.transform = '';
-                                modalContent.style.transition = '';
-                            }, 350);
+                            modalContent.style.transform = '';
+                            modalContent.style.transition = '';
                         }
                         
-                        // Usar API do bottom nav
-                        if (window.BottomNavAPI) {
-                            if (filterModal.classList.contains('visible')) {
+                        // Controlar bottom nav
+                        const bottomNav = document.getElementById('bottom-nav-container');
+                        
+                        if (isOpening) {
+                            // Esconder bottom nav
+                            if (bottomNav) {
+                                bottomNav.style.transform = 'translateY(100%)';
+                            }
+                            if (window.BottomNavAPI) {
                                 window.BottomNavAPI.hide();
-                            } else {
+                            }
+                        } else {
+                            // Mostrar bottom nav
+                            if (bottomNav) {
+                                bottomNav.style.transform = '';
+                            }
+                            if (window.BottomNavAPI) {
                                 window.BottomNavAPI.show();
                             }
                         }
@@ -220,64 +383,134 @@
                         toggleModal();
                     });
                     
+                    // Fechar ao clicar no overlay (fora do modal)
                     filterModal.addEventListener('click', (e) => {
                         if (e.target === filterModal) {
                             closeModal();
                         }
                     });
                     
-                    // Funcionalidade de arrastar para fechar
-                    const modalHeader = modalContent.querySelector('.modal-header');
-                    if (modalHeader) {
-                        let startY = 0;
-                        let isDragging = false;
-                        
-                        modalHeader.addEventListener('touchstart', (e) => {
-                            startY = e.touches[0].clientY;
-                            isDragging = true;
-                            modalContent.style.transition = 'none';
-                        }, { passive: true });
-                        
-                        modalHeader.addEventListener('touchmove', (e) => {
-                            if (!isDragging) return;
-                            const currentY = e.touches[0].clientY;
-                            const deltaY = currentY - startY;
-                            if (deltaY > 0) {
-                                modalContent.style.transform = `translateY(${deltaY}px)`;
+                    // Bloquear todos os toques no overlay que não sejam no modal-content
+                    filterModal.addEventListener('touchstart', (e) => {
+                        if (e.target === filterModal || !modalContent.contains(e.target)) {
+                            // Se tocou no overlay (fora do modal), bloquear
+                            if (e.target === filterModal) {
+                                e.stopPropagation();
                             }
-                        }, { passive: true });
-                        
-                        modalHeader.addEventListener('touchend', (e) => {
-                            if (!isDragging) return;
-                            isDragging = false;
-                            modalContent.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-                            const currentY = e.changedTouches[0].clientY;
-                            const deltaY = currentY - startY;
-                            const threshold = modalContent.offsetHeight * 0.3;
-                            
-                            if (deltaY > threshold) {
-                                closeModal();
-                            } else {
-                                modalContent.style.transform = 'translateY(0)';
-                                // Resetar transform após animação
-                                setTimeout(() => {
-                                    modalContent.style.transform = '';
-                                    modalContent.style.transition = '';
-                                }, 400);
+                        }
+                    }, { passive: false });
+                    
+                    filterModal.addEventListener('touchmove', (e) => {
+                        if (e.target === filterModal || !modalContent.contains(e.target)) {
+                            // Se moveu no overlay (fora do modal), bloquear
+                            if (e.target === filterModal) {
+                                e.preventDefault();
+                                e.stopPropagation();
                             }
-                        }, { passive: true });
-                    }
+                        }
+                    }, { passive: false });
+                    
+                    // Prevenir TODOS os toques na página quando modal está aberto
+                    // Apenas permitir toques dentro do modal
+                    const preventPageTouch = (e) => {
+                        if (!filterModal.classList.contains('visible')) return;
+                        
+                        // Verificar se o toque está dentro do modal
+                        const isInsideModal = filterModal.contains(e.target);
+                        
+                        if (!isInsideModal) {
+                            // Bloquear TUDO fora do modal
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            return false;
+                        }
+                    };
+                    
+                    // Bloquear touchmove na página quando modal está aberto
+                    document.addEventListener('touchmove', (e) => {
+                        if (!filterModal.classList.contains('visible')) return;
+                        
+                        // Permitir apenas dentro do modal
+                        const isInsideModal = filterModal.contains(e.target);
+                        
+                        // Se está dentro do modal, deixar os listeners do modalContent lidarem
+                        if (isInsideModal) {
+                            return; // Deixar o modalContent gerenciar
+                        }
+                        
+                        // Bloquear TUDO fora do modal
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, { passive: false });
+                    
+                    // Bloquear touchstart na página quando modal está aberto
+                    document.addEventListener('touchstart', (e) => {
+                        if (!filterModal.classList.contains('visible')) return;
+                        
+                        const isInsideModal = filterModal.contains(e.target);
+                        if (!isInsideModal) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                    }, { passive: false });
+                    
+                    // Bloquear wheel na página quando modal está aberto
+                    document.addEventListener('wheel', (e) => {
+                        if (!filterModal.classList.contains('visible')) return;
+                        
+                        const isInsideModal = filterModal.contains(e.target);
+                        const modalScrollable = filterModal.querySelector('.modal-scrollable-content');
+                        
+                        // Permitir scroll apenas dentro do conteúdo do modal
+                        if (isInsideModal && modalScrollable && modalScrollable.contains(e.target)) {
+                            return;
+                        }
+                        
+                        // Bloquear TUDO fora do modal
+                        e.preventDefault();
+                    }, { passive: false });
+                    
                 }
                 
                 const searchInput = document.getElementById('search-input');
                 const applyFiltersBtn = document.getElementById('apply-filters-btn');
                 const clearFiltersBtn = document.getElementById('clear-filters-btn');
                 
-                // Função para voltar ao estado original com transição fluida
+                // Função para voltar ao estado original
                 const resetToOriginal = async () => {
-                    // Fechar modal suavemente
+                    // Fechar modal
                     filterModal.classList.remove('visible');
+                    document.body.style.top = '';
+                    document.body.style.left = '';
+                    document.body.style.right = '';
+                    document.body.style.position = '';
+                    document.body.style.width = '';
+                    document.body.style.height = '';
+                    document.body.style.maxWidth = '';
+                    document.body.style.maxHeight = '';
                     document.body.style.overflow = '';
+                    document.body.style.touchAction = '';
+                    document.body.style.overscrollBehavior = '';
+                    document.documentElement.style.overflow = '';
+                    document.documentElement.style.touchAction = '';
+                    document.documentElement.style.overscrollBehavior = '';
+                    document.body.classList.remove('modal-open');
+                    // Restaurar container
+                    const appContainer = document.querySelector('.app-container');
+                    if (appContainer) {
+                        appContainer.style.overflow = '';
+                        appContainer.style.overflowY = '';
+                        appContainer.style.overflowX = '';
+                        appContainer.style.touchAction = '';
+                        appContainer.style.overscrollBehavior = '';
+                        appContainer.style.pointerEvents = '';
+                    }
+                    // Mostrar bottom nav
+                    const bottomNav = document.getElementById('bottom-nav-container');
+                    if (bottomNav) {
+                        bottomNav.style.transform = '';
+                    }
                     if (window.BottomNavAPI) {
                         window.BottomNavAPI.show();
                     }
@@ -315,7 +548,36 @@
                     
                     // Fechar modal primeiro
                     filterModal.classList.remove('visible');
+                    document.body.style.top = '';
+                    document.body.style.left = '';
+                    document.body.style.right = '';
+                    document.body.style.position = '';
+                    document.body.style.width = '';
+                    document.body.style.height = '';
+                    document.body.style.maxWidth = '';
+                    document.body.style.maxHeight = '';
                     document.body.style.overflow = '';
+                    document.body.style.touchAction = '';
+                    document.body.style.overscrollBehavior = '';
+                    document.documentElement.style.overflow = '';
+                    document.documentElement.style.touchAction = '';
+                    document.documentElement.style.overscrollBehavior = '';
+                    document.body.classList.remove('modal-open');
+                    // Restaurar container
+                    const appContainer = document.querySelector('.app-container');
+                    if (appContainer) {
+                        appContainer.style.overflow = '';
+                        appContainer.style.overflowY = '';
+                        appContainer.style.overflowX = '';
+                        appContainer.style.touchAction = '';
+                        appContainer.style.overscrollBehavior = '';
+                        appContainer.style.pointerEvents = '';
+                    }
+                    // Mostrar bottom nav
+                    const bottomNav = document.getElementById('bottom-nav-container');
+                    if (bottomNav) {
+                        bottomNav.style.transform = '';
+                    }
                     if (window.BottomNavAPI) {
                         window.BottomNavAPI.show();
                     }

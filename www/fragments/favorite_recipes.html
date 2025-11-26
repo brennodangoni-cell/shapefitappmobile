@@ -103,6 +103,59 @@
 .empty-favorites-message{margin:0 1rem;padding:2rem 1.5rem;border-radius:16px;text-align:center}.empty-favorites-message i{font-size:2.5rem;color:var(--accent-orange);margin-bottom:1rem}.empty-favorites-message p{margin:0;color:var(--text-secondary);line-height:1.5}
 
 /* ===== MODAL SHAPEFIT (COMPACTO) ===== */
+/* Prevenir scroll quando modal está aberto - BLOQUEIO TOTAL */
+body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    touch-action: none !important;
+    -webkit-overflow-scrolling: none !important;
+    overscroll-behavior: none !important;
+    -webkit-overscroll-behavior: none !important;
+    pointer-events: none !important;
+}
+
+body.modal-open html {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    touch-action: none !important;
+    overscroll-behavior: none !important;
+}
+
+body.modal-open .app-container,
+body.modal-open .container {
+    overflow: hidden !important;
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+    touch-action: none !important;
+    -webkit-overflow-scrolling: none !important;
+    overscroll-behavior: none !important;
+    -webkit-overscroll-behavior: none !important;
+    pointer-events: none !important;
+    position: relative !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+}
+
+body.modal-open .app-container *,
+body.modal-open .container * {
+    pointer-events: none !important;
+    touch-action: none !important;
+}
+
+body.modal-open .modal-overlay {
+    pointer-events: auto !important;
+}
+
+body.modal-open .modal-overlay * {
+    pointer-events: auto !important;
+}
+
 .modal-overlay {
     position: fixed !important;
     inset: 0 !important;
@@ -111,7 +164,6 @@
     z-index: 2000 !important;
     opacity: 0;
     visibility: hidden;
-    transition: all .3s ease;
 }
 
 .modal-overlay.visible {
@@ -131,7 +183,6 @@
     border-top-right-radius: 30px;
     border-top: 1px solid rgba(255,255,255,0.1);
     transform: translateY(100%);
-    transition: transform .35s cubic-bezier(.25,1,.5,1);
     box-shadow: 0 -12px 52px rgba(0,0,0,0.35);
     display: flex;
     flex-direction: column;
@@ -451,7 +502,7 @@
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/bottom-nav.js"></script>
 <script src="/https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="/https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+<!-- ✅ Lottie removido - só main_app usa -->
 <script src="/assets/js/pages/favorite_recipes/favorite_recipes_inline_0.js"></script>
 <script src="/assets/js/pages/favorite_recipes/favorite_recipes_inline_1.js"></script>
 <script src="/assets/js/pages/favorite_recipes/favorite_recipes_inline_2.js"></script>

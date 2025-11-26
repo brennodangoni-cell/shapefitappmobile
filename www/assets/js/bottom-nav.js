@@ -76,20 +76,63 @@
             return;
         }
         
-        // Interpolação suave
+        // ✅ DESABILITAR COMPLETAMENTE DURANTE TRANSIÇÕES
+        if (document.body.classList.contains('page-transitioning') || 
+            document.documentElement.classList.contains('page-transitioning') ||
+            document.body.classList.contains('page-loading') ||
+            document.body.classList.contains('page-ready')) {
+            state.isAnimating = false;
+            if (state.rafId) {
+                cancelAnimationFrame(state.rafId);
+                state.rafId = null;
+            }
+            // ✅ FORÇAR FIXO - SEM QUALQUER TRANSFORM
+            state.navContainer.style.cssText = `
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                transform: none !important;
+                -webkit-transform: none !important;
+                transition: none !important;
+                animation: none !important;
+                will-change: auto !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                display: block !important;
+            `;
+            return;
+        }
+        
+        // Interpolação suave (apenas quando NÃO está em transição)
         const diff = state.targetOffset - state.currentOffset;
         
         if (Math.abs(diff) < 0.5) {
             state.currentOffset = state.targetOffset;
             state.isAnimating = false;
+            // ✅ Se offset é 0, usar none em vez de transform
+            if (state.currentOffset === 0) {
+                state.navContainer.style.transform = 'none';
+                state.navContainer.style.webkitTransform = 'none';
+            } else {
+                state.navContainer.style.transform = `translateY(${state.currentOffset}px) translateZ(0)`;
+                state.navContainer.style.webkitTransform = `translateY(${state.currentOffset}px) translateZ(0)`;
+            }
         } else {
             // Lerp com fator mais alto durante touch
             const lerpFactor = state.isTouching ? 0.5 : 0.25;
             state.currentOffset += diff * lerpFactor;
             state.rafId = requestAnimationFrame(animationLoop);
+            
+            // ✅ Se offset é 0, usar none em vez de transform
+            if (Math.abs(state.currentOffset) < 0.5) {
+                state.navContainer.style.transform = 'none';
+                state.navContainer.style.webkitTransform = 'none';
+            } else {
+                state.navContainer.style.transform = `translateY(${state.currentOffset}px) translateZ(0)`;
+                state.navContainer.style.webkitTransform = `translateY(${state.currentOffset}px) translateZ(0)`;
+            }
         }
-        
-        state.navContainer.style.transform = `translateY(${state.currentOffset}px) translateZ(0)`;
     }
     
     function startAnimation() {
@@ -189,6 +232,20 @@
         if (state.navContainer.classList.contains('hidden')) return;
         if (state.isTouching) return;
         
+        // ✅ DESABILITAR COMPLETAMENTE DURANTE TRANSIÇÕES
+        if (document.body.classList.contains('page-transitioning') ||
+            document.body.classList.contains('page-loading') ||
+            document.body.classList.contains('page-ready')) {
+            // ✅ FORÇAR FIXO DURANTE TRANSIÇÕES
+            state.navContainer.style.cssText = `
+                position: fixed !important;
+                bottom: 0 !important;
+                transform: none !important;
+                -webkit-transform: none !important;
+            `;
+            return;
+        }
+        
         const currentScrollY = state.scrollContainer.scrollTop;
         const deltaY = currentScrollY - state.lastScrollY;
         
@@ -242,7 +299,7 @@
         const pageName = getPageNameFromPath(path);
         const activeTab = pageMap[pageName] || 'home';
         
-        console.log('[BottomNav] Página:', pageName, '-> Tab:', activeTab);
+        // ✅ Log removido para performance
         
         const navItems = document.querySelectorAll('.bottom-nav .nav-item');
         
@@ -274,13 +331,24 @@
         // Medir altura do nav
         state.navHeight = state.navContainer.offsetHeight || 70;
         
-        // Garantir que começa visível
+        // ✅ Garantir que começa visível e 100% fixo
         state.currentOffset = 0;
         state.targetOffset = 0;
-        state.navContainer.style.transform = 'translateY(0) translateZ(0)';
-        
-        // Aplicar will-change para GPU
-        state.navContainer.style.willChange = 'transform';
+        // ✅ FORÇAR FIXO COM CSS INLINE
+        state.navContainer.style.cssText = `
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            transform: none !important;
+            -webkit-transform: none !important;
+            transition: none !important;
+            animation: none !important;
+            will-change: auto !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+        `;
 
         // Touch events no container de scroll
         state.scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -291,6 +359,22 @@
         // Scroll event com throttle
         let lastScrollTime = 0;
         state.scrollContainer.addEventListener('scroll', () => {
+            // ✅ DESABILITAR COMPLETAMENTE DURANTE TRANSIÇÕES
+            if (document.body.classList.contains('page-transitioning') ||
+                document.body.classList.contains('page-loading') ||
+                document.body.classList.contains('page-ready')) {
+                // ✅ FORÇAR FIXO
+                if (state.navContainer) {
+                    state.navContainer.style.cssText = `
+                        position: fixed !important;
+                        bottom: 0 !important;
+                        transform: none !important;
+                        -webkit-transform: none !important;
+                    `;
+                }
+                return;
+            }
+            
             const now = performance.now();
             if (now - lastScrollTime > 16 && !state.isTouching) { // ~60fps
                 lastScrollTime = now;
@@ -301,7 +385,7 @@
         // Atualizar item ativo inicial
         updateActiveMenuItem();
         
-        console.log('[BottomNav] ✅ Inicializado (navHeight:', state.navHeight + 'px)');
+        // ✅ Log removido para performance
     }
 
     // ============================================
@@ -328,20 +412,47 @@
         // Remover classe auth-initial quando sair de página de auth
         document.documentElement.classList.remove('auth-initial');
         
-        // Resetar estado de scroll
+        // ✅ PARAR COMPLETAMENTE QUALQUER ANIMAÇÃO
+        if (state.rafId) {
+            cancelAnimationFrame(state.rafId);
+            state.rafId = null;
+        }
+        state.isAnimating = false;
+        
+        // ✅ DESABILITAR COMPLETAMENTE O SISTEMA DE SCROLL HIDE/SHOW
+        state.isTouching = false;
         state.lastScrollY = 0;
         state.velocity = 0;
+        state.currentOffset = 0;
+        state.targetOffset = 0;
         
         if (shouldHideNav(pageName)) {
+            // ✅ Apenas para auth pages - esconder
             if (state.navContainer) {
                 state.navContainer.classList.add('hidden');
             }
         } else {
+            // ✅ SEMPRE MOSTRAR E MANTER FIXO
             if (state.navContainer) {
                 state.navContainer.classList.remove('hidden');
-                // Recalcular altura e mostrar imediatamente
+                // Recalcular altura
                 state.navHeight = state.navContainer.offsetHeight || 70;
-                showNav(true); // immediate = true
+                // ✅ FORÇAR POSIÇÃO FIXA - SEMPRE VISÍVEL
+                state.navContainer.style.cssText = `
+                    position: fixed !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    transform: translateZ(0) !important;
+                    -webkit-transform: translateZ(0) !important;
+                    transition: none !important;
+                    animation: none !important;
+                    will-change: transform !important;
+                    z-index: 1000 !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                    display: block !important;
+                `;
             }
             updateActiveMenuItem(path);
         }

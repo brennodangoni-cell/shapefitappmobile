@@ -20,10 +20,10 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 16px 16px 0 16px;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) 24px calc(100px + env(safe-area-inset-bottom, 0px)) 24px;
     max-width: 100%;
     box-sizing: border-box;
-    padding-bottom: 0 !important;
+    min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
 }
 
 /* Botão salvar - pequeno respiro antes do menu */
@@ -651,7 +651,7 @@
     }
     
     .ep-container {
-        padding: 12px 10px 120px 10px;
+        padding: calc(12px + env(safe-area-inset-top, 0px)) 10px calc(120px + env(safe-area-inset-bottom, 0px)) 10px;
     }
     
     .ep-card {

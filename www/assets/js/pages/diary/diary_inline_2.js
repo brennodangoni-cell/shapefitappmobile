@@ -151,6 +151,9 @@ async function loadDiaryData(date) {
             };
         }
         
+        // ✅ PÁGINA PRONTA - Remover skeleton
+        if (window.PageLoader) window.PageLoader.ready();
+        
     } catch (error) {
         console.error('Erro ao carregar dados do diário:', error);
         document.getElementById('meals-list').innerHTML = `
@@ -160,6 +163,8 @@ async function loadDiaryData(date) {
                 <p>${error.message}</p>
             </div>
         `;
+        // ✅ Mesmo com erro, remover skeleton
+        if (window.PageLoader) window.PageLoader.ready();
     }
 }
 

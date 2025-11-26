@@ -23,11 +23,13 @@
 html {
     height: 100%;
     width: 100%;
-    /* FUNDO SÓLIDO - sempre visível */
+    /* ✅ FUNDO SÓLIDO - sempre visível, sem gradientes durante transição */
     background: #121212 !important;
     overscroll-behavior: contain;
     /* iOS: permitir scroll nativo */
     overflow: hidden;
+    /* ✅ Sem transições no background */
+    transition: none !important;
 }
 
 /* BODY - NÃO USAR position: fixed (causa barra cinza no iOS) */
@@ -38,7 +40,7 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    /* FUNDO CINZA com gradientes sutis */
+    /* ✅ FUNDO SÓLIDO - sem gradientes durante transição */
     background: #121212 !important;
     background-image: 
         radial-gradient(circle at 90% 90%, rgba(60, 60, 60, 0.3) 0%, transparent 50%),
@@ -49,9 +51,20 @@ body {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
-    touch-action: manipulation;
+    /* ✅ GARANTIR TOUCH FUNCIONA - permitir pan-y para scroll */
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
     /* iOS: Garantir que o body preencha toda a tela */
     position: relative;
+    /* ✅ Sem transições no background */
+    transition: none !important;
+}
+
+/* ✅ Durante transição, background 100% sólido */
+body.page-transitioning,
+html.page-transitioning {
+    background: #121212 !important;
+    background-image: none !important;
 }
 
 /* Classes de container dentro dos fragments */
@@ -67,6 +80,12 @@ body {
     background: transparent;
     /* iOS: min-height para conteúdo pequeno */
     min-height: 100%;
+    /* ✅ GARANTIR TOUCH FUNCIONA */
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
+    pointer-events: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
 
 .app-container::-webkit-scrollbar, .container::-webkit-scrollbar { 
@@ -78,10 +97,41 @@ body {
     overscroll-behavior-x: none;
 }
 
+/* ✅ EXCEÇÃO: CARROSSEL DE SUGESTÕES PRECISA DE OVERSCROLL HORIZONTAL */
+.suggestions-carousel,
+.carousel-wrapper {
+    overscroll-behavior-x: auto !important;
+}
+
 /* Previne que qualquer elemento cause scroll horizontal */
 body, html, .app-container, .container {
     max-width: 100vw;
     overflow-x: hidden;
+}
+
+/* ✅ FORÇA O CONTAINER A PERMITIR QUE O CARROSSEL SAIA */
+.app-container:has(.card-suggestions),
+.container:has(.card-suggestions),
+.dashboard-grid:has(.card-suggestions) {
+    overflow-x: visible !important;
+    contain: none !important;
+}
+
+/* Fallback para navegadores sem :has() */
+@supports not selector(:has(*)) {
+    .app-container,
+    .dashboard-grid {
+        overflow-x: visible !important;
+    }
+}
+
+/* ✅ GARANTE QUE O CARD E SEUS FILHOS POSSAM SAIR DO CONTAINER */
+.card-suggestions,
+.card-suggestions *,
+.card-suggestions .carousel-wrapper,
+.card-suggestions .suggestions-carousel {
+    contain: none !important;
+    isolation: auto !important;
 }
 
 /* iOS: Garantir que elementos fixed usem safe-area corretamente */

@@ -178,9 +178,8 @@
                         return null;
                     }
                     
-                    // Ler resposta como texto primeiro para debug
+                    // Ler resposta como texto primeiro
                     const text = await responseClone.text();
-                    console.log('📥 [Ranking] Resposta da API (primeiros 500 chars):', text.substring(0, 500));
                     
                     // Tentar parsear JSON
                     let result;

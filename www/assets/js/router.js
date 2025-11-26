@@ -1,6 +1,6 @@
 /**
- * Router SPA - Versão Reload (Resolve o travamento "Carregando...")
- * Diferencia scripts globais de scripts de página para forçar re-execução.
+ * Router SPA - Versão com View Transitions
+ * Transições fluidas entre páginas e skeleton loading para evitar flash de conteúdo vazio
  */
 
 (function() {
@@ -20,8 +20,14 @@
         container: null,
         bottomNav: null,
         history: [],
-        loading: false
+        loading: false,
+        isNative: typeof window.Capacitor !== 'undefined',
+        isGoingBack: false,
+        prefetchedPages: new Map()
     };
+    
+    // === DETECTAR SUPORTE A VIEW TRANSITIONS ===
+    const supportsViewTransitions = 'startViewTransition' in document;
     
     const PAGES_WITHOUT_MENU = [
         'auth_login', 'auth_register', 'onboarding_onboarding', 'scan_barcode', 'offline'
@@ -75,6 +81,26 @@
         
         // IMPORTANTE: Setar o currentPath ANTES de carregar para View Transitions funcionarem
         router.currentPath = initialPath;
+        
+        // ✅ MOSTRAR SKELETON IMEDIATAMENTE NO CARREGAMENTO INICIAL (F5)
+        const pageName = initialPath.split('/').pop().replace('.html', '').split('?')[0];
+        showSkeleton(pageName);
+        
+        // ✅ GARANTIR BACKGROUND VISÍVEL
+        if (router.container) {
+            router.container.style.cssText = `
+                background: #121212 !important;
+                background-color: #121212 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            `;
+        }
+        document.body.style.cssText = `
+            background: #121212 !important;
+            background-color: #121212 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        `;
         
         loadPage(initialPath, false);
     }
@@ -145,15 +171,76 @@
         return `/fragments/${path}${queryString}`;
     }
     
-    // Páginas de autenticação para View Transitions
+    // Páginas de autenticação para View Transitions especiais
     const AUTH_PAGES = ['auth_login', 'auth_register'];
     
     function isAuthPage(pageName) {
         return AUTH_PAGES.includes(pageName);
     }
     
-    function navigateTo(fragmentPath) {
+    // === USAR PAGELOADER SE DISPONÍVEL ===
+    function showSkeleton(pageName) {
+        if (!router.container) return;
+        
+        // ✅ GARANTIR BACKGROUND VISÍVEL IMEDIATAMENTE
+        router.container.style.cssText = `
+            background: #121212 !important;
+            background-color: #121212 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        `;
+        
+        // ✅ SEMPRE mostrar skeleton primeiro - SEM DELAY
+        router.container.classList.add('page-loading');
+        router.container.classList.remove('page-ready', 'page-loaded');
+        
+        // ✅ REMOVER CONTEÚDO ANTIGO IMEDIATAMENTE
+        const oldContent = router.container.querySelector('.page-root, .app-container');
+        if (oldContent) {
+            oldContent.style.display = 'none';
+            oldContent.remove();
+        }
+        
+        // ✅ REMOVER SKELETON ANTIGO SE EXISTIR
+        const oldSkeleton = router.container.querySelector('.page-skeleton');
+        if (oldSkeleton) {
+            oldSkeleton.remove();
+        }
+        
+        // Usar o PageLoader se estiver disponível
+        if (window.PageLoader) {
+            window.PageLoader.start(pageName);
+        } else {
+            // ✅ FALLBACK: mostrar skeleton básico IMEDIATAMENTE
+            const fallbackSkeleton = document.createElement('div');
+            fallbackSkeleton.className = 'page-skeleton';
+            fallbackSkeleton.innerHTML = '<div class="skeleton-safe-area"></div><div class="skeleton" style="height:200px;margin:16px;"></div>';
+            fallbackSkeleton.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                z-index: 999 !important;
+                background: #121212 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
+                padding-left: 16px !important;
+                padding-right: 16px !important;
+                padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            `;
+            router.container.appendChild(fallbackSkeleton);
+        }
+    }
+    
+    function navigateTo(fragmentPath, options = {}) {
         if (router.loading) return;
+        
+        const { isBack = false } = options;
+        router.isGoingBack = isBack;
         
         // Separar path da query string
         const [basePath, queryString] = fragmentPath.split('?');
@@ -166,8 +253,6 @@
         if (basePath.startsWith('/') && !basePath.startsWith('/fragments/')) {
             // Extrair nome base (remover apenas a primeira barra)
             const pathName = basePath.substring(1);
-            
-            console.log('[Router] pathName extraído:', pathName);
             
             // Mapear URLs amigáveis para fragmentos reais
             const reverseMap = {
@@ -212,7 +297,6 @@
                 'scan_barcode': '/fragments/scan_barcode.html'
             };
             actualFragmentPath = reverseMap[pathName] || `/fragments/${pathName}.html`;
-            console.log('[Router] actualFragmentPath:', actualFragmentPath, '| reverseMap encontrou:', !!reverseMap[pathName]);
             prettyUrl = basePath + qs; // Manter URL pretty com query string
         } else {
             // É um fragmentPath, converter para pretty URL
@@ -234,21 +318,59 @@
         
         router.currentPath = actualFragmentPath;
         
-        // Usar View Transitions API para transições auth (se suportado)
-        if (isAuthTransition && document.startViewTransition) {
-            // Marcar que estamos em transição auth (não animar a logo de novo)
-            window._authTransition = true;
-            document.startViewTransition(() => {
-                return loadPage(actualFragmentPath + qs, false);
-            });
-        } else {
-            window._authTransition = false;
-            loadPage(actualFragmentPath + qs, true);
+        // ✅ REMOVER TODAS AS TRANSIÇÕES - SEM CLASSES DE TRANSIÇÃO
+        
+        // ✅ MOSTRAR SKELETON IMEDIATAMENTE (ANTES DE QUALQUER COISA)
+        // ✅ IMPORTANTE: mostrar ANTES de qualquer fetch/load
+        showSkeleton(targetPageName);
+        
+        // ✅ FORÇAR BOTTOM NAV SEMPRE VISÍVEL E FIXO
+        const bottomNav = document.getElementById('bottom-nav-container');
+        if (bottomNav) {
+            // ✅ NUNCA ESCONDER - SEMPRE VISÍVEL
+            bottomNav.classList.remove('hidden');
+            bottomNav.style.cssText = `
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                transform: none !important;
+                -webkit-transform: none !important;
+                transition: none !important;
+                animation: none !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                display: block !important;
+                z-index: 1000 !important;
+            `;
         }
+        
+        // ✅ GARANTIR BACKGROUND SEMPRE VISÍVEL
+        document.body.style.cssText = `
+            background: #121212 !important;
+            background-color: #121212 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        `;
+        document.documentElement.style.cssText = `
+            background: #121212 !important;
+            background-color: #121212 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        `;
+        
+        // ✅ SEM VIEW TRANSITIONS - CARREGAR DIRETO
+        window._authTransition = isAuthTransition;
+        loadPage(actualFragmentPath + qs, false);
     }
     
     function handlePopState(event) {
-        loadPage(event.state?.path || '/fragments/main_app.html', false);
+        const path = event.state?.path || '/fragments/main_app.html';
+        const pageName = path.split('/').pop().replace('.html', '').split('?')[0];
+        
+        // ✅ SEM TRANSIÇÕES - APARECER DIRETO
+        showSkeleton(pageName);
+        loadPage(path, false);
     }
     
     async function loadPage(path, showLoading = true) {
@@ -284,31 +406,54 @@
         }
 
         try {
-            if (showLoading) router.container.classList.add('page-loading');
-            
             // Remover query string para extrair nome da página
             const pathWithoutQuery = path.split('?')[0];
             const pageName = pathWithoutQuery.split('/').pop().replace('.html', '');
-            const isAuthPage = PAGES_WITHOUT_MENU.includes(pageName);
+            const isAuthPageCheck = PAGES_WITHOUT_MENU.includes(pageName);
             
             if (router.bottomNav) {
-                if (isAuthPage) {
-                    router.bottomNav.style.display = 'none';
+                if (isAuthPageCheck) {
+                    // ✅ Apenas esconder para auth, mas manter fixo
                     router.bottomNav.classList.add('hidden');
                     document.body.classList.add('auth-mode');
                 } else {
-                    router.bottomNav.style.display = 'block';
+                    // ✅ SEMPRE MOSTRAR E MANTER FIXO
                     router.bottomNav.classList.remove('hidden');
+                    router.bottomNav.style.cssText = `
+                        position: fixed !important;
+                        bottom: 0 !important;
+                        left: 0 !important;
+                        right: 0 !important;
+                        transform: translateZ(0) !important;
+                        -webkit-transform: translateZ(0) !important;
+                        opacity: 1 !important;
+                        visibility: visible !important;
+                        display: block !important;
+                        z-index: 1000 !important;
+                    `;
                     document.body.classList.remove('auth-mode');
                 }
             }
 
-            // Fetch usa apenas o path sem query string (arquivo estático)
-            const response = await fetch(pathWithoutQuery);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const html = await response.text();
+            // Verificar cache de prefetch
+            let html;
+            if (router.prefetchedPages.has(pathWithoutQuery)) {
+                html = router.prefetchedPages.get(pathWithoutQuery);
+                router.prefetchedPages.delete(pathWithoutQuery);
+            } else {
+                // Fetch usa apenas o path sem query string (arquivo estático)
+                const response = await fetch(pathWithoutQuery);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                html = await response.text();
+            }
             
-            router.container.innerHTML = '';
+            // ✅ NÃO limpar container ainda - skeleton já está lá
+            // Remover apenas conteúdo antigo (não o skeleton)
+            const oldContent = router.container.querySelector('.page-root, .app-container');
+            if (oldContent) {
+                oldContent.style.display = 'none';
+                oldContent.remove();
+            }
             
             const scripts = extractScriptsFromHTML(html);
             let htmlWithoutScripts = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
@@ -320,7 +465,14 @@
             tempDiv.innerHTML = htmlWithoutScripts;
             let content = tempDiv.querySelector('.page-root') || tempDiv;
             
-            router.container.appendChild(content.cloneNode(true));
+            // ✅ Inserir conteúdo mas mantê-lo COMPLETAMENTE ESCONDIDO
+            const clonedContent = content.cloneNode(true);
+            clonedContent.style.cssText = `
+                display: none !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+            `;
+            router.container.appendChild(clonedContent);
             
             // Adicionar animação apenas se NÃO for transição entre páginas auth
             const logo = router.container.querySelector('.login-logo');
@@ -342,18 +494,29 @@
             await loadScriptsSequentially(scripts);
             
             window.dispatchEvent(new CustomEvent('fragmentReady', { detail: { path, container: router.container } }));
-            window.dispatchEvent(new CustomEvent('pageLoaded', { detail: { path, container: router.container } }));
+            
+            // ✅ NÃO disparar pageLoaded ainda - esperar PageLoader.ready()
+            // window.dispatchEvent(new CustomEvent('pageLoaded', { detail: { path, container: router.container } }));
             
             window.scrollTo(0, 0);
             
         } catch (error) {
             console.error('[Router] Erro:', path, error);
             if (path.includes('main_app')) window.location.href = '/';
+            // Em caso de erro, forçar ready
+            if (window.PageLoader) window.PageLoader.forceReady();
         } finally {
             clearTimeout(safetyTimer);
-            router.container.classList.remove('page-loading');
-            router.container.classList.add('page-loaded');
             router.loading = false;
+            
+            // FALLBACK: Se a página não chamar PageLoader.ready() em 800ms,
+            // assumir que está pronta (para páginas antigas sem integração)
+            setTimeout(() => {
+                if (window.PageLoader && window.PageLoader.isLoading()) {
+                    // ✅ Log removido para performance
+                    window.PageLoader.ready();
+                }
+            }, 800);
         }
     }
     
@@ -369,10 +532,44 @@
         }
         const inlineRegex = /<script(?:\s+[^>]*)?>([\s\S]*?)<\/script>/gi;
         while ((match = inlineRegex.exec(html)) !== null) {
-            const content = match[1].trim();
-            if (content && !match[0].includes('src=')) {
-                scripts.push({ type: 'inline', src: null, content: content });
+            // Pula se tiver src (já foi capturado pelo regex externo)
+            if (match[0].includes('src=')) continue;
+            
+            // Pula scripts com type específico (module, importmap, JSON, template)
+            if (match[0].includes('type="module"') || 
+                match[0].includes("type='module'") ||
+                match[0].includes('type="importmap"') ||
+                match[0].includes("type='importmap'") ||
+                match[0].includes('type="text/template"') ||
+                match[0].includes("type='text/template'") ||
+                match[0].includes('type="application/json"') ||
+                match[0].includes("type='application/json'")) {
+                continue;
             }
+            
+            const content = match[1].trim();
+            
+            // Ignora scripts vazios ou que só têm comentários/whitespace
+            if (!content || content.length === 0 || /^[\s\n\r]*$/.test(content)) {
+                continue;
+            }
+            
+            // Ignora scripts que são JSON (import maps ou outros JSON)
+            if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+                // Verifica se parece JSON (tem "imports", "scopes", etc)
+                if (content.includes('"imports"') || 
+                    content.includes('"scopes"') ||
+                    content.includes('"exports"')) {
+                    continue; // É um import map ou JSON, não JavaScript
+                }
+            }
+            
+            // Ignora scripts que são apenas comentários HTML
+            if (/^[\s\n\r]*<!--[\s\S]*-->[\s\n\r]*$/.test(content)) {
+                continue;
+            }
+            
+            scripts.push({ type: 'inline', src: null, content: content });
         }
         return scripts;
     }
@@ -428,7 +625,15 @@
     }
 
     function executeInlineScript(content) {
-        try { new Function(content)(); } catch(e) { console.error(e); }
+        try { 
+            // Remove comentários HTML que podem estar causando problemas
+            const cleanContent = content.replace(/<!--[\s\S]*?-->/g, '').trim();
+            if (!cleanContent) return; // Se não há conteúdo, pula
+            new Function(cleanContent)(); 
+        } catch(e) { 
+            console.error('[Router] Erro ao executar script inline:', e);
+            console.error('[Router] Conteúdo problemático:', content.substring(0, 200));
+        }
     }
 
     function fixPHPValues(html) {
@@ -472,8 +677,53 @@
         });
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-    else init();
+    // === PREFETCH PARA NAVEGAÇÃO RÁPIDA ===
+    function prefetchPage(path) {
+        const pathWithoutQuery = path.split('?')[0];
+        if (router.prefetchedPages.has(pathWithoutQuery)) return;
+        
+        fetch(pathWithoutQuery)
+            .then(res => res.ok ? res.text() : null)
+            .then(html => {
+                if (html) {
+                    router.prefetchedPages.set(pathWithoutQuery, html);
+                    // Limpar cache após 30 segundos
+                    setTimeout(() => router.prefetchedPages.delete(pathWithoutQuery), 30000);
+                }
+            })
+            .catch(() => {});
+    }
     
-    window.SPARouter = { navigate: (p) => navigateTo(p) };
+    // Prefetch links do bottom nav quando hover
+    function setupPrefetch() {
+        if (router.bottomNav) {
+            router.bottomNav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('mouseenter', () => {
+                    const href = link.getAttribute('href');
+                    if (href) prefetchPage(convertToFragmentPath(href));
+                });
+                // Para touch devices
+                link.addEventListener('touchstart', () => {
+                    const href = link.getAttribute('href');
+                    if (href) prefetchPage(convertToFragmentPath(href));
+                }, { passive: true });
+            });
+        }
+    }
+    
+    // Chamar setup de prefetch após init
+    function initWithPrefetch() {
+        init();
+        setTimeout(setupPrefetch, 100);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initWithPrefetch);
+    else initWithPrefetch();
+    
+    window.SPARouter = { 
+        navigate: (p, opts) => navigateTo(p, opts),
+        prefetch: prefetchPage,
+        isNative: router.isNative,
+        get currentPath() { return router.currentPath; }
+    };
 })();

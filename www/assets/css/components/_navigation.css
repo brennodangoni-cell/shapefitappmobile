@@ -5,38 +5,81 @@
    CONTAINER DO BOTTOM NAV
    ============================================ */
 #bottom-nav-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important; /* Abaixo do modal (z-index: 99999) */
     
     /* === GLASSMORPHISM === */
-    background: rgba(25, 25, 25, 0.75);
-    -webkit-backdrop-filter: saturate(180%) blur(25px);
-    backdrop-filter: saturate(180%) blur(25px);
+    background: rgba(25, 25, 25, 0.75) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(25px) !important;
+    backdrop-filter: saturate(180%) blur(25px) !important;
     
     /* Borda sutil no topo */
-    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1) !important;
     
     /* Sombra suave */
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25) !important;
     
-    /* PREENCHER ATÉ A BORDA INFERIOR (safe area) */
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* ✅ COLADO NA BORDA - Safe area apenas no conteúdo interno */
+    padding: 0 !important;
+    margin: 0 !important;
+    top: auto !important;
     
-    /* GPU acceleration */
-    will-change: transform;
-    transform: translateY(0) translateZ(0);
-    -webkit-transform: translateY(0) translateZ(0);
+    /* ✅ FORÇAR FIXO - SEM QUALQUER MOVIMENTO */
+    transform: none !important;
+    -webkit-transform: none !important;
+    translate: none !important;
+    will-change: auto !important;
     
-    /* Sem transição por padrão */
-    transition: none;
+        /* ✅ TRANSIÇÃO SUAVE APENAS QUANDO HIDDEN POR MODAL */
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    animation: none !important;
+    
+    /* ✅ FORÇAR RENDERIZAÇÃO ESTÁTICA */
+    contain: layout style paint !important;
 }
 
-/* Classe para transição suave (snap) */
+/* ✅ PERMITIR TRANSIÇÃO SUAVE QUANDO HIDDEN POR MODAL */
 #bottom-nav-container.smooth-transition {
-    transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+/* ✅ QUANDO MODAL ESTÁ ABERTO - ESCONDER BOTTOM NAV */
+body.modal-open #bottom-nav-container,
+body:has(.modal-overlay.visible) #bottom-nav-container,
+.modal-overlay.visible ~ * #bottom-nav-container,
+.modal-overlay.visible + * #bottom-nav-container {
+    transform: translateY(100%) !important;
+    -webkit-transform: translateY(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    z-index: 999 !important; /* Abaixo do modal */
+}
+
+/* ✅ DURANTE TRANSIÇÕES - GARANTIR 100% FIXO */
+body.page-transitioning #bottom-nav-container,
+html.page-transitioning #bottom-nav-container,
+body.page-loading #bottom-nav-container,
+html.page-loading #bottom-nav-container,
+#bottom-nav-container {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    translate: none !important;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    animation: none !important;
+    will-change: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    top: auto !important;
+    /* ✅ FORÇAR LAYOUT ESTÁTICO */
+    contain: layout style paint !important;
+    /* ✅ PREVENIR QUALQUER MOVIMENTO */
+    pointer-events: auto !important;
 }
 
 /* ============================================
@@ -51,9 +94,10 @@
     justify-content: space-around;
     align-items: center;
     
-    /* Altura fixa */
+    /* Altura fixa + safe area no padding */
     height: 50px;
     padding: 6px 16px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
     
     /* Background transparente */
     background: transparent;
@@ -104,9 +148,22 @@
    ESTADOS ESPECIAIS
    ============================================ */
 
-/* Esconder completamente */
+/* Esconder apenas para auth pages */
 #bottom-nav-container.hidden {
     display: none !important;
+}
+
+/* ✅ GARANTIR QUE NUNCA SOME DURANTE TRANSIÇÕES */
+body.page-transitioning #bottom-nav-container.hidden,
+body.page-loading #bottom-nav-container.hidden {
+    /* Se não for auth, mostrar mesmo com hidden */
+}
+
+/* ✅ SEMPRE VISÍVEL quando não é auth */
+body:not(.auth-mode) #bottom-nav-container:not(.hidden) {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 

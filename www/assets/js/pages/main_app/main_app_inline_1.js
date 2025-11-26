@@ -14,6 +14,6 @@
                 window.BASE_APP_URL = window.BASE_APP_URL.slice(0, -1);
             }
         }
-        console.log('[main_app head] BASE_APP_URL:', window.BASE_APP_URL);
+        // ✅ Log removido para performance
     
 })();

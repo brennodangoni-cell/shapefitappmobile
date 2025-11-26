@@ -47,6 +47,22 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
 
     if (window.navigator.standalone === true) {document.addEventListener('click', function(event) {var target = event.target; while (target && target.nodeName !== 'A') { target = target.parentNode; } if (target && target.nodeName === 'A' && target.target !== '_blank') {event.preventDefault(); window.location.href = target.href;}}, false);}
 
+    // ✅ FUNÇÃO AUXILIAR PARA GARANTIR MODAL CORRETO
+    function ensureModalPosition(modal) {
+        if (!modal) return;
+        // ✅ GARANTIR QUE MODAL ESTÁ NO BODY (fora do container)
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+        // ✅ GARANTIR POSICIONAMENTO CORRETO
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.right = '0';
+        modal.style.bottom = '0';
+        modal.style.zIndex = '99999';
+    }
+
     function showPointsPopup(message) {
         const popup = document.createElement('div');
         popup.className = 'points-popup';
@@ -390,6 +406,8 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
                 // Botão de sono clicado - apenas abre o modal
                 const modal = document.getElementById('sleep-modal-main');
                 if (modal) {
+                    // ✅ GARANTIR POSICIONAMENTO CORRETO
+                    ensureModalPosition(modal);
                     modal.classList.add('modal-visible');
                     document.body.style.overflow = 'hidden';
                     // Event listener global já cuida do fechamento
@@ -505,6 +523,9 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
                     console.error('Modal não encontrado!');
                     return;
                 }
+                
+                // ✅ GARANTIR POSICIONAMENTO CORRETO
+                ensureModalPosition(modal);
                 
                 // Configurar o modal
                 modal.querySelector('h2').textContent = `⏱️ Duração - ${exerciseName}`;

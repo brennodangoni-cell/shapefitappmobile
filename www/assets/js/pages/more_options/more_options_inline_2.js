@@ -89,8 +89,13 @@
                     profileCard.href = './edit_profile.html';
                 }
                 
+                // ✅ PÁGINA PRONTA - Remover skeleton
+                if (window.PageLoader) window.PageLoader.ready();
+                
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
+                // ✅ Mesmo com erro, remover skeleton
+                if (window.PageLoader) window.PageLoader.ready();
             }
         }
         

@@ -87,7 +87,7 @@ function openCheckinModal() {
                 messagesContainer.style.paddingBottom = '100px';
             }
             
-            console.log('[Check-in] Scroll touch configurado - scrollHeight:', messagesContainer.scrollHeight, 'clientHeight:', messagesContainer.clientHeight);
+            // Scroll touch configurado
         }
     }, 100);
     
@@ -142,7 +142,7 @@ function setupCheckinModalEvents() {
         newCloseBtn.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('[Check-in] Botão X clicado');
+            // Botão X clicado
             closeCheckinModal();
             return false;
         };
@@ -150,7 +150,7 @@ function setupCheckinModalEvents() {
         newCloseBtn.ontouchend = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('[Check-in] Botão X tocado');
+            // Botão X tocado
             closeCheckinModal();
             return false;
         };
@@ -192,7 +192,7 @@ function closeCheckinModal() {
     // Salvar progresso antes de fechar o modal
     if (checkinData && Object.keys(checkinResponses).length > 0) {
         saveCheckinProgressToLocalStorage();
-        console.log('[Check-in] Progresso salvo ao fechar modal');
+        // Progresso salvo ao fechar modal
     }
     
     // Forçar fechamento do modal - múltiplas formas para garantir
@@ -205,7 +205,7 @@ function closeCheckinModal() {
     // Restaurar scroll do body
     document.body.classList.remove('checkin-modal-open');
     
-    console.log('[Check-in] Modal fechado - display:', modal.style.display, 'classList:', modal.classList.toString());
+    // Modal fechado
     
     // Não resetar o progresso - manter para continuar depois
 }
@@ -236,13 +236,11 @@ function loadCheckinProgress() {
     if (savedProgress) {
         try {
             const progress = JSON.parse(savedProgress);
-            console.log('[Check-in] Progresso carregado do localStorage:', progress);
-            
+            // Progresso carregado do localStorage
             // Verificar se o progresso é da semana atual
             const savedWeek = progress.week_start || progress.week_date;
             if (savedWeek !== currentWeek) {
-                console.log('[Check-in] Progresso de semana diferente detectado. Limpando localStorage antigo.');
-                console.log('[Check-in] Semana salva:', savedWeek, '| Semana atual:', currentWeek);
+                // Progresso de semana diferente detectado - limpando localStorage antigo
                 // Limpar progresso antigo
                 localStorage.removeItem(storageKey);
                 // Limpar também chaves antigas sem semana (compatibilidade)
@@ -291,12 +289,9 @@ function loadCheckinProgress() {
                 .filter(key => !isNaN(Number(key)))
                 .map(id => Number(id));
             
-            console.log('[Check-in] Respostas salvas localmente:', savedResponses);
-            console.log('[Check-in] IDs de perguntas respondidas:', answeredQuestionIds);
-            
             // Se já temos respostas salvas, restaurar o chat
             if (answeredQuestionIds.length > 0) {
-                console.log('[Check-in] Restaurando chat do progresso salvo localmente...');
+                // Restaurando chat do progresso salvo localmente
                 restoreChatFromProgress();
                 return; // Não precisa buscar do servidor
             }
@@ -321,12 +316,12 @@ function loadCheckinProgress() {
         return response.json();
     })
     .then(data => {
-        console.log('[Check-in] Dados do servidor:', data);
+        // Dados do servidor carregados
         if (data && data.success) {
             // Se o servidor retornou respostas vazias, significa que o checkin já foi completado
             // ou não há progresso salvo. Nesse caso, começar do início
             if (!data.responses || Object.keys(data.responses).length === 0) {
-                console.log('[Check-in] Nenhuma resposta salva encontrada, começando do início');
+                // Nenhuma resposta salva encontrada, começando do início
                 currentQuestionIndex = 0;
                 checkinResponses = {};
                 const textInput = document.getElementById('checkinTextInput');
@@ -348,7 +343,7 @@ function loadCheckinProgress() {
                 answeredQuestionIds = (data.answered_questions || []).map(id => Number(id));
                 checkinResponses = savedResponses;
                 
-                console.log('[Check-in] Restaurando chat do progresso do servidor...');
+                // Restaurando chat do progresso do servidor
                 restoreChatFromProgress();
             }
         } else {
@@ -381,9 +376,7 @@ function restoreChatFromProgress() {
     const messagesDiv = document.getElementById('checkinMessages');
     messagesDiv.innerHTML = ''; // Limpar mensagens anteriores
     
-    console.log('[Check-in] Restaurando chat - Total de perguntas:', checkinData.questions.length);
-    console.log('[Check-in] Perguntas respondidas:', answeredQuestionIds);
-    console.log('[Check-in] Índice atual da pergunta:', currentQuestionIndex);
+    // Restaurando chat
     
     // Garantir que answeredQuestionIds e question.id são do mesmo tipo para comparação
     const answeredQuestionIdsNum = answeredQuestionIds.map(id => Number(id));
@@ -394,7 +387,7 @@ function restoreChatFromProgress() {
         const questionIdNum = Number(question.id);
         
         if (answeredQuestionIdsNum.includes(questionIdNum)) {
-            console.log('[Check-in] Restaurando pergunta:', questionIdNum, question.question_text);
+            // Restaurando pergunta
             // Renderizar pergunta
             addMessage(question.question_text, 'bot');
             
@@ -459,8 +452,7 @@ function restoreChatFromProgress() {
         }
     }
     
-    console.log('[Check-in] Total respondido:', totalAnswered, 'de', checkinData.questions.length);
-    console.log('[Check-in] Próximo índice:', currentQuestionIndex);
+    // Verificando progresso
     
     if (currentQuestionIndex >= checkinData.questions.length || totalAnswered >= checkinData.questions.length) {
         // Todas as perguntas foram respondidas
@@ -543,7 +535,7 @@ function renderNextQuestion() {
             break;
         } else {
             // Pular esta pergunta
-            console.log('Pulando pergunta', question.id, 'devido a condição não atendida');
+            // Pulando pergunta devido a condição não atendida
             currentQuestionIndex++;
         }
     }
@@ -722,11 +714,7 @@ function _saveCheckinProgressToLocalStorage() {
     try {
         const serialized = JSON.stringify(progress);
         localStorage.setItem(storageKey, serialized);
-        console.log('[Check-in] Progresso salvo no localStorage:', {
-            total_responses: Object.keys(responsesCopy).length,
-            current_index: currentQuestionIndex,
-            question_ids: Object.keys(responsesCopy).join(', ')
-        });
+        // Progresso salvo no localStorage
     } catch (error) {
         console.error('[Check-in] Erro ao salvar no localStorage:', error);
         // Se o localStorage estiver cheio, tentar limpar dados antigos
@@ -736,7 +724,7 @@ function _saveCheckinProgressToLocalStorage() {
             // Tentar novamente
             try {
                 localStorage.setItem(storageKey, JSON.stringify(progress));
-                console.log('[Check-in] Progresso salvo após limpeza');
+                // Progresso salvo após limpeza
             } catch (retryError) {
                 console.error('[Check-in] Erro ao salvar após limpeza:', retryError);
             }
@@ -766,7 +754,7 @@ function clearOldCheckinProgress() {
     
     keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log('[Check-in] Removido progresso antigo:', key);
+        // Removido progresso antigo
     });
 }
 
@@ -779,7 +767,7 @@ function clearCheckinProgressFromLocalStorage() {
     
     try {
         localStorage.removeItem(storageKey);
-        console.log('[Check-in] Progresso removido do localStorage');
+        // Progresso removido do localStorage
         
         // Limpar também chave antiga sem semana (compatibilidade)
         const oldKey = `checkin_progress_${checkinData.id}`;
@@ -809,7 +797,7 @@ function clearOldCheckinProgressForConfig(configId, currentWeek) {
     
     keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log('[Check-in] Removido progresso antigo:', key);
+        // Removido progresso antigo
     });
 }
 
@@ -841,7 +829,7 @@ function markCheckinComplete() {
     })
     .then(data => {
         if (data.success) {
-            console.log('Check-in completo!', data);
+            // Check-in completo
             
             // Limpar progresso do localStorage após enviar com sucesso
             clearCheckinProgressFromLocalStorage();
@@ -1173,7 +1161,7 @@ function animatePointsCount(element, startValue, endValue, duration) {
     }
     
     if (!window.showCurrentMission || !window.initializeMissionsCarousel) {
-        console.warn('[Dashboard] Funções de missões não foram carregadas após espera');
+        // Funções de missões não foram carregadas após espera
         // Tentar criar stubs básicos para evitar erros
         if (!window.showCurrentMission) {
             window.showCurrentMission = function() {
@@ -1191,7 +1179,7 @@ function animatePointsCount(element, startValue, endValue, duration) {
         }
         if (!window.initializeMissionsCarousel) {
             window.initializeMissionsCarousel = function() {
-                console.warn('[Dashboard] initializeMissionsCarousel stub chamado - script não carregou');
+                // initializeMissionsCarousel stub chamado
             };
         }
     }
@@ -1210,14 +1198,13 @@ function animatePointsCount(element, startValue, endValue, duration) {
     }
     
     const BASE_URL = window.BASE_APP_URL;
-    console.log('[Dashboard] BASE_URL:', BASE_URL);
-    console.log('[Dashboard] Token:', getAuthToken() ? 'SIM' : 'NÃO');
+    // ✅ Logs removidos para performance
     
     // Verificar se há token na URL (vindo do login.php)
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
     if (tokenFromUrl) {
-        console.log('Token encontrado na URL, salvando...');
+        // ✅ Log removido para performance
         // Salvar token no localStorage
         setAuthToken(tokenFromUrl);
         // Remover token da URL
@@ -1225,50 +1212,39 @@ function animatePointsCount(element, startValue, endValue, duration) {
     }
     
     // Verificar autenticação
-    console.log('Verificando autenticação...');
+    // ✅ Logs removidos para performance
     const authenticated = await requireAuth();
-    console.log('Autenticado?', authenticated);
     if (!authenticated) {
-        console.log('Não autenticado, redirecionando...');
         return;
     }
     
     try {
         // Carregar dados do dashboard (usar URL relativa para proxy)
-        console.log('[Dashboard] Carregando dados de: /api/get_dashboard_data.php');
+        // ✅ Log removido para performance
         const response = await authenticatedFetch('/api/get_dashboard_data.php');
         if (!response) {
             console.error('Response é null - token inválido ou erro de autenticação');
             return;
         }
         
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers.get('content-type'));
-        
-        // Clonar a resposta para poder ler como texto E como JSON
-        const responseClone = response.clone();
-        
-        // Ler como texto para debug (sem consumir a resposta original)
-        const responseText = await responseClone.text();
-        console.log('Response text (primeiros 500 chars):', responseText.substring(0, 500));
-        
         // Verificar se a resposta é JSON
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
+            const responseText = await response.clone().text();
             console.error('Resposta não é JSON. Conteúdo completo:', responseText);
             throw new Error('A API retornou um formato inválido. Verifique o console para mais detalhes.');
         }
         
-        // Tentar fazer parse do JSON da resposta original
+        // Tentar fazer parse do JSON
         let result;
         try {
             result = await response.json();
         } catch (parseError) {
+            const responseText = await response.clone().text();
             console.error('Erro ao fazer parse do JSON:', parseError);
-            console.error('Texto recebido:', responseText);
             throw new Error('Resposta da API não é JSON válido. Verifique o console.');
         }
-        console.log('Result:', result);
+        // ✅ Log removido para performance
         
         if (!result.success) {
             throw new Error(result.message || 'Erro ao carregar dados');
@@ -1276,11 +1252,18 @@ function animatePointsCount(element, startValue, endValue, duration) {
         
         const data = result.data;
         
-        // Renderizar dashboard
-        renderDashboard(data);
+        // ✅ RENDERIZAÇÃO INCREMENTAL - Não bloquear thread
+        renderDashboardOptimized(data).catch(err => {
+            console.error('Erro na renderização incremental:', err);
+            // Fallback: renderização direta
+            renderDashboard(data);
+        });
         
         // Mostrar container
         document.getElementById('dashboard-container').style.display = 'block';
+        
+        // ✅ PÁGINA PRONTA - Remover skeleton APÓS renderização completa
+        if (window.PageLoader) window.PageLoader.ready();
         
     } catch (error) {
         console.error('Erro ao carregar dashboard:', error);
@@ -1293,114 +1276,147 @@ function animatePointsCount(element, startValue, endValue, duration) {
             </div>
         `;
         document.getElementById('dashboard-container').style.display = 'block';
+        
+        // ✅ Mesmo com erro, remover skeleton
+        if (window.PageLoader) window.PageLoader.ready();
     }
 })();
 
-function renderDashboard(data) {
-    // Atualizar pontos
-    const pointsDisplay = document.getElementById('user-points-display');
-    if (pointsDisplay && data.points !== undefined) {
-        pointsDisplay.textContent = new Intl.NumberFormat('pt-BR').format(data.points);
-    }
-    
-    // Atualizar avatar (usar domínio remoto para imagens + cache-busting)
-    const IMAGES_BASE_URL = 'https://appshapefit.com';
-    const cacheBuster = Date.now();
-    const profileIcon = document.getElementById('profile-icon-link');
-    if (profileIcon && data.profile_image) {
-        const img = profileIcon.querySelector('img') || document.createElement('img');
-        img.src = `${IMAGES_BASE_URL}/assets/images/users/${data.profile_image}?t=${cacheBuster}`;
-        img.alt = 'Foto de Perfil';
-        img.onerror = function() {
-            // Se a imagem falhar, tentar thumbnail
-            this.onerror = null;
-            this.src = `${IMAGES_BASE_URL}/assets/images/users/thumb_${data.profile_image}?t=${cacheBuster}`;
-            this.onerror = function() {
-                // Se thumbnail também falhar, mostrar ícone
-                this.style.display = 'none';
-                const icon = profileIcon.querySelector('i') || document.createElement('i');
-                icon.className = 'fas fa-user';
-                icon.style.display = 'flex';
-                if (!profileIcon.querySelector('i')) {
-                    profileIcon.appendChild(icon);
+/**
+ * ✅ RENDERIZAÇÃO OTIMIZADA - Incremental com requestAnimationFrame
+ * Não bloqueia o thread principal, mantém skeleton fluido
+ */
+async function renderDashboardOptimized(data) {
+    return new Promise((resolve) => {
+        let step = 0;
+        const steps = [
+            // Passo 1: Elementos críticos (header)
+            () => {
+                const pointsDisplay = document.getElementById('user-points-display');
+                if (pointsDisplay && data.points !== undefined) {
+                    pointsDisplay.textContent = new Intl.NumberFormat('pt-BR').format(data.points);
                 }
-            };
-        };
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        if (!profileIcon.querySelector('img')) {
-            profileIcon.innerHTML = '';
-            profileIcon.appendChild(img);
-        }
-    }
-    
-    // Renderizar card de peso
-    renderWeightCard(data);
-    
-    // Renderizar hidratação
-    renderHydration(data);
-    
-    // Renderizar consumo
-    renderConsumption(data);
-    
-    // Renderizar rotinas/missões
-    renderRoutines(data);
-    
-    // Renderizar ranking
-    renderRanking(data);
-    
-    // Renderizar sugestões de refeições
-    renderMealSuggestions(data);
-    
-    // Renderizar desafios
-    renderChallenges(data);
-    
-    // Mostrar botão de check-in se disponível
-    if (data.available_checkin) {
-        const checkinBtn = document.getElementById('checkin-floating-btn');
-        const checkinModal = document.getElementById('checkinModal');
-        
-        if (checkinBtn) {
-            checkinBtn.style.display = 'flex';
-        }
-        
-        // Inicializar dados do checkin
-        if (data.available_checkin) {
-            window.checkinData = data.available_checkin;
-            checkinData = data.available_checkin;
-            
-            // Atualizar título do modal se existir
-            const checkinTitle = document.getElementById('checkin-title');
-            if (checkinTitle && data.available_checkin.name) {
-                checkinTitle.textContent = data.available_checkin.name;
+                
+                // Avatar
+                const IMAGES_BASE_URL = 'https://appshapefit.com';
+                const cacheBuster = Date.now();
+                const profileIcon = document.getElementById('profile-icon-link');
+                if (profileIcon && data.profile_image) {
+                    const img = profileIcon.querySelector('img') || document.createElement('img');
+                    img.src = `${IMAGES_BASE_URL}/assets/images/users/${data.profile_image}?t=${cacheBuster}`;
+                    img.alt = 'Foto de Perfil';
+                    img.onerror = function() {
+                        this.onerror = null;
+                        this.src = `${IMAGES_BASE_URL}/assets/images/users/thumb_${data.profile_image}?t=${cacheBuster}`;
+                        this.onerror = function() {
+                            this.style.display = 'none';
+                            const icon = profileIcon.querySelector('i') || document.createElement('i');
+                            icon.className = 'fas fa-user';
+                            icon.style.display = 'flex';
+                            if (!profileIcon.querySelector('i')) {
+                                profileIcon.appendChild(icon);
+                            }
+                        };
+                    };
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    if (!profileIcon.querySelector('img')) {
+                        profileIcon.innerHTML = '';
+                        profileIcon.appendChild(img);
+                    }
+                }
+            },
+            // Passo 2: Cards principais
+            () => {
+                renderWeightCard(data);
+                renderHydration(data);
+            },
+            // Passo 3: Consumo
+            () => {
+                renderConsumption(data);
+            },
+            // Passo 4: Rotinas
+            () => {
+                renderRoutines(data);
+            },
+            // Passo 5: Ranking
+            () => {
+                renderRanking(data);
+            },
+            // Passo 6: Sugestões
+            () => {
+                renderMealSuggestions(data);
+            },
+            // Passo 7: Desafios
+            () => {
+                renderChallenges(data);
+            },
+            // Passo 8: Check-in e finalização
+            () => {
+                if (data.available_checkin) {
+                    const checkinBtn = document.getElementById('checkin-floating-btn');
+                    const checkinModal = document.getElementById('checkinModal');
+                    
+                    if (checkinBtn) {
+                        checkinBtn.style.display = 'flex';
+                    }
+                    
+                    if (data.available_checkin) {
+                        window.checkinData = data.available_checkin;
+                        checkinData = data.available_checkin;
+                        
+                        const checkinTitle = document.getElementById('checkin-title');
+                        if (checkinTitle && data.available_checkin.name) {
+                            checkinTitle.textContent = data.available_checkin.name;
+                        }
+                        
+                        if (checkinModal) {
+                            checkinModal.style.display = '';
+                        }
+                    }
+                } else {
+                    const checkinBtn = document.getElementById('checkin-floating-btn');
+                    const checkinModal = document.getElementById('checkinModal');
+                    if (checkinBtn) {
+                        checkinBtn.style.display = 'none';
+                    }
+                    if (checkinModal) {
+                        checkinModal.style.display = 'none';
+                    }
+                }
+                
+                // Inicializar carrossel após tudo renderizado
+                setTimeout(() => {
+                    if (window.initializeMissionsCarousel) {
+                        window.initializeMissionsCarousel();
+                    }
+                }, 100);
+                
+                resolve();
             }
-            
-            // Garantir que o modal está disponível (remover display: none se estiver)
-            if (checkinModal) {
-                checkinModal.style.display = '';
+        ];
+        
+        // ✅ EXECUTAR PASSOS INCREMENTALMENTE COM DELAY ENTRE PASSOS
+        function executeNextStep() {
+            if (step < steps.length) {
+                steps[step]();
+                step++;
+                // ✅ Delay entre passos para não sobrecarregar (5ms = 200fps)
+                setTimeout(() => {
+                    requestAnimationFrame(executeNextStep);
+                }, 5);
             }
         }
-    } else {
-        // Esconder botão e modal se não houver checkin disponível
-        const checkinBtn = document.getElementById('checkin-floating-btn');
-        const checkinModal = document.getElementById('checkinModal');
-        if (checkinBtn) {
-            checkinBtn.style.display = 'none';
-        }
-        if (checkinModal) {
-            checkinModal.style.display = 'none';
-        }
-    }
-    
-    // Inicializar carrossel de missões após renderizar
-    setTimeout(() => {
-        if (window.initializeMissionsCarousel) {
-            window.initializeMissionsCarousel();
-        } else {
-            console.warn('[Dashboard] initializeMissionsCarousel não está disponível ainda');
-        }
-    }, 100);
+        
+        // ✅ Iniciar no próximo frame
+        requestAnimationFrame(executeNextStep);
+    });
+}
+
+// ✅ MANTER FUNÇÃO ORIGINAL PARA COMPATIBILIDADE
+function renderDashboard(data) {
+    renderDashboardOptimized(data);
 }
 
 function renderWeightCard(data) {
@@ -1584,46 +1600,37 @@ function renderRoutines(data) {
     const pendingRoutines = routines.filter(r => r.completion_status != 1);
     let firstPendingIndex = -1;
     
+    // ✅ OTIMIZADO: Um único loop em vez de dois
     routines.forEach((routine, index) => {
         const isCompleted = routine.completion_status == 1;
         if (!isCompleted && firstPendingIndex === -1) {
             firstPendingIndex = index;
         }
-    });
-    
-    routines.forEach((routine, index) => {
-        const isCompleted = routine.completion_status == 1;
+        
+        // ✅ Processar no mesmo loop
         const missionId = routine.id || `routine_${index}`;
         const title = routine.title || 'Tarefa';
         const icon = routine.icon_class || 'fa-check-circle';
         const isExercise = routine.is_exercise == 1;
         const exerciseType = routine.exercise_type || '';
-        const hasDuration = routine.duration_minutes !== null && routine.duration_minutes !== undefined;
-        const duration = routine.duration_minutes || null;
         
-        // Determinar se precisa de duração ou sono (igual ao main_app.php)
+        // Determinar se precisa de duração ou sono
         let isDuration = false;
         let isSleep = false;
         
         if (String(missionId).indexOf('onboarding_') === 0) {
-            // Exercício onboarding - sempre é duração
             isDuration = true;
         } else if (isExercise) {
-            // Verificar se é sono ou duração baseado no exercise_type
             if (exerciseType === 'sleep') {
                 isSleep = true;
             } else if (exerciseType === 'duration') {
                 isDuration = true;
             }
         } else if (title.toLowerCase().indexOf('sono') !== -1) {
-            // Fallback para verificação por título
             isSleep = true;
         }
         
-        // Se é exercício onboarding, usar prefixo onboarding_
         const displayMissionId = isExercise && exerciseType === 'duration' ? `onboarding_${title}` : missionId;
-        
-        // Primeira missão pendente fica ativa
         const isFirstPending = index === firstPendingIndex && !isCompleted;
         
         html += `
@@ -1670,11 +1677,17 @@ function renderRoutines(data) {
         `;
     }
     
-    // Limpar completamente antes de adicionar novo conteúdo
-    missionsCarousel.innerHTML = '';
+    // ✅ OTIMIZADO: Usar DocumentFragment para não causar reflow
+    const fragment = document.createDocumentFragment();
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    while (tempDiv.firstChild) {
+        fragment.appendChild(tempDiv.firstChild);
+    }
     
-    // Adicionar novo HTML
-    missionsCarousel.innerHTML = html;
+    // Limpar e adicionar de uma vez (menos reflow)
+    missionsCarousel.innerHTML = '';
+    missionsCarousel.appendChild(fragment);
     
     // Reconfigurar event listeners e variáveis após renderizar
     // Isso garante que não haja referências antigas
@@ -1689,14 +1702,14 @@ function renderRoutines(data) {
         if (window.showCurrentMission) {
             window.showCurrentMission();
         } else {
-            console.warn('[Dashboard] showCurrentMission não está disponível ainda');
+            // showCurrentMission não está disponível ainda
         }
         
         // Reinicializar o carrossel de missões para configurar event listeners
         if (window.initializeMissionsCarousel) {
             window.initializeMissionsCarousel();
         } else {
-            console.warn('[Dashboard] initializeMissionsCarousel não está disponível ainda');
+            // initializeMissionsCarousel não está disponível ainda
         }
     }, 100);
 }
@@ -1706,8 +1719,7 @@ function renderRanking(data) {
     if (!rankingCard) return;
     
     const ranking = data.ranking || {};
-    console.log('🔍 [Ranking] Dados recebidos:', ranking);
-    console.log('🔍 [Ranking] Opponent data:', ranking.opponent);
+    // ✅ Logs removidos para performance
     
     if (!ranking.my_rank || ranking.my_rank === 0) {
         rankingCard.style.display = 'none';
@@ -1765,24 +1777,19 @@ function renderRanking(data) {
     // Verificar se há oponente (pode ser null ou objeto com dados)
     // No PHP: <?php if (isset($opponent_data)): ?>
     // A API retorna opponent_data que pode ser null ou um objeto
-    console.log('🔍 [Ranking] Verificando oponente:', {
-        hasOpponent: !!ranking.opponent,
-        opponentIsNull: ranking.opponent === null,
-        opponentName: ranking.opponent?.name,
-        opponentImage: ranking.opponent?.profile_image_filename
-    });
+    // ✅ Log removido para performance
     
     // Verificar se há oponente (igual ao PHP: <?php if (isset($opponent_data)): ?>)
     // A API retorna opponent_data que pode ser null ou um objeto com id, name, points, profile_image_filename, etc.
     if (ranking.opponent && ranking.opponent !== null && typeof ranking.opponent === 'object' && ranking.opponent.name) {
-        console.log('✅ [Ranking] Renderizando oponente:', ranking.opponent);
+        // ✅ Log removido para performance
         
         // Mostrar oponente
         if (opponentInfo) {
             const opponentAvatar = opponentInfo.querySelector('.player-avatar');
             if (opponentAvatar) {
                 const opponentImage = ranking.opponent.profile_image_filename;
-                console.log('🖼️ [Ranking] Foto do oponente:', opponentImage);
+                // ✅ Log removido para performance
                 
                 if (opponentImage) {
                     // Tentar imagem original primeiro, depois thumbnail, depois ícone (igual ao PHP)
@@ -1793,7 +1800,7 @@ function renderRanking(data) {
                         <i class="fas fa-user" style="display:none;"></i>
                     `;
                 } else {
-                    console.log('⚠️ [Ranking] Oponente sem foto, usando ícone padrão');
+                    // ✅ Log removido para performance
                     opponentAvatar.innerHTML = '<i class="fas fa-user"></i>';
                 }
             }
@@ -1802,7 +1809,7 @@ function renderRanking(data) {
         // Nome do oponente (apenas primeiro nome) - igual ao PHP: explode(' ', $opponent_data['name'])[0]
         if (opponentName && ranking.opponent.name) {
             const firstName = ranking.opponent.name.split(' ')[0];
-            console.log('👤 [Ranking] Nome do oponente:', firstName);
+            // ✅ Log removido para performance
             opponentName.textContent = firstName;
         }
     } else {
@@ -1848,10 +1855,42 @@ function renderMealSuggestions(data) {
                 titleEl.innerHTML = `Sugestões para <span>${escapeHtml(mealSuggestion.display_name || 'Refeição')}</span>`;
             }
             
-            // Atualizar link "Ver mais"
+            // Atualizar link "Ver mais" - NAVEGAR PARA EXPLORAR RECEITAS
             const viewAllLink = document.getElementById('suggestions-view-all');
             if (viewAllLink && mealSuggestion.category_id) {
-                viewAllLink.href = `./explore_recipes.html?categories=${mealSuggestion.category_id}`;
+                const categoryId = mealSuggestion.category_id;
+                
+                // ✅ NAVEGAR DIRETAMENTE PARA EXPLORAR RECEITAS
+                viewAllLink.href = `./explore_recipes.html?categories=${categoryId}`;
+                viewAllLink.setAttribute('data-router-ignore', 'true');
+                
+                // ✅ GARANTIR QUE O CLIQUE FUNCIONE CORRETAMENTE
+                viewAllLink.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Tentar usar o router SPA primeiro, senão navegação normal
+                    if (window.SPARouter && typeof window.SPARouter.navigate === 'function') {
+                        window.SPARouter.navigate(`./explore_recipes.html?categories=${categoryId}`);
+                    } else {
+                        window.location.href = `./explore_recipes.html?categories=${categoryId}`;
+                    }
+                    return false;
+                };
+            } else if (viewAllLink) {
+                // Se não tem category_id, navegar para explore_recipes sem filtro
+                viewAllLink.href = `./explore_recipes.html`;
+                viewAllLink.setAttribute('data-router-ignore', 'true');
+                viewAllLink.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.SPARouter && typeof window.SPARouter.navigate === 'function') {
+                        window.SPARouter.navigate(`./explore_recipes.html`);
+                    } else {
+                        window.location.href = `./explore_recipes.html`;
+                    }
+                    return false;
+                };
             }
             
             const carousel = document.getElementById('suggestions-carousel');
@@ -2058,10 +2097,7 @@ function setupWeightModalListeners() {
             // Converter para número
             let weight = parseFloat(weightValue);
             
-            console.log('[Weight] Valor original:', input.value);
-            console.log('[Weight] Valor normalizado:', weightValue);
-            console.log('[Weight] Valor parseFloat:', weight);
-            console.log('[Weight] É NaN?', isNaN(weight));
+            // Validando peso
             
             // Validar se é um número válido
             if (isNaN(weight) || weight <= 0) {
@@ -2078,7 +2114,7 @@ function setupWeightModalListeners() {
             // Arredondar para 1 casa decimal
             weight = Math.round(weight * 10) / 10;
             
-            console.log('[Weight] Valor final (arredondado):', weight);
+            // Peso validado
             
             // Desabilitar botão durante requisição
             newSaveBtn.disabled = true;
@@ -2092,8 +2128,7 @@ function setupWeightModalListeners() {
                 const formData = new FormData();
                 formData.append('weight', weight.toString());
                 
-                console.log('[Weight] Atualizando peso via:', apiUrl);
-                console.log('[Weight] Campo weight:', weight);
+                // Atualizando peso
                 
                 const response = await authenticatedFetch(apiUrl, {
                     method: 'POST',
@@ -2128,7 +2163,7 @@ function setupWeightModalListeners() {
                 }
                 
                 const result = await response.json();
-                console.log('[Weight] Resposta da API:', result);
+                // Resposta da API recebida
                 
                 if (result.success || result.status === 'success') {
                     // Fechar modal
@@ -2153,7 +2188,7 @@ function setupWeightModalListeners() {
                         window.showToast('Peso atualizado com sucesso!', 'success');
                     }
                     
-                    console.log('[Weight] Peso atualizado com sucesso! Novo peso:', weight);
+                    // Peso atualizado com sucesso
                 } else {
                     alert(result.message || 'Erro ao atualizar peso.');
                     newSaveBtn.disabled = false;
@@ -2175,10 +2210,28 @@ function setupWeightModalListeners() {
         document.removeEventListener('click', existingHandler);
     }
     
+    // ✅ FUNÇÃO AUXILIAR PARA GARANTIR MODAL CORRETO
+    function ensureModalPosition(modal) {
+        if (!modal) return;
+        // ✅ GARANTIR QUE MODAL ESTÁ NO BODY (fora do container)
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+        // ✅ GARANTIR POSICIONAMENTO CORRETO
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.right = '0';
+        modal.style.bottom = '0';
+        modal.style.zIndex = '99999';
+    }
+
     document._weightModalHandler = function(e) {
         if (e.target.closest('[data-action="open-weight-modal"]')) {
             const modal = document.getElementById('edit-weight-modal');
             if (modal) {
+                // ✅ GARANTIR POSICIONAMENTO CORRETO
+                ensureModalPosition(modal);
                 modal.classList.add('modal-visible');
                 document.body.style.overflow = 'hidden';
                 // Preencher input com peso atual

@@ -5,7 +5,7 @@
     width: 100%;
     aspect-ratio: 16 / 9;
     border-radius: 24px;
-    overflow: hidden; /* ESSENCIAL para esconder slides fora da área */
+    overflow: hidden !important; /* ✅ ESSENCIAL para esconder slides fora da área */
     margin-bottom: 20px;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
     cursor: grab;
@@ -13,6 +13,15 @@
     /* NOVO: Previne scroll da página ao tocar no carrossel (iOS/Android) */
     touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
+    /* ✅ GARANTIR QUE NADA VAZA */
+    contain: layout style paint;
+    isolation: isolate;
+    /* ✅ Esconder qualquer conteúdo que vaze - máscara mais forte */
+    clip-path: inset(0 round 24px);
+    -webkit-clip-path: inset(0 round 24px);
+    /* ✅ Garantir que nada apareça fora */
+    mask-image: linear-gradient(to right, black, black);
+    -webkit-mask-image: linear-gradient(to right, black, black);
 }
 
 .main-carousel:active {
@@ -23,8 +32,14 @@
 .main-carousel .carousel-track {
     display: flex;
     height: 100%;
+    width: 100%; /* ✅ GARANTIR LARGURA CORRETA */
     /* A transição agora é aplicada APENAS no trilho */
     transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* ✅ GARANTIR QUE NÃO VAZA */
+    position: relative;
+    will-change: transform;
+    /* ✅ Garantir que slides adjacentes não apareçam */
+    overflow: visible;
 }
 
 /* NOVO: Remove a transição durante o arraste para resposta imediata */
@@ -43,6 +58,12 @@
     height: 100%;
     flex-shrink: 0; /* Impede que os slides sejam espremidos */
     position: relative;
+    /* ✅ GARANTIR QUE NÃO VAZA */
+    overflow: hidden;
+    box-sizing: border-box;
+    /* ✅ Garantir que não apareça nada fora do slide */
+    border: none;
+    outline: none;
 }
 
 .main-carousel .lottie-slide svg {
@@ -67,9 +88,14 @@
 
 .main-carousel .pagination-item {
     flex: 1;
-    background: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 2px;
     overflow: hidden;
+}
+
+/* Apenas o item ativo (atual) tem background mais visível */
+.main-carousel .pagination-item.active {
+    background: rgba(255, 255, 255, 0.35);
 }
 
 .main-carousel .pagination-fill {
