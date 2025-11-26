@@ -4,12 +4,14 @@
   "webDir": "www",
   "server": {
     "androidScheme": "https",
-    "iosScheme": "https"
+    "iosScheme": "capacitor"
   },
   "ios": {
     "allowsLinkPreview": false,
     "scrollEnabled": true,
-    "contentInset": "automatic",
+    "contentInset": "always",
+    "backgroundColor": "#000000",
+    "preferredContentMode": "mobile",
     "allowNavigation": [
       "https://appshapefit.com",
       "https://*.appshapefit.com"
@@ -28,7 +30,13 @@
     "SplashScreen": {
       "launchShowDuration": 2000,
       "backgroundColor": "#000000",
-      "showSpinner": false
+      "showSpinner": false,
+      "launchAutoHide": true
+    },
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#000000",
+      "overlaysWebView": true
     }
   }
 }

@@ -108,8 +108,11 @@
         #app-container {
             width: 100%;
             height: 100vh;
+            /* iOS safe area - altura completa */
+            height: -webkit-fill-available;
             position: relative;
-            padding-bottom: 60px; /* Espaço do menu - igual à altura do bottom-nav */
+            /* Espaço do menu + safe area bottom para iPhones com notch */
+            padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
             z-index: 1;
             box-sizing: border-box;
             /* SCROLL - Essencial! */
@@ -378,6 +381,7 @@
     
     <script src="/assets/js/common.js"></script>
     <script src="/assets/js/config.js"></script>
+    <script src="/assets/js/capacitor-init.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script type="module" src="/assets/js/toast-helper.js"></script> 
 
