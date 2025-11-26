@@ -1860,37 +1860,24 @@ function renderMealSuggestions(data) {
             if (viewAllLink && mealSuggestion.category_id) {
                 const categoryId = mealSuggestion.category_id;
                 
-                // ✅ NAVEGAR DIRETAMENTE PARA EXPLORAR RECEITAS
-                viewAllLink.href = `./explore_recipes.html?categories=${categoryId}`;
-                viewAllLink.setAttribute('data-router-ignore', 'true');
+                // ✅ NAVEGAR USANDO O ROUTER SPA CORRETAMENTE
+                const targetPath = `/fragments/explore_recipes.html?categories=${categoryId}`;
+                viewAllLink.href = `/explorar?categories=${categoryId}`;
                 
-                // ✅ GARANTIR QUE O CLIQUE FUNCIONE CORRETAMENTE
-                viewAllLink.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Tentar usar o router SPA primeiro, senão navegação normal
-                    if (window.SPARouter && typeof window.SPARouter.navigate === 'function') {
-                        window.SPARouter.navigate(`./explore_recipes.html?categories=${categoryId}`);
-                    } else {
-                        window.location.href = `./explore_recipes.html?categories=${categoryId}`;
-                    }
-                    return false;
-                };
+                // ✅ REMOVER data-router-ignore PARA DEIXAR O ROUTER TRATAR
+                viewAllLink.removeAttribute('data-router-ignore');
+                
+                // ✅ GARANTIR QUE O CLIQUE FUNCIONE CORRETAMENTE (deixar router tratar)
+                viewAllLink.onclick = null; // Remover onclick anterior se existir
             } else if (viewAllLink) {
                 // Se não tem category_id, navegar para explore_recipes sem filtro
-                viewAllLink.href = `./explore_recipes.html`;
-                viewAllLink.setAttribute('data-router-ignore', 'true');
-                viewAllLink.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (window.SPARouter && typeof window.SPARouter.navigate === 'function') {
-                        window.SPARouter.navigate(`./explore_recipes.html`);
-                    } else {
-                        window.location.href = `./explore_recipes.html`;
-                    }
-                    return false;
-                };
+                viewAllLink.href = `/explorar`;
+                
+                // ✅ REMOVER data-router-ignore PARA DEIXAR O ROUTER TRATAR
+                viewAllLink.removeAttribute('data-router-ignore');
+                
+                // ✅ GARANTIR QUE O CLIQUE FUNCIONE CORRETAMENTE (deixar router tratar)
+                viewAllLink.onclick = null; // Remover onclick anterior se existir
             }
             
             const carousel = document.getElementById('suggestions-carousel');

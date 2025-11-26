@@ -531,6 +531,10 @@
                 window.dispatchEvent(new CustomEvent('fragmentReady', { detail: { path, container: router.container } }));
                 window.dispatchEvent(new CustomEvent('pageLoaded', { detail: { path, container: router.container } }));
                 
+                // ✅ RESETAR SCROLL DO CONTAINER E DA WINDOW
+                if (router.container) {
+                    router.container.scrollTop = 0;
+                }
                 window.scrollTo(0, 0);
             } else {
                 // ✅ COMPORTAMENTO NORMAL (com skeleton/PageLoader)
@@ -576,6 +580,10 @@
                 // ✅ NÃO disparar pageLoaded ainda - esperar PageLoader.ready()
                 // window.dispatchEvent(new CustomEvent('pageLoaded', { detail: { path, container: router.container } }));
                 
+                // ✅ RESETAR SCROLL DO CONTAINER E DA WINDOW
+                if (router.container) {
+                    router.container.scrollTop = 0;
+                }
                 window.scrollTo(0, 0);
             }
             
