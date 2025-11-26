@@ -267,6 +267,9 @@
         const path = e.detail?.path || window.location.pathname;
         const pageName = getPageNameFromPath(path);
         
+        // Remover classe auth-initial quando sair de página de auth
+        document.documentElement.classList.remove('auth-initial');
+        
         if (shouldHideNav(pageName)) {
             if (state.navContainer) {
                 state.navContainer.classList.add('hidden');

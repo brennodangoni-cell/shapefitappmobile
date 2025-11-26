@@ -105,7 +105,8 @@
             width: 100%;
         }
         
-        body.auth-mode #bottom-nav-container {
+        body.auth-mode #bottom-nav-container,
+        html.auth-initial #bottom-nav-container {
             display: none !important;
         }
 
@@ -152,11 +153,12 @@
     </style>
     <script>
         // Esconder menu IMEDIATAMENTE se for página de auth (antes do DOM carregar)
+        // Usa classe no body em vez de document.write para não ser permanente
         (function() {
             var path = window.location.pathname;
             var isAuthPage = path.includes('login') || path.includes('cadastro') || path.includes('register') || path.includes('bem-vindo') || path.includes('onboarding');
             if (isAuthPage) {
-                document.write('<style>#bottom-nav-container{display:none!important}</style>');
+                document.documentElement.classList.add('auth-initial');
             }
         })();
     </script>
