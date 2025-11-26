@@ -14,6 +14,7 @@
     let lastScrollY = 0;
     let navOffset = 0; // Quanto o nav está "escondido" (0 = visível, navHeight = escondido)
     let navHeight = 70; // Altura aproximada do nav
+    let safeAreaBottom = 0; // Safe area do iPhone
     let ticking = false;
     
     function handleNavScroll() {
@@ -26,6 +27,9 @@
         const currentScrollY = scrollContainer.scrollTop;
         const scrollDiff = currentScrollY - lastScrollY;
         
+        // Altura total a esconder = altura do nav + safe area bottom
+        const totalHeight = navHeight + safeAreaBottom;
+        
         // Calcular novo offset baseado na direção do scroll
         if (currentScrollY < 30) {
             // No topo - sempre mostrar
@@ -34,8 +38,8 @@
             // Adiciona ou subtrai do offset baseado na direção
             navOffset += scrollDiff;
             
-            // Limitar entre 0 e navHeight
-            navOffset = Math.max(0, Math.min(navOffset, navHeight));
+            // Limitar entre 0 e totalHeight (nav + safe area)
+            navOffset = Math.max(0, Math.min(navOffset, totalHeight));
         }
         
         // Aplicar transform diretamente (fluido)
@@ -53,13 +57,16 @@
             return;
         }
         
-        // Pegar altura real do nav
-        navHeight = navContainer.offsetHeight || 70;
-        
-        // Remover transição para movimento fluido
-        navContainer.style.transition = 'none';
-        
-        console.log('[BottomNav] Auto-hide fluido ativado! Altura:', navHeight);
+        // Aguardar um frame pra garantir que o layout foi calculado
+        requestAnimationFrame(() => {
+            // Pegar altura REAL do nav (JÁ INCLUI o padding da safe area)
+            navHeight = navContainer.offsetHeight || 100;
+            
+            // Não precisa de safe area extra - offsetHeight já inclui tudo
+            safeAreaBottom = 0;
+            
+            console.log('[BottomNav] Auto-hide ativado! Altura:', navHeight);
+        });
         
         scrollContainer.addEventListener('scroll', function() {
             if (!ticking) {

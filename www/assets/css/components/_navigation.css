@@ -1,37 +1,26 @@
 /* assets/css/components/_navigation.css */
 
-/* assets/css/components/_navigation.css */
+/* O container #bottom-nav-container é fixed no index.html */
+/* .bottom-nav é o elemento visual dentro dele */
 
 .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    /* Relativo ao container fixed (não precisa ser fixed) */
+    position: relative;
     width: 100%;
-    /* Removido max-width e margin para ocupar toda a largura da tela */
     height: auto;
-    background: rgba(16, 16, 16, 0.6);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    /* Fundo transparente pra herdar do container */
+    background: transparent;
     border-top: 1px solid var(--glass-border);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    z-index: 1000;
     
-    /* REMOVER QUALQUER BORDER-RADIUS - MENU DEVE SER RETO */
+    /* SEM border-radius */
     border-radius: 0 !important;
-    border-top-left-radius: 0 !important;
-    border-top-right-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
     
-    /* 
-      A MUDANÇA: O padding-bottom agora é APLICADO AOS ÍCONES,
-      NÃO À BARRA INTEIRA. A barra em si vai até o fundo.
-    */
+    /* Padding: espaço pros ícones + safe area embaixo */
     padding: 12px 10px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     padding-left: calc(10px + env(safe-area-inset-left, 0px));
     padding-right: calc(10px + env(safe-area-inset-right, 0px));
 }
