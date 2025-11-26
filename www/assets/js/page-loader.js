@@ -341,6 +341,20 @@
                 transform: translateZ(0) !important;
                 -webkit-transform: translateZ(0) !important;
             `;
+            
+            // ✅ ATIVAR ANIMAÇÕES DE AUTH (login/register) se não for transição auth
+            if (!window._authTransition) {
+                const logo = pageContent.querySelector('.login-logo');
+                const loginContainer = pageContent.querySelector('.login-container');
+                const registerContainer = pageContent.querySelector('.register-container');
+                const authContainer = loginContainer || registerContainer;
+                
+                if (authContainer) {
+                    // Primeira entrada: animar tudo
+                    if (logo) logo.classList.add('animate-in');
+                    if (authContainer) authContainer.classList.add('animate-in');
+                }
+            }
         }
         
         // ✅ GARANTIR BACKGROUND SEMPRE VISÍVEL
@@ -375,24 +389,36 @@
             detail: { path, container: container } 
         }));
 
-        // ✅ GARANTIR QUE BOTTOM NAV ESTÁ SEMPRE VISÍVEL E FIXO
+        // ✅ ESCONDER BOTTOM NAV EM PÁGINAS AUTH
         const bottomNav = document.getElementById('bottom-nav-container');
+        const currentPage = state.currentPage || '';
+        const isAuthPage = ['auth_login', 'auth_register'].includes(currentPage);
+        
         if (bottomNav) {
-            bottomNav.classList.remove('hidden');
-            bottomNav.style.cssText = `
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                transform: none !important;
-                -webkit-transform: none !important;
-                transition: none !important;
-                animation: none !important;
-                opacity: 1 !important;
-                visibility: visible !important;
-                display: block !important;
-                z-index: 1000 !important;
-            `;
+            if (isAuthPage) {
+                // Esconder em páginas de auth
+                bottomNav.classList.add('hidden');
+                bottomNav.style.display = 'none';
+                document.body.classList.add('auth-mode');
+            } else {
+                // Mostrar em outras páginas
+                bottomNav.classList.remove('hidden');
+                bottomNav.style.cssText = `
+                    position: fixed !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    transform: none !important;
+                    -webkit-transform: none !important;
+                    transition: none !important;
+                    animation: none !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                    display: block !important;
+                    z-index: 1000 !important;
+                `;
+                document.body.classList.remove('auth-mode');
+            }
         }
 
         // ✅ Log removido para performance
