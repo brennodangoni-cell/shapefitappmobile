@@ -94,13 +94,18 @@ html.page-loading #bottom-nav-container,
     justify-content: space-around;
     align-items: center;
     
-    /* Altura fixa + safe area no padding */
-    height: 50px;
+    /* Altura fixa + safe area no padding - GARANTIR QUE NÃO CORTE */
+    min-height: 50px;
+    height: auto;
     padding: 6px 16px;
     padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
     
     /* Background transparente */
     background: transparent;
+    
+    /* ✅ GARANTIR QUE NÃO CORTE */
+    overflow: visible !important;
+    box-sizing: border-box !important;
 }
 
 /* ============================================

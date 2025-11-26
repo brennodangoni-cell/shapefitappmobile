@@ -12,10 +12,7 @@
     right: 0 !important;
     top: auto !important;
     
-    /* ✅ SEMPRE VISÍVEL */
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: block !important;
+    /* ✅ SEMPRE VISÍVEL (EXCETO AUTH) */
     z-index: 1000 !important;
     
     /* ✅ SEM QUALQUER TRANSFORMAÇÃO */
@@ -30,23 +27,46 @@
     /* ✅ SEM WILL-CHANGE (causa pulos) */
     will-change: auto !important;
     
-    /* ✅ FORÇAR LAYOUT ESTÁTICO */
-    contain: strict !important;
+    /* ✅ FORÇAR LAYOUT ESTÁTICO (mas permitir overflow para não cortar) */
+    contain: layout style !important;
     
     /* ✅ SEM MARGIN/PADDING QUE CAUSE MOVIMENTO */
     margin: 0 !important;
     padding: 0 !important;
+    
+    /* ✅ GARANTIR ALTURA MÍNIMA E NÃO CORTAR */
+    min-height: auto !important;
+    overflow: visible !important;
+}
+
+/* ✅ ESCONDER EM PÁGINAS AUTH */
+html.auth-initial #bottom-nav-container,
+body.auth-mode #bottom-nav-container,
+#bottom-nav-container.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+}
+
+/* ✅ SEMPRE VISÍVEL quando não é auth */
+body:not(.auth-mode) #bottom-nav-container:not(.hidden) {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 /* === DURANTE QUALQUER TRANSIÇÃO === */
-body.page-transitioning #bottom-nav-container,
-html.page-transitioning #bottom-nav-container,
-body.page-loading #bottom-nav-container,
-html.page-loading #bottom-nav-container,
-body.page-ready #bottom-nav-container,
-html.page-ready #bottom-nav-container,
-body.page-loaded #bottom-nav-container,
-html.page-loaded #bottom-nav-container {
+body.page-transitioning #bottom-nav-container:not(.hidden):not([class*="auth"]),
+html.page-transitioning #bottom-nav-container:not(.hidden):not([class*="auth"]),
+body.page-loading #bottom-nav-container:not(.hidden):not([class*="auth"]),
+html.page-loading #bottom-nav-container:not(.hidden):not([class*="auth"]),
+body.page-ready #bottom-nav-container:not(.hidden):not([class*="auth"]),
+html.page-ready #bottom-nav-container:not(.hidden):not([class*="auth"]),
+body.page-loaded #bottom-nav-container:not(.hidden):not([class*="auth"]),
+html.page-loaded #bottom-nav-container:not(.hidden):not([class*="auth"]) {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
@@ -59,7 +79,7 @@ html.page-loaded #bottom-nav-container {
     opacity: 1 !important;
     visibility: visible !important;
     display: block !important;
-    contain: strict !important;
+    contain: layout style !important;
 }
 
 /* === DESABILITAR COMPLETAMENTE O SISTEMA DE SCROLL HIDE/SHOW === */
