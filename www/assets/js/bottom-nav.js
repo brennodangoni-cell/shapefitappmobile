@@ -1,6 +1,7 @@
 /**
  * bottom-nav.js - Bottom Navigation Controller
- * Animação que ACOMPANHA O DEDO durante o arrasto
+ * Animação fluida que acompanha o dedo durante o arrasto
+ * OTIMIZADO para iOS com requestAnimationFrame
  */
 
 (function() {
@@ -14,8 +15,9 @@
     // CONFIGURAÇÃO
     // ============================================
     const CONFIG = {
-        followFactor: 1.0,
-        velocityThreshold: 0.25,
+        followFactor: 0.8,          // Suavidade do acompanhamento (0-1)
+        velocityThreshold: 0.15,    // Threshold menor = mais responsivo
+        scrollThreshold: 5,         // Pixels mínimos para detectar scroll
         hiddenPages: ['auth_login', 'auth_register', 'login', 'register', 'onboarding', 'bem-vindo']
     };
 
@@ -48,7 +50,8 @@
     // ESTADO
     // ============================================
     let state = {
-        offset: 0,
+        targetOffset: 0,
+        currentOffset: 0,
         navHeight: 0,
         touchStartY: 0,
         touchStartOffset: 0,
@@ -58,44 +61,77 @@
         isTouching: false,
         scrollContainer: null,
         navContainer: null,
-        lastScrollY: 0
+        lastScrollY: 0,
+        rafId: null,
+        isAnimating: false
     };
+
+    // ============================================
+    // LOOP DE ANIMAÇÃO (RAF)
+    // ============================================
+    
+    function animationLoop() {
+        if (!state.navContainer) {
+            state.isAnimating = false;
+            return;
+        }
+        
+        // Interpolação suave
+        const diff = state.targetOffset - state.currentOffset;
+        
+        if (Math.abs(diff) < 0.5) {
+            state.currentOffset = state.targetOffset;
+            state.isAnimating = false;
+        } else {
+            // Lerp com fator mais alto durante touch
+            const lerpFactor = state.isTouching ? 0.5 : 0.25;
+            state.currentOffset += diff * lerpFactor;
+            state.rafId = requestAnimationFrame(animationLoop);
+        }
+        
+        state.navContainer.style.transform = `translateY(${state.currentOffset}px) translateZ(0)`;
+    }
+    
+    function startAnimation() {
+        if (!state.isAnimating) {
+            state.isAnimating = true;
+            state.rafId = requestAnimationFrame(animationLoop);
+        }
+    }
 
     // ============================================
     // FUNÇÕES DE CONTROLE DO NAV
     // ============================================
     
-    function setNavOffset(offset, animate = false) {
+    function setNavOffset(offset, immediate = false) {
         if (!state.navContainer) return;
         
-        const clampedOffset = Math.max(0, Math.min(offset, state.navHeight));
-        state.offset = clampedOffset;
+        state.targetOffset = Math.max(0, Math.min(offset, state.navHeight));
         
-        if (animate) {
-            state.navContainer.classList.add('smooth-transition');
+        if (immediate) {
+            state.currentOffset = state.targetOffset;
+            state.navContainer.style.transform = `translateY(${state.currentOffset}px) translateZ(0)`;
         } else {
-            state.navContainer.classList.remove('smooth-transition');
+            startAnimation();
         }
-        
-        state.navContainer.style.transform = `translateY(${clampedOffset}px) translateZ(0)`;
     }
 
-    function showNav(animate = true) {
-        setNavOffset(0, animate);
+    function showNav(immediate = false) {
+        setNavOffset(0, immediate);
     }
 
-    function hideNav(animate = true) {
-        setNavOffset(state.navHeight, animate);
+    function hideNav(immediate = false) {
+        setNavOffset(state.navHeight, immediate);
     }
 
     function snapToPosition() {
         const shouldHide = state.velocity > CONFIG.velocityThreshold || 
-                          (state.offset > state.navHeight * 0.4 && state.velocity >= 0);
+                          (state.currentOffset > state.navHeight * 0.35 && state.velocity >= 0);
         
         if (shouldHide) {
-            hideNav(true);
+            hideNav(false);
         } else {
-            showNav(true);
+            showNav(false);
         }
     }
 
@@ -108,12 +144,10 @@
         
         state.isTouching = true;
         state.touchStartY = e.touches[0].clientY;
-        state.touchStartOffset = state.offset;
+        state.touchStartOffset = state.currentOffset;
         state.lastTouchY = state.touchStartY;
         state.lastTouchTime = performance.now();
         state.velocity = 0;
-        
-        state.navContainer.classList.remove('smooth-transition');
     }
 
     function handleTouchMove(e) {
@@ -125,14 +159,16 @@
         const deltaTime = currentTime - state.lastTouchTime;
         const deltaY = state.lastTouchY - currentY;
         
+        // Calcular velocidade com smoothing
         if (deltaTime > 0) {
-            state.velocity = deltaY / deltaTime;
+            const instantVelocity = deltaY / deltaTime;
+            state.velocity = state.velocity * 0.6 + instantVelocity * 0.4;
         }
         
+        // Aplicar offset diretamente durante touch (seguir o dedo)
         let newOffset = state.touchStartOffset + (deltaFromStart * CONFIG.followFactor);
-        newOffset = Math.max(0, Math.min(newOffset, state.navHeight));
-        
-        setNavOffset(newOffset, false);
+        state.targetOffset = Math.max(0, Math.min(newOffset, state.navHeight));
+        startAnimation();
         
         state.lastTouchY = currentY;
         state.lastTouchTime = currentTime;
@@ -145,7 +181,7 @@
     }
 
     // ============================================
-    // HANDLER DE SCROLL
+    // HANDLER DE SCROLL (quando não está tocando)
     // ============================================
     
     function handleScroll() {
@@ -156,12 +192,17 @@
         const currentScrollY = state.scrollContainer.scrollTop;
         const deltaY = currentScrollY - state.lastScrollY;
         
-        if (currentScrollY < 30) {
-            showNav(true);
-        } else if (deltaY > 10) {
-            hideNav(true);
-        } else if (deltaY < -10) {
-            showNav(true);
+        // No topo: sempre mostrar
+        if (currentScrollY < 50) {
+            showNav(false);
+        } 
+        // Scrollando para baixo: esconder
+        else if (deltaY > CONFIG.scrollThreshold) {
+            hideNav(false);
+        } 
+        // Scrollando para cima: mostrar
+        else if (deltaY < -CONFIG.scrollThreshold) {
+            showNav(false);
         }
         
         state.lastScrollY = currentScrollY;
@@ -230,33 +271,50 @@
             return;
         }
 
-        requestAnimationFrame(() => {
-            state.navHeight = state.navContainer.offsetHeight || 70;
-        });
+        // Medir altura do nav
+        state.navHeight = state.navContainer.offsetHeight || 70;
+        
+        // Garantir que começa visível
+        state.currentOffset = 0;
+        state.targetOffset = 0;
+        state.navContainer.style.transform = 'translateY(0) translateZ(0)';
+        
+        // Aplicar will-change para GPU
+        state.navContainer.style.willChange = 'transform';
 
-        // Touch events
+        // Touch events no container de scroll
         state.scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
         state.scrollContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
         state.scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
         state.scrollContainer.addEventListener('touchcancel', handleTouchEnd, { passive: true });
 
-        // Scroll event
-        let scrollTicking = false;
+        // Scroll event com throttle
+        let lastScrollTime = 0;
         state.scrollContainer.addEventListener('scroll', () => {
-            if (!scrollTicking && !state.isTouching) {
-                requestAnimationFrame(() => {
-                    handleScroll();
-                    scrollTicking = false;
-                });
-                scrollTicking = true;
+            const now = performance.now();
+            if (now - lastScrollTime > 16 && !state.isTouching) { // ~60fps
+                lastScrollTime = now;
+                handleScroll();
             }
         }, { passive: true });
 
         // Atualizar item ativo inicial
         updateActiveMenuItem();
         
-        console.log('[BottomNav] ✅ Inicializado');
+        console.log('[BottomNav] ✅ Inicializado (navHeight:', state.navHeight + 'px)');
     }
+
+    // ============================================
+    // API PÚBLICA (para modais/overlays)
+    // ============================================
+    
+    window.BottomNavAPI = {
+        hide: () => hideNav(false),
+        show: () => showNav(false),
+        hideImmediate: () => hideNav(true),
+        showImmediate: () => showNav(true),
+        isVisible: () => state.currentOffset < state.navHeight * 0.5
+    };
 
     // ============================================
     // EVENT LISTENERS
@@ -270,6 +328,10 @@
         // Remover classe auth-initial quando sair de página de auth
         document.documentElement.classList.remove('auth-initial');
         
+        // Resetar estado de scroll
+        state.lastScrollY = 0;
+        state.velocity = 0;
+        
         if (shouldHideNav(pageName)) {
             if (state.navContainer) {
                 state.navContainer.classList.add('hidden');
@@ -277,13 +339,12 @@
         } else {
             if (state.navContainer) {
                 state.navContainer.classList.remove('hidden');
-                showNav(false);
+                // Recalcular altura e mostrar imediatamente
+                state.navHeight = state.navContainer.offsetHeight || 70;
+                showNav(true); // immediate = true
             }
             updateActiveMenuItem(path);
         }
-        
-        state.lastScrollY = 0;
-        state.offset = 0;
     });
 
     // Quando fragmento está pronto

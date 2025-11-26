@@ -182,10 +182,9 @@
                             modalContent.style.transform = '';
                             modalContent.style.transition = '';
                         }, 350);
-                        // Mostrar bottom-nav quando modal fechar
-                        const bottomNav = document.querySelector('.bottom-nav') || document.getElementById('bottom-nav-container');
-                        if (bottomNav) {
-                            bottomNav.style.transform = 'translateY(0)';
+                        // Usar API do bottom nav
+                        if (window.BottomNavAPI) {
+                            window.BottomNavAPI.show();
                         }
                     };
                     
@@ -205,14 +204,12 @@
                             }, 350);
                         }
                         
-                        // Esconder/mostrar bottom-nav quando modal abrir/fechar
-                        const bottomNav = document.querySelector('.bottom-nav') || document.getElementById('bottom-nav-container');
-                        if (bottomNav) {
-                            bottomNav.style.transition = 'transform 0.3s ease';
+                        // Usar API do bottom nav
+                        if (window.BottomNavAPI) {
                             if (filterModal.classList.contains('visible')) {
-                                bottomNav.style.transform = 'translateY(100%)';
+                                window.BottomNavAPI.hide();
                             } else {
-                                bottomNav.style.transform = 'translateY(0)';
+                                window.BottomNavAPI.show();
                             }
                         }
                     };
@@ -281,9 +278,8 @@
                     // Fechar modal suavemente
                     filterModal.classList.remove('visible');
                     document.body.style.overflow = '';
-                    const bottomNav = document.querySelector('.bottom-nav') || document.getElementById('bottom-nav-container');
-                    if (bottomNav) {
-                        bottomNav.style.transform = 'translateY(0)';
+                    if (window.BottomNavAPI) {
+                        window.BottomNavAPI.show();
                     }
                     
                     // Resetar inputs do modal
@@ -320,9 +316,8 @@
                     // Fechar modal primeiro
                     filterModal.classList.remove('visible');
                     document.body.style.overflow = '';
-                    const bottomNav = document.querySelector('.bottom-nav') || document.getElementById('bottom-nav-container');
-                    if (bottomNav) {
-                        bottomNav.style.transform = 'translateY(0)';
+                    if (window.BottomNavAPI) {
+                        window.BottomNavAPI.show();
                     }
                     
                     // Carregar dados com novos filtros (sem reload!)

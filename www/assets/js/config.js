@@ -14,14 +14,23 @@
     console.log('🔧 [Config] isRealDevelopment:', isRealDevelopment);
     
     // 1. Definição da URL Base (para redirecionamentos internos)
-    if (!window.BASE_APP_URL) {
-        window.BASE_APP_URL = "https://appshapefit.com";
-    }
+    // SEMPRE definir, não verificar se já existe (outros scripts podem ter definido errado)
+    window.BASE_APP_URL = "https://appshapefit.com";
     
     // 2. API_BASE_URL - SEMPRE usar appshapefit.com/api
-    if (!window.API_BASE_URL) {
-        window.API_BASE_URL = 'https://appshapefit.com/api';
-    }
+    window.API_BASE_URL = 'https://appshapefit.com/api';
+    
+    // Congelar as URLs para evitar que outros scripts sobrescrevam
+    Object.defineProperty(window, 'BASE_APP_URL', {
+        value: window.BASE_APP_URL,
+        writable: false,
+        configurable: false
+    });
+    Object.defineProperty(window, 'API_BASE_URL', {
+        value: window.API_BASE_URL,
+        writable: false,
+        configurable: false
+    });
     
     console.log('🔧 [Config] BASE_APP_URL:', window.BASE_APP_URL);
     console.log('🔧 [Config] API_BASE_URL:', window.API_BASE_URL);

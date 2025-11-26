@@ -257,21 +257,18 @@ function initExploreRecipesUI() {
             modalContent.style.transform = ''; 
             filterModal.classList.add('visible');
             document.body.style.overflow = 'hidden';
-            // Esconder bottom-nav quando modal abrir
-            const bottomNav = document.querySelector('.bottom-nav') || document.getElementById('bottom-nav-container');
-            if (bottomNav) {
-                bottomNav.style.transform = 'translateY(100%)';
-                bottomNav.style.transition = 'transform 0.3s ease';
+            // Usar API do bottom nav se disponível
+            if (window.BottomNavAPI) {
+                window.BottomNavAPI.hide();
             }
         };
         
         const closeModal = () => {
             filterModal.classList.remove('visible');
             document.body.style.overflow = '';
-            // Mostrar bottom-nav quando modal fechar
-            const bottomNav = document.querySelector('.bottom-nav') || document.getElementById('bottom-nav-container');
-            if (bottomNav) {
-                bottomNav.style.transform = 'translateY(0)';
+            // Usar API do bottom nav se disponível
+            if (window.BottomNavAPI) {
+                window.BottomNavAPI.show();
             }
         };
         
@@ -325,9 +322,8 @@ function initExploreRecipesUI() {
         // Fechar modal suavemente
         filterModal.classList.remove('visible');
         document.body.style.overflow = '';
-        const bottomNav = document.querySelector('.bottom-nav') || document.getElementById('bottom-nav-container');
-        if (bottomNav) {
-            bottomNav.style.transform = 'translateY(0)';
+        if (window.BottomNavAPI) {
+            window.BottomNavAPI.show();
         }
         
         // Resetar inputs do modal
@@ -366,9 +362,8 @@ function initExploreRecipesUI() {
         // Fechar modal primeiro
         filterModal.classList.remove('visible');
         document.body.style.overflow = '';
-        const bottomNav = document.querySelector('.bottom-nav') || document.getElementById('bottom-nav-container');
-        if (bottomNav) {
-            bottomNav.style.transform = 'translateY(0)';
+        if (window.BottomNavAPI) {
+            window.BottomNavAPI.show();
         }
         
         // Carregar dados com novos filtros (sem reload!)

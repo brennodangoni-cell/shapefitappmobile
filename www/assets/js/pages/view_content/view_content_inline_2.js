@@ -423,27 +423,39 @@
         }
         
         function renderVideoFile(file) {
-            let fileUrl = file.file_path || '';
-            if (fileUrl && !fileUrl.match(/^https?:\/\//) && !fileUrl.match(/^\//)) {
-                fileUrl = '/' + fileUrl.replace(/^\//, '');
+            // Usar file_url se disponível, senão file_path
+            let fileUrl = file.file_url || file.file_path || '';
+            
+            // Garantir URL completa para funcionar no Capacitor/iOS
+            if (fileUrl && !fileUrl.match(/^https?:\/\//)) {
+                if (!fileUrl.startsWith('/')) {
+                    fileUrl = '/' + fileUrl;
+                }
+                // Usar BASE_APP_URL para URL completa
+                fileUrl = 'https://appshapefit.com' + fileUrl;
             }
             
             let poster = '';
             if (file.thumbnail_url) {
                 poster = file.thumbnail_url;
-                if (!poster.match(/^https?:\/\//) && !poster.match(/^\//)) {
-                    poster = '/' + poster.replace(/^\//, '');
+                if (!poster.match(/^https?:\/\//)) {
+                    if (!poster.startsWith('/')) {
+                        poster = '/' + poster;
+                    }
+                    poster = 'https://appshapefit.com' + poster;
                 }
             }
             
             const title = file.video_title || 'Sem título';
             const mimeType = file.mime_type || 'video/mp4';
             
+            console.log('[ViewContent] Renderizando vídeo:', { fileUrl, poster, title });
+            
             return `
                 <div class="file-container">
                     <h3 class="file-title">${escapeHtml(title)}</h3>
                     <div class="content-media">
-                        <video class="content-video" controls preload="metadata" ${poster ? `poster="${escapeHtml(poster)}"` : ''}>
+                        <video class="content-video" controls preload="metadata" playsinline webkit-playsinline ${poster ? `poster="${escapeHtml(poster)}"` : ''}>
                             <source src="${escapeHtml(fileUrl)}" type="${escapeHtml(mimeType)}">
                             Seu navegador não suporta a reprodução de vídeos.
                         </video>
