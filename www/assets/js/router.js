@@ -82,9 +82,24 @@
         // IMPORTANTE: Setar o currentPath ANTES de carregar para View Transitions funcionarem
         router.currentPath = initialPath;
         
-        // ✅ MOSTRAR SKELETON IMEDIATAMENTE NO CARREGAMENTO INICIAL (F5)
+        // ✅ ESCONDER BOTTOM NAV IMEDIATAMENTE SE FOR PÁGINA AUTH (ANTES DE QUALQUER COISA)
         const pageName = initialPath.split('/').pop().replace('.html', '').split('?')[0];
-        showSkeleton(pageName);
+        const isAuthInitial = isAuthPage(pageName);
+        if (router.bottomNav && isAuthInitial) {
+            // Esconder IMEDIATAMENTE, antes de qualquer renderização
+            router.bottomNav.style.cssText = `
+                display: none !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+            `;
+            router.bottomNav.classList.add('hidden');
+            document.body.classList.add('auth-mode');
+        }
+        
+        // ✅ MOSTRAR SKELETON APENAS SE NÃO FOR PÁGINA AUTH (auth carrega direto, mais rápido)
+        if (!isAuthInitial) {
+            showSkeleton(pageName);
+        }
         
         // ✅ GARANTIR BACKGROUND VISÍVEL
         if (router.container) {
@@ -181,6 +196,18 @@
     // === USAR PAGELOADER SE DISPONÍVEL ===
     function showSkeleton(pageName) {
         if (!router.container) return;
+        
+        // ✅ PÁGINAS AUTH: NÃO USAR SKELETON (carregar direto, mais rápido)
+        if (isAuthPage(pageName)) {
+            // Apenas garantir background visível
+            router.container.style.cssText = `
+                background: #121212 !important;
+                background-color: #121212 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            `;
+            return; // Não mostrar skeleton para auth
+        }
         
         // ✅ GARANTIR BACKGROUND VISÍVEL IMEDIATAMENTE
         router.container.style.cssText = `
@@ -318,57 +345,8 @@
         
         router.currentPath = actualFragmentPath;
         
-        // ✅ REMOVER TODAS AS TRANSIÇÕES - SEM CLASSES DE TRANSIÇÃO
-        
-        // ✅ MOSTRAR SKELETON IMEDIATAMENTE (ANTES DE QUALQUER COISA)
-        // ✅ IMPORTANTE: mostrar ANTES de qualquer fetch/load
-        showSkeleton(targetPageName);
-        
-        // ✅ ESCONDER BOTTOM NAV EM PÁGINAS AUTH
-        const bottomNav = document.getElementById('bottom-nav-container');
-        const isAuthTarget = isAuthPage(targetPageName);
-        if (bottomNav) {
-            if (isAuthTarget) {
-                // Esconder em páginas de auth
-                bottomNav.classList.add('hidden');
-                bottomNav.style.display = 'none';
-                document.body.classList.add('auth-mode');
-            } else {
-                // Mostrar em outras páginas
-                bottomNav.classList.remove('hidden');
-                bottomNav.style.cssText = `
-                    position: fixed !important;
-                    bottom: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    transform: none !important;
-                    -webkit-transform: none !important;
-                    transition: none !important;
-                    animation: none !important;
-                    opacity: 1 !important;
-                    visibility: visible !important;
-                    display: block !important;
-                    z-index: 1000 !important;
-                `;
-                document.body.classList.remove('auth-mode');
-            }
-        }
-        
-        // ✅ GARANTIR BACKGROUND SEMPRE VISÍVEL
-        document.body.style.cssText = `
-            background: #121212 !important;
-            background-color: #121212 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-        `;
-        document.documentElement.style.cssText = `
-            background: #121212 !important;
-            background-color: #121212 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-        `;
-        
         // ✅ USAR VIEW TRANSITIONS PARA TRANSIÇÕES AUTH (como na pasta REFFFF)
+        // IMPORTANTE: fazer ANTES de showSkeleton e outras coisas
         if (isAuthTransition && document.startViewTransition) {
             // Marcar que estamos em transição auth (não animar a logo de novo)
             window._authTransition = true;
@@ -376,7 +354,56 @@
                 return loadPage(actualFragmentPath + qs, false);
             });
         } else {
-            window._authTransition = isAuthTransition;
+            window._authTransition = false;
+            
+            // ✅ MOSTRAR SKELETON IMEDIATAMENTE (ANTES DE QUALQUER COISA)
+            // ✅ IMPORTANTE: mostrar ANTES de qualquer fetch/load
+            showSkeleton(targetPageName);
+            
+            // ✅ ESCONDER BOTTOM NAV EM PÁGINAS AUTH
+            const bottomNav = document.getElementById('bottom-nav-container');
+            const isAuthTarget = isAuthPage(targetPageName);
+            if (bottomNav) {
+                if (isAuthTarget) {
+                    // Esconder em páginas de auth
+                    bottomNav.classList.add('hidden');
+                    bottomNav.style.display = 'none';
+                    document.body.classList.add('auth-mode');
+                } else {
+                    // Mostrar em outras páginas
+                    bottomNav.classList.remove('hidden');
+                    bottomNav.style.cssText = `
+                        position: fixed !important;
+                        bottom: 0 !important;
+                        left: 0 !important;
+                        right: 0 !important;
+                        transform: none !important;
+                        -webkit-transform: none !important;
+                        transition: none !important;
+                        animation: none !important;
+                        opacity: 1 !important;
+                        visibility: visible !important;
+                        display: block !important;
+                        z-index: 1000 !important;
+                    `;
+                    document.body.classList.remove('auth-mode');
+                }
+            }
+            
+            // ✅ GARANTIR BACKGROUND SEMPRE VISÍVEL
+            document.body.style.cssText = `
+                background: #121212 !important;
+                background-color: #121212 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            `;
+            document.documentElement.style.cssText = `
+                background: #121212 !important;
+                background-color: #121212 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            `;
+            
             loadPage(actualFragmentPath + qs, false);
         }
     }
@@ -464,58 +491,93 @@
                 html = await response.text();
             }
             
-            // ✅ NÃO limpar container ainda - skeleton já está lá
-            // Remover apenas conteúdo antigo (não o skeleton)
-            const oldContent = router.container.querySelector('.page-root, .app-container');
-            if (oldContent) {
-                oldContent.style.display = 'none';
-                oldContent.remove();
-            }
-            
-            const scripts = extractScriptsFromHTML(html);
-            let htmlWithoutScripts = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-            
-            // Corrigir valores PHP antes de inserir no DOM para evitar warnings
-            htmlWithoutScripts = fixPHPValues(htmlWithoutScripts);
-            
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlWithoutScripts;
-            let content = tempDiv.querySelector('.page-root') || tempDiv;
-            
-            // ✅ Inserir conteúdo mas mantê-lo COMPLETAMENTE ESCONDIDO
-            const clonedContent = content.cloneNode(true);
-            clonedContent.style.cssText = `
-                display: none !important;
-                opacity: 0 !important;
-                visibility: hidden !important;
-            `;
-            router.container.appendChild(clonedContent);
-            
-            // Adicionar animação apenas se NÃO for transição entre páginas auth
-            const logo = router.container.querySelector('.login-logo');
-            const loginContainer = router.container.querySelector('.login-container');
-            const registerContainer = router.container.querySelector('.register-container');
-            const authContainer = loginContainer || registerContainer;
-            
-            if (!window._authTransition) {
+            // ✅ COMPORTAMENTO ESPECIAL PARA PÁGINAS AUTH (carregar direto, sem skeleton/PageLoader)
+            if (window._authTransition || isAuthPageCheck) {
+                // Limpar container completamente
+                router.container.innerHTML = '';
+                
+                const scripts = extractScriptsFromHTML(html);
+                let htmlWithoutScripts = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+                
+                // Corrigir valores PHP antes de inserir no DOM para evitar warnings
+                htmlWithoutScripts = fixPHPValues(htmlWithoutScripts);
+                
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlWithoutScripts;
+                let content = tempDiv.querySelector('.page-root') || tempDiv;
+                
+                // Inserir conteúdo diretamente (sem esconder)
+                router.container.appendChild(content.cloneNode(true));
+                
+                // View Transition: não animar (a API cuida)
+                const logo = router.container.querySelector('.login-logo');
+                const loginContainer = router.container.querySelector('.login-container');
+                const registerContainer = router.container.querySelector('.register-container');
+                const authContainer = loginContainer || registerContainer;
+                
+                if (window._authTransition) {
+                    // Transição entre auth: não animar (View Transitions cuida)
+                    if (logo) logo.classList.remove('animate-in');
+                    if (authContainer) authContainer.classList.remove('animate-in');
+                } else {
+                    // Primeira entrada: animar
+                    if (logo) logo.classList.add('animate-in');
+                    if (authContainer) authContainer.classList.add('animate-in');
+                }
+                
+                fixTimeInputs();
+                await loadScriptsSequentially(scripts);
+                
+                window.dispatchEvent(new CustomEvent('fragmentReady', { detail: { path, container: router.container } }));
+                window.dispatchEvent(new CustomEvent('pageLoaded', { detail: { path, container: router.container } }));
+                
+                window.scrollTo(0, 0);
+            } else {
+                // ✅ COMPORTAMENTO NORMAL (com skeleton/PageLoader)
+                // Remover apenas conteúdo antigo (não o skeleton)
+                const oldContent = router.container.querySelector('.page-root, .app-container');
+                if (oldContent) {
+                    oldContent.style.display = 'none';
+                    oldContent.remove();
+                }
+                
+                const scripts = extractScriptsFromHTML(html);
+                let htmlWithoutScripts = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+                
+                // Corrigir valores PHP antes de inserir no DOM para evitar warnings
+                htmlWithoutScripts = fixPHPValues(htmlWithoutScripts);
+                
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlWithoutScripts;
+                let content = tempDiv.querySelector('.page-root') || tempDiv;
+                
+                // ✅ Inserir conteúdo mas mantê-lo COMPLETAMENTE ESCONDIDO
+                const clonedContent = content.cloneNode(true);
+                clonedContent.style.cssText = `
+                    display: none !important;
+                    opacity: 0 !important;
+                    visibility: hidden !important;
+                `;
+                router.container.appendChild(clonedContent);
+                
                 // Primeira entrada: animar tudo
+                const logo = router.container.querySelector('.login-logo');
+                const loginContainer = router.container.querySelector('.login-container');
+                const registerContainer = router.container.querySelector('.register-container');
+                const authContainer = loginContainer || registerContainer;
                 if (logo) logo.classList.add('animate-in');
                 if (authContainer) authContainer.classList.add('animate-in');
-            } else {
-                // View Transition: não animar (a API cuida)
-                if (logo) logo.classList.remove('animate-in');
-                if (authContainer) authContainer.classList.remove('animate-in');
+                
+                fixTimeInputs();
+                await loadScriptsSequentially(scripts);
+                
+                window.dispatchEvent(new CustomEvent('fragmentReady', { detail: { path, container: router.container } }));
+                
+                // ✅ NÃO disparar pageLoaded ainda - esperar PageLoader.ready()
+                // window.dispatchEvent(new CustomEvent('pageLoaded', { detail: { path, container: router.container } }));
+                
+                window.scrollTo(0, 0);
             }
-            
-            fixTimeInputs();
-            await loadScriptsSequentially(scripts);
-            
-            window.dispatchEvent(new CustomEvent('fragmentReady', { detail: { path, container: router.container } }));
-            
-            // ✅ NÃO disparar pageLoaded ainda - esperar PageLoader.ready()
-            // window.dispatchEvent(new CustomEvent('pageLoaded', { detail: { path, container: router.container } }));
-            
-            window.scrollTo(0, 0);
             
         } catch (error) {
             console.error('[Router] Erro:', path, error);

@@ -328,13 +328,34 @@
             return;
         }
 
+        // ✅ VERIFICAR SE É PÁGINA AUTH ANTES DE MOSTRAR
+        const currentPath = window.location.pathname;
+        const pageName = getPageNameFromPath(currentPath);
+        const isAuth = shouldHideNav(pageName) || 
+                      document.documentElement.classList.contains('auth-initial') ||
+                      document.body.classList.contains('auth-mode');
+        
+        if (isAuth) {
+            // Esconder imediatamente em páginas auth
+            state.navContainer.style.cssText = `
+                display: none !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
+            `;
+            state.navContainer.classList.add('hidden');
+            state.navContainer.classList.remove('nav-visible');
+            return; // Não inicializar o sistema de scroll em páginas auth
+        }
+
         // Medir altura do nav
         state.navHeight = state.navContainer.offsetHeight || 70;
         
         // ✅ Garantir que começa visível e 100% fixo
         state.currentOffset = 0;
         state.targetOffset = 0;
-        // ✅ FORÇAR FIXO COM CSS INLINE
+        // ✅ FORÇAR FIXO COM CSS INLINE E ADICIONAR CLASSE PARA MOSTRAR
+        state.navContainer.classList.add('nav-visible');
         state.navContainer.style.cssText = `
             position: fixed !important;
             bottom: 0 !important;
@@ -430,11 +451,13 @@
             // ✅ Apenas para auth pages - esconder
             if (state.navContainer) {
                 state.navContainer.classList.add('hidden');
+                state.navContainer.classList.remove('nav-visible');
             }
         } else {
             // ✅ SEMPRE MOSTRAR E MANTER FIXO
             if (state.navContainer) {
                 state.navContainer.classList.remove('hidden');
+                state.navContainer.classList.add('nav-visible');
                 // Recalcular altura
                 state.navHeight = state.navContainer.offsetHeight || 70;
                 // ✅ FORÇAR POSIÇÃO FIXA - SEMPRE VISÍVEL

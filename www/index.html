@@ -103,6 +103,14 @@
             transform: none !important;
         }
         
+        /* Esconder bottom nav por padrão - só mostrar quando necessário */
+        #bottom-nav-container:not(.nav-visible) {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        
         /* === SKELETON BASE (inline para carregamento rápido) === */
         .skeleton {
             background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
@@ -165,6 +173,19 @@
         body.auth-mode #bottom-nav-container,
         html.auth-initial #bottom-nav-container {
             display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        
+        /* Esconder bottom nav IMEDIATAMENTE se URL contém login/cadastro/register */
+        html:has([href*="login"]) #bottom-nav-container,
+        html:has([href*="cadastro"]) #bottom-nav-container,
+        html:has([href*="register"]) #bottom-nav-container {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
         }
 
         .login-container, .register-container, .auth-container {
@@ -210,12 +231,46 @@
     </style>
     <script>
         // Esconder menu IMEDIATAMENTE se for página de auth (antes do DOM carregar)
-        // Usa classe no body em vez de document.write para não ser permanente
+        // Executar ANTES de qualquer coisa, até antes do body ser renderizado
         (function() {
             var path = window.location.pathname;
             var isAuthPage = path.includes('login') || path.includes('cadastro') || path.includes('register') || path.includes('bem-vindo') || path.includes('onboarding');
             if (isAuthPage) {
+                // Adicionar classe ANTES de qualquer renderização
                 document.documentElement.classList.add('auth-initial');
+                
+                // Esconder bottom nav IMEDIATAMENTE - usar MutationObserver para pegar assim que aparecer
+                function hideBottomNav() {
+                    var bottomNav = document.getElementById('bottom-nav-container');
+                    if (bottomNav) {
+                        bottomNav.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; position: fixed !important; bottom: -1000px !important;';
+                        bottomNav.classList.add('hidden');
+                        return true; // Indica que foi escondido
+                    }
+                    return false;
+                }
+                
+                // Tentar esconder imediatamente (se o elemento já existir)
+                if (!hideBottomNav()) {
+                    // Se não existir ainda, usar MutationObserver para esconder assim que aparecer
+                    var observer = new MutationObserver(function(mutations, obs) {
+                        if (hideBottomNav()) {
+                            obs.disconnect(); // Parar de observar quando conseguir esconder
+                        }
+                    });
+                    // Começar a observar imediatamente
+                    observer.observe(document.documentElement || document.body || document, {
+                        childList: true,
+                        subtree: true
+                    });
+                    // Timeout de segurança para desconectar após 1 segundo
+                    setTimeout(function() { observer.disconnect(); }, 1000);
+                }
+                
+                // Executar no DOMContentLoaded também (garantia)
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', hideBottomNav, { once: true });
+                }
             }
         })();
     </script>
@@ -223,7 +278,7 @@
 <body>
     <div id="app-container"></div>
     
-    <div id="bottom-nav-container">
+    <div id="bottom-nav-container" style="display: none;">
         <nav class="bottom-nav">
             <a href="/main_app.html" class="nav-item" data-page="home">
                 <i class="fas fa-home"></i>
