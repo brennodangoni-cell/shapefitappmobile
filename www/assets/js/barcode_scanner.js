@@ -66,8 +66,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
             camera = Camera.default;
             if (camera) {
+                // ✅ SOLICITAR PERMISSÃO DE CÂMERA EXPLICITAMENTE NO iOS/Capacitor
+                try {
+                    // Verificar se é app nativo (Capacitor)
+                    if (typeof window.Capacitor !== 'undefined') {
+                        // Tentar usar Capacitor Camera plugin se disponível
+                        if (window.Capacitor.Plugins?.Camera) {
+                            try {
+                                const { Camera } = window.Capacitor.Plugins;
+                                const permissionResult = await Camera.requestPermissions({ permissions: ['camera'] });
+                                if (permissionResult.camera !== 'granted' && permissionResult.camera !== 'yes') {
+                                    throw new Error('Permissão de câmera negada pelo usuário');
+                                }
+                            } catch (capError) {
+                                console.warn('Erro ao solicitar permissão via Capacitor:', capError);
+                                // Continuar mesmo se falhar - Scandit pode solicitar automaticamente
+                            }
+                        }
+                    }
+                    
+                    // Para web ou fallback, tentar getUserMedia para solicitar permissão
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                            stream.getTracks().forEach(track => track.stop()); // Parar stream imediatamente
+                        } catch (permError) {
+                            console.warn('Erro ao solicitar permissão via getUserMedia:', permError);
+                            // Continuar - Scandit pode solicitar automaticamente
+                        }
+                    }
+                } catch (permError) {
+                    console.warn('Aviso de permissão (continuando):', permError);
+                    // Não bloquear - deixar Scandit tentar
+                }
+                
+                // Tentar configurar a câmera (Scandit pode solicitar permissão automaticamente aqui)
                 await dataCaptureContext.setFrameSource(camera);
                 await camera.switchToDesiredState(FrameSourceState.On);
+            } else {
+                throw new Error('Câmera não disponível no dispositivo');
             }
             await barcodeCapture.setEnabled(true);
             
