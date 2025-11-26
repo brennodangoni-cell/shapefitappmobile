@@ -9,61 +9,84 @@
     }
 
     console.log('📱 [Capacitor] Inicializando plugins nativos...');
+    
+    // Cor de fundo do app (deve combinar com o CSS)
+    const APP_BG_COLOR = '#121212';
 
-    // Aguardar o DOM estar pronto
-    document.addEventListener('DOMContentLoaded', async function() {
+    // Função para configurar StatusBar
+    async function setupStatusBar() {
         try {
-            // Configurar StatusBar
-            if (window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
-                const StatusBar = window.Capacitor.Plugins.StatusBar;
-                
-                // Estilo escuro (texto branco) para combinar com nosso tema
-                await StatusBar.setStyle({ style: 'DARK' });
-                
-                // Fundo transparente para tela cheia
-                await StatusBar.setBackgroundColor({ color: '#00000000' });
-                
-                // Sobrepor o WebView (tela cheia)
-                await StatusBar.setOverlaysWebView({ overlay: true });
-                
-                console.log('✅ [Capacitor] StatusBar configurado');
+            const { StatusBar } = window.Capacitor.Plugins;
+            if (!StatusBar) {
+                console.log('⚠️ [Capacitor] StatusBar plugin não disponível');
+                return;
             }
-
-            // Esconder Splash Screen após carregamento
-            if (window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
-                const SplashScreen = window.Capacitor.Plugins.SplashScreen;
-                await SplashScreen.hide();
-                console.log('✅ [Capacitor] SplashScreen ocultado');
-            }
-
+            
+            // iOS: Status bar com texto branco (Dark = texto claro)
+            await StatusBar.setStyle({ style: 'Dark' });
+            
+            // Cor de fundo igual ao app
+            await StatusBar.setBackgroundColor({ color: APP_BG_COLOR });
+            
+            // CRÍTICO: WebView por baixo da status bar (tela cheia)
+            await StatusBar.setOverlaysWebView({ overlay: true });
+            
+            console.log('✅ [Capacitor] StatusBar configurado');
         } catch (error) {
-            console.error('❌ [Capacitor] Erro na inicialização:', error);
+            console.error('❌ [Capacitor] Erro StatusBar:', error);
         }
-    });
+    }
+
+    // Função para esconder Splash
+    async function hideSplash() {
+        try {
+            const { SplashScreen } = window.Capacitor.Plugins;
+            if (!SplashScreen) return;
+            
+            await SplashScreen.hide();
+            console.log('✅ [Capacitor] SplashScreen ocultado');
+        } catch (error) {
+            console.error('❌ [Capacitor] Erro SplashScreen:', error);
+        }
+    }
+
+    // Configurar imediatamente (não esperar DOMContentLoaded)
+    setupStatusBar();
+
+    // Aguardar o DOM estar pronto para o resto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', hideSplash);
+    } else {
+        hideSplash();
+    }
 
     // Tratar eventos do app (voltar, pausar, etc)
-    if (window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-        const App = window.Capacitor.Plugins.App;
-        
-        // Botão voltar do Android
-        App.addListener('backButton', ({ canGoBack }) => {
-            if (canGoBack) {
-                window.history.back();
-            } else {
-                // Opcional: minimizar app ou mostrar confirmação de saída
-                App.minimizeApp();
-            }
-        });
+    try {
+        const { App } = window.Capacitor.Plugins;
+        if (App) {
+            // Botão voltar do Android
+            App.addListener('backButton', ({ canGoBack }) => {
+                if (canGoBack) {
+                    window.history.back();
+                } else {
+                    App.minimizeApp();
+                }
+            });
 
-        // App pausado (em background)
-        App.addListener('pause', () => {
-            console.log('📱 [App] Em background');
-        });
+            // App pausado (em background)
+            App.addListener('pause', () => {
+                console.log('📱 [App] Em background');
+            });
 
-        // App retomado (voltou do background)
-        App.addListener('resume', () => {
-            console.log('📱 [App] Retomado');
-        });
+            // App retomado (voltou do background)
+            App.addListener('resume', () => {
+                console.log('📱 [App] Retomado');
+                // Re-configurar status bar ao voltar (fix iOS)
+                setupStatusBar();
+            });
+        }
+    } catch (error) {
+        console.error('❌ [Capacitor] Erro App listeners:', error);
     }
 
 })();

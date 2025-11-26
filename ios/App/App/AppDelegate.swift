@@ -7,7 +7,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Cor de fundo do app (igual ao CSS #121212)
+        let appBackgroundColor = UIColor(red: 18/255, green: 18/255, blue: 18/255, alpha: 1.0)
+        
+        // Aplicar cor de fundo na window principal
+        window?.backgroundColor = appBackgroundColor
+        
+        // Configurar status bar para modo escuro (texto branco)
+        if #available(iOS 13.0, *) {
+            window?.overrideUserInterfaceStyle = .dark
+        }
+        
         return true
     }
 

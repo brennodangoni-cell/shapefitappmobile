@@ -10,8 +10,9 @@
     "allowsLinkPreview": false,
     "scrollEnabled": true,
     "contentInset": "always",
-    "backgroundColor": "#000000",
+    "backgroundColor": "#121212",
     "preferredContentMode": "mobile",
+    "limitsNavigationsToAppBoundDomains": false,
     "allowNavigation": [
       "https://appshapefit.com",
       "https://*.appshapefit.com"
@@ -21,6 +22,7 @@
     "allowMixedContent": false,
     "captureInput": true,
     "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#121212",
     "allowNavigation": [
       "https://appshapefit.com",
       "https://*.appshapefit.com"
@@ -28,14 +30,16 @@
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
-      "backgroundColor": "#000000",
+      "launchShowDuration": 0,
+      "launchAutoHide": true,
+      "backgroundColor": "#121212",
       "showSpinner": false,
-      "launchAutoHide": true
+      "splashFullScreen": true,
+      "splashImmersive": true
     },
     "StatusBar": {
       "style": "Dark",
-      "backgroundColor": "#000000",
+      "backgroundColor": "#121212",
       "overlaysWebView": true
     }
   }
