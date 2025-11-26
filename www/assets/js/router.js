@@ -457,12 +457,29 @@
             
             if (router.bottomNav) {
                 if (isAuthPageCheck) {
-                    // ✅ Apenas esconder para auth, mas manter fixo
+                    // ✅ FORÇAR ESCONDER COMPLETAMENTE EM PÁGINAS AUTH
                     router.bottomNav.classList.add('hidden');
+                    router.bottomNav.classList.remove('nav-visible');
                     document.body.classList.add('auth-mode');
+                    document.documentElement.classList.add('auth-initial');
+                    // ✅ FORÇAR COM STYLE INLINE TAMBÉM
+                    router.bottomNav.style.cssText = `
+                        display: none !important;
+                        opacity: 0 !important;
+                        visibility: hidden !important;
+                        pointer-events: none !important;
+                        position: fixed !important;
+                        bottom: -1000px !important;
+                        height: 0 !important;
+                        width: 0 !important;
+                        overflow: hidden !important;
+                    `;
                 } else {
                     // ✅ SEMPRE MOSTRAR E MANTER FIXO
                     router.bottomNav.classList.remove('hidden');
+                    router.bottomNav.classList.add('nav-visible');
+                    document.body.classList.remove('auth-mode');
+                    document.documentElement.classList.remove('auth-initial');
                     router.bottomNav.style.cssText = `
                         position: fixed !important;
                         bottom: 0 !important;
@@ -474,8 +491,10 @@
                         visibility: visible !important;
                         display: block !important;
                         z-index: 1000 !important;
+                        height: auto !important;
+                        width: 100% !important;
+                        overflow: visible !important;
                     `;
-                    document.body.classList.remove('auth-mode');
                 }
             }
 

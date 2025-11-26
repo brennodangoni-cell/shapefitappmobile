@@ -170,12 +170,23 @@
             width: 100%;
         }
         
+        /* ✅ FORÇAR ESCONDER BOTTOM NAV EM PÁGINAS AUTH - MÁXIMA PRIORIDADE */
         body.auth-mode #bottom-nav-container,
-        html.auth-initial #bottom-nav-container {
+        html.auth-initial #bottom-nav-container,
+        #bottom-nav-container.hidden,
+        body.auth-mode #bottom-nav-container.nav-visible,
+        html.auth-initial #bottom-nav-container.nav-visible {
             display: none !important;
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
+            transform: none !important;
+            -webkit-transform: none !important;
+            position: fixed !important;
+            bottom: -1000px !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
         }
         
         /* Esconder bottom nav IMEDIATAMENTE se URL contém login/cadastro/register */

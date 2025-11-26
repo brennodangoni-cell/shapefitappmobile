@@ -39,16 +39,27 @@
     overflow: visible !important;
 }
 
-/* ✅ ESCONDER EM PÁGINAS AUTH */
+/* ✅ ESCONDER EM PÁGINAS AUTH - MÁXIMA PRIORIDADE */
 html.auth-initial #bottom-nav-container,
 body.auth-mode #bottom-nav-container,
-#bottom-nav-container.hidden {
+#bottom-nav-container.hidden,
+html.auth-initial #bottom-nav-container.nav-visible,
+body.auth-mode #bottom-nav-container.nav-visible,
+html.auth-initial #bottom-nav-container[style*="display: block"],
+body.auth-mode #bottom-nav-container[style*="display: block"] {
     display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
     transform: none !important;
     -webkit-transform: none !important;
+    position: fixed !important;
+    bottom: -1000px !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* ✅ SEMPRE VISÍVEL quando não é auth */

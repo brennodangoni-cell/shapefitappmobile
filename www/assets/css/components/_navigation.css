@@ -153,9 +153,21 @@ html.page-loading #bottom-nav-container,
    ESTADOS ESPECIAIS
    ============================================ */
 
-/* Esconder apenas para auth pages */
-#bottom-nav-container.hidden {
+/* ✅ ESCONDER APENAS PARA AUTH PAGES - MÁXIMA PRIORIDADE */
+#bottom-nav-container.hidden,
+html.auth-initial #bottom-nav-container,
+body.auth-mode #bottom-nav-container,
+html.auth-initial #bottom-nav-container.nav-visible,
+body.auth-mode #bottom-nav-container.nav-visible {
     display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    position: fixed !important;
+    bottom: -1000px !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
 }
 
 /* ✅ GARANTIR QUE NUNCA SOME DURANTE TRANSIÇÕES */
