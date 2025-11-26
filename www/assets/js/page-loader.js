@@ -29,7 +29,6 @@
         // Dashboard / Home - ✅ SUPER OTIMIZADO (mínimo de elementos)
         dashboard: `
             <div class="page-skeleton" data-type="dashboard">
-                <div class="skeleton-safe-area"></div>
                 <div class="skel-header" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
                     <div style="flex: 1;"></div>
                     <div style="display: flex; gap: 12px; align-items: center;">
@@ -45,7 +44,6 @@
         // Lista (diário, receitas, ranking, etc)
         list: `
             <div class="page-skeleton" data-type="list">
-                <div class="skeleton-safe-area"></div>
                 <div class="skel-page-header">
                     <div class="skel-back skeleton"></div>
                     <div class="skel-title skeleton"></div>
@@ -89,7 +87,6 @@
         // Perfil / Configurações - ✅ EXPANDIDO
         profile: `
             <div class="page-skeleton" data-type="profile">
-                <div class="skeleton-safe-area"></div>
                 <div class="skel-page-header">
                     <div class="skel-back skeleton" style="width: 40px; height: 40px; border-radius: 12px;"></div>
                     <div class="skel-title skeleton" style="height: 24px; width: 150px; border-radius: 8px;"></div>
@@ -112,7 +109,6 @@
         // Cards Grid (explorar receitas, etc) - ✅ EXPANDIDO
         grid: `
             <div class="page-skeleton" data-type="grid">
-                <div class="skeleton-safe-area"></div>
                 <div class="skel-page-header">
                     <div class="skel-back skeleton" style="width: 40px; height: 40px; border-radius: 12px;"></div>
                     <div class="skel-title skeleton" style="height: 24px; width: 150px; border-radius: 8px;"></div>
@@ -133,7 +129,6 @@
         // Formulário (adicionar alimento, editar, etc)
         form: `
             <div class="page-skeleton" data-type="form">
-                <div class="skeleton-safe-area"></div>
                 <div class="skel-page-header">
                     <div class="skel-back skeleton"></div>
                     <div class="skel-title skeleton"></div>
@@ -158,7 +153,6 @@
         // Detalhe (receita, conteúdo, etc)
         detail: `
             <div class="page-skeleton" data-type="detail">
-                <div class="skeleton-safe-area"></div>
                 <div class="skel-detail-image skeleton"></div>
                 <div class="skel-detail-content">
                     <div class="skel-detail-title skeleton"></div>

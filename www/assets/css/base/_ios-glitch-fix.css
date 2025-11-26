@@ -70,16 +70,29 @@ body.page-loading .glass-card {
     -webkit-backdrop-filter: blur(5px) !important;
 }
 
-/* === 7. BOTTOM NAV SEMPRE VISÍVEL === */
+/* === 7. BOTTOM NAV SEMPRE VISÍVEL (EXCETO AUTH) === */
 #bottom-nav-container {
     transform: translateZ(0) !important;
     -webkit-transform: translateZ(0) !important;
     will-change: transform;
-    /* ✅ SEMPRE VISÍVEL - NUNCA ESCONDE */
+    z-index: 1000 !important;
+}
+
+/* ✅ ESCONDER EM PÁGINAS AUTH */
+html.auth-initial #bottom-nav-container,
+body.auth-mode #bottom-nav-container,
+#bottom-nav-container.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* ✅ SEMPRE VISÍVEL quando não é auth */
+body:not(.auth-mode) #bottom-nav-container:not(.hidden) {
     opacity: 1 !important;
     visibility: visible !important;
     display: block !important;
-    z-index: 1000 !important;
 }
 
 /* === 8. BACKGROUND SEMPRE VISÍVEL === */

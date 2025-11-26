@@ -38,8 +38,10 @@ function cleanupCarousel() {
 // Função para carregar banners da API
 async function loadBannersFromAPI() {
   try {
-    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const apiUrl = isDev 
+    // ✅ DETECTAR SE É APP NATIVO (iOS/Android) OU DEV
+    const isNative = typeof window.Capacitor !== 'undefined';
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
+    const apiUrl = (isNative || isDev)
       ? 'https://appshapefit.com/api/get_banners.php'
       : '/api/get_banners.php';
     
@@ -62,7 +64,8 @@ async function loadBannersFromAPI() {
         return 0; // mantém ordem original
       });
       
-      if (isDev) {
+      // ✅ Em app nativo ou dev, garantir URLs completas
+      if (isNative || isDev) {
         return banners.map(b => ({
           ...b,
           json_path: b.json_path.startsWith('http') 
@@ -83,8 +86,11 @@ async function loadBannersFromAPI() {
 }
 
 function getFallbackBanners() {
-  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const baseUrl = isDev ? 'https://appshapefit.com' : '';
+  // ✅ DETECTAR SE É APP NATIVO (iOS/Android) OU DEV
+  const isNative = typeof window.Capacitor !== 'undefined';
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
+  // ✅ Em app nativo ou dev, usar URL completa
+  const baseUrl = (isNative || isDev) ? 'https://appshapefit.com' : '';
   
   // ✅ OTIMIZADO: Receitas por último (mais pesado)
   return [
