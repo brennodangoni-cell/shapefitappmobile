@@ -324,25 +324,34 @@
         // ✅ IMPORTANTE: mostrar ANTES de qualquer fetch/load
         showSkeleton(targetPageName);
         
-        // ✅ FORÇAR BOTTOM NAV SEMPRE VISÍVEL E FIXO
+        // ✅ ESCONDER BOTTOM NAV EM PÁGINAS AUTH
         const bottomNav = document.getElementById('bottom-nav-container');
+        const isAuthTarget = isAuthPage(targetPageName);
         if (bottomNav) {
-            // ✅ NUNCA ESCONDER - SEMPRE VISÍVEL
-            bottomNav.classList.remove('hidden');
-            bottomNav.style.cssText = `
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                transform: none !important;
-                -webkit-transform: none !important;
-                transition: none !important;
-                animation: none !important;
-                opacity: 1 !important;
-                visibility: visible !important;
-                display: block !important;
-                z-index: 1000 !important;
-            `;
+            if (isAuthTarget) {
+                // Esconder em páginas de auth
+                bottomNav.classList.add('hidden');
+                bottomNav.style.display = 'none';
+                document.body.classList.add('auth-mode');
+            } else {
+                // Mostrar em outras páginas
+                bottomNav.classList.remove('hidden');
+                bottomNav.style.cssText = `
+                    position: fixed !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    transform: none !important;
+                    -webkit-transform: none !important;
+                    transition: none !important;
+                    animation: none !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                    display: block !important;
+                    z-index: 1000 !important;
+                `;
+                document.body.classList.remove('auth-mode');
+            }
         }
         
         // ✅ GARANTIR BACKGROUND SEMPRE VISÍVEL
@@ -359,7 +368,10 @@
             visibility: visible !important;
         `;
         
-        // ✅ SEM VIEW TRANSITIONS - CARREGAR DIRETO
+        // ✅ MARCAR TRANSIÇÃO AUTH PARA NÃO REPETIR ANIMAÇÕES
+        if (isAuthTransition) {
+            sessionStorage.setItem('auth-transition', 'true');
+        }
         window._authTransition = isAuthTransition;
         loadPage(actualFragmentPath + qs, false);
     }
