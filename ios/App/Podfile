@@ -29,12 +29,15 @@ end
 post_install do |installer|
   assertDeploymentTarget(installer)
   
-  # Garantir que todos os pods usem iOS 15.5 como mínimo
+  # FORÇAR iOS 15.5 em TODOS os pods e no projeto principal
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
-      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.5
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
-      end
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
     end
+  end
+  
+  # Também atualizar o projeto principal
+  installer.pods_project.build_configurations.each do |config|
+    config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
   end
 end
