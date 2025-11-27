@@ -342,14 +342,18 @@
     <!-- Modal Offline -->
     <div id="offline-modal" class="offline-modal-overlay">
         <div class="offline-modal-content">
-            <div class="offline-modal-icon">
+            <div class="offline-modal-icon" id="offline-modal-icon">
                 <i class="fas fa-wifi-slash"></i>
             </div>
             <h3 class="offline-modal-title">Sem conexão</h3>
-            <p class="offline-modal-message">Você está offline. Verifique sua conexão com a internet.</p>
-            <div class="offline-modal-spinner">
+            <p class="offline-modal-message" id="offline-modal-message">Você está offline. Verifique sua conexão com a internet.</p>
+            <div class="offline-modal-spinner" id="offline-modal-spinner" style="display: none;">
                 <i class="fas fa-spinner fa-spin"></i>
             </div>
+            <button class="offline-modal-button" id="offline-retry-button">
+                <i class="fas fa-sync-alt"></i>
+                Tentar novamente
+            </button>
         </div>
     </div>
 
@@ -432,7 +436,63 @@
         .offline-modal-spinner {
             font-size: 20px !important;
             color: var(--accent-orange, #ff6b00) !important;
+            margin: 8px 0 16px 0 !important;
+        }
+
+        .offline-modal-button {
+            width: 100% !important;
+            padding: 14px 24px !important;
+            background: linear-gradient(135deg, var(--accent-orange, #ff6b00), #ff8c00) !important;
+            border: none !important;
+            border-radius: 12px !important;
+            color: #ffffff !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
             margin-top: 8px !important;
+            font-family: inherit !important;
+        }
+
+        .offline-modal-button:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(255, 107, 0, 0.3) !important;
+        }
+
+        .offline-modal-button:active {
+            transform: translateY(0) !important;
+        }
+
+        .offline-modal-button:disabled {
+            opacity: 0.6 !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+        }
+
+        .offline-modal-button i {
+            font-size: 16px !important;
+        }
+
+        .offline-modal-button.checking i {
+            animation: spin 1s linear infinite !important;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .offline-modal-icon.checking i {
+            animation: pulse 1.5s ease-in-out infinite !important;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
         }
     </style>
 

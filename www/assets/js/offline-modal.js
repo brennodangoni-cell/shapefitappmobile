@@ -15,32 +15,76 @@
 
     let isOffline = false;
     let reconnectCheckInterval = null;
+    let isChecking = false;
+
+    const retryButton = document.getElementById('offline-retry-button');
+    const modalIcon = document.getElementById('offline-modal-icon');
+    const modalMessage = document.getElementById('offline-modal-message');
+    const modalSpinner = document.getElementById('offline-modal-spinner');
 
     /**
      * Verifica se está realmente offline (não apenas navigator.onLine)
+     * Tenta múltiplas estratégias para garantir detecção precisa
      */
     async function checkConnection() {
-        // Se navigator.onLine diz que está online, tenta fazer um fetch pequeno
-        if (navigator.onLine) {
+        // Primeira verificação: navigator.onLine
+        if (!navigator.onLine) {
+            return false;
+        }
+
+        // Segunda verificação: tentar fazer fetch para o servidor
+        const baseUrl = window.BASE_APP_URL || window.location.origin;
+        const testUrls = [
+            `${baseUrl}/favicon.ico?t=${Date.now()}`,
+            `${baseUrl}/manifest.json?t=${Date.now()}`,
+            'https://www.google.com/favicon.ico?t=' + Date.now() // Fallback para Google
+        ];
+
+        for (const url of testUrls) {
             try {
-                // Criar AbortController para timeout manual (compatibilidade)
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const timeoutId = setTimeout(() => controller.abort(), 2000); // Timeout mais curto
                 
-                // Tenta buscar um arquivo pequeno do servidor
-                const response = await fetch(`${window.BASE_APP_URL || ''}/favicon.ico?t=${Date.now()}`, {
+                const response = await fetch(url, {
                     method: 'HEAD',
                     cache: 'no-cache',
-                    signal: controller.signal
+                    signal: controller.signal,
+                    mode: 'no-cors' // Para o fallback do Google
                 });
                 
                 clearTimeout(timeoutId);
-                return response.ok;
+                
+                // Se chegou aqui, tem conexão
+                return true;
             } catch (error) {
-                return false;
+                // Continua tentando outras URLs
+                continue;
             }
         }
+
+        // Se nenhuma URL funcionou, está offline
         return false;
+    }
+
+    /**
+     * Atualiza o estado visual do modal
+     */
+    function updateModalState(checking) {
+        if (checking) {
+            isChecking = true;
+            retryButton.disabled = true;
+            retryButton.classList.add('checking');
+            modalIcon.classList.add('checking');
+            modalSpinner.style.display = 'block';
+            modalMessage.textContent = 'Verificando conexão...';
+        } else {
+            isChecking = false;
+            retryButton.disabled = false;
+            retryButton.classList.remove('checking');
+            modalIcon.classList.remove('checking');
+            modalSpinner.style.display = 'none';
+            modalMessage.textContent = 'Você está offline. Verifique sua conexão com a internet.';
+        }
     }
 
     /**
@@ -50,17 +94,20 @@
         if (isOffline) return; // Já está mostrando
         
         isOffline = true;
+        updateModalState(false);
         offlineModal.classList.add('visible');
         console.log('[OfflineModal] Modal offline exibido');
         
-        // Iniciar verificação periódica de reconexão
+        // Iniciar verificação periódica de reconexão (mais frequente)
         if (!reconnectCheckInterval) {
             reconnectCheckInterval = setInterval(async () => {
-                const isOnline = await checkConnection();
-                if (isOnline) {
-                    hideOfflineModal();
+                if (!isChecking) {
+                    const isOnline = await checkConnection();
+                    if (isOnline) {
+                        hideOfflineModal();
+                    }
                 }
-            }, 2000); // Verifica a cada 2 segundos
+            }, 1500); // Verifica a cada 1.5 segundos
         }
     }
 
@@ -86,13 +133,45 @@
      */
     async function handleOnline() {
         console.log('[OfflineModal] Evento online detectado, verificando conexão...');
+        updateModalState(true);
+        
         // Aguardar um pouco antes de verificar (pode ser um falso positivo)
         setTimeout(async () => {
             const isOnline = await checkConnection();
             if (isOnline) {
                 hideOfflineModal();
+            } else {
+                updateModalState(false);
             }
-        }, 1000);
+        }, 500);
+    }
+
+    /**
+     * Função para tentar reconectar manualmente
+     */
+    async function retryConnection() {
+        if (isChecking) return;
+        
+        console.log('[OfflineModal] Tentativa manual de reconexão');
+        updateModalState(true);
+        
+        // Verificar múltiplas vezes para garantir
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        const checkInterval = setInterval(async () => {
+            attempts++;
+            const isOnline = await checkConnection();
+            
+            if (isOnline) {
+                clearInterval(checkInterval);
+                hideOfflineModal();
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                updateModalState(false);
+                console.log('[OfflineModal] Ainda offline após', maxAttempts, 'tentativas');
+            }
+        }, 800);
     }
 
     /**
@@ -119,6 +198,11 @@
     // Event listeners
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    
+    // Botão de tentar novamente
+    if (retryButton) {
+        retryButton.addEventListener('click', retryConnection);
+    }
 
     // Verificação inicial
     if (document.readyState === 'loading') {
