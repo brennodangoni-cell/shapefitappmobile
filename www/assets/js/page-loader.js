@@ -174,13 +174,12 @@
         scanner: `
             <div class="page-skeleton" data-type="scanner">
                 <div class="skel-page-header" style="display: flex; align-items: center; gap: 12px; padding: 16px 0; margin-bottom: 16px;">
-                    <div class="skel-back skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                    <div class="skel-back skeleton" style="width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;"></div>
                     <div class="skel-title skeleton" style="height: 24px; flex: 1; border-radius: 8px;"></div>
                 </div>
-                <div class="skel-scanner-camera skeleton" style="height: 55vh; min-height: 450px; max-height: 550px; border-radius: 16px; margin-bottom: 16px;"></div>
+                <div class="skel-scanner-camera skeleton" style="width: 100%; height: 55vh; min-height: 450px; max-height: 550px; border-radius: 16px; margin-bottom: 16px; flex-shrink: 0;"></div>
                 <div class="skel-scanner-controls" style="display: flex; flex-direction: column; gap: 12px;">
-                    <div class="skel-input-group skeleton" style="height: 60px; border-radius: 16px;"></div>
-                    <div class="skel-buttons skeleton" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 50px;"></div>
+                    <div class="skel-input-group skeleton" style="height: 60px; border-radius: 16px; width: 100%;"></div>
                 </div>
             </div>`,
 
