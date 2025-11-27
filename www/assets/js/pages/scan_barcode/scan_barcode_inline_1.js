@@ -9,8 +9,20 @@
         let selectedDeviceId = null;
         let scanning = false;
 
+        // ✅ Mover modal para fora do page-root para funcionar corretamente com position: fixed
+        function moveModalToBody() {
+            const modal = document.getElementById('product-not-found-modal');
+            if (modal && modal.parentElement && modal.parentElement.classList.contains('page-root')) {
+                document.body.appendChild(modal);
+                console.log('✅ Modal movido para body');
+            }
+        }
+        
         // Verificar autenticação
         document.addEventListener('DOMContentLoaded', async function() {
+            // ✅ Mover modal para body primeiro
+            moveModalToBody();
+            
             const authenticated = await requireAuth();
             if (!authenticated) return;
             

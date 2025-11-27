@@ -1176,11 +1176,24 @@ async function initAddFoodPage() {
     }
 }
 
+// ✅ Mover modal para fora do page-root para funcionar corretamente com position: fixed
+function moveModalToBody() {
+    const modal = document.getElementById('recipe-modal');
+    if (modal && modal.parentElement && modal.parentElement.classList.contains('page-root')) {
+        document.body.appendChild(modal);
+        console.log('✅ Modal movido para body');
+    }
+}
+
 // Executar no DOMContentLoaded (para páginas completas)
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAddFoodPage);
+    document.addEventListener('DOMContentLoaded', () => {
+        moveModalToBody();
+        initAddFoodPage();
+    });
 } else {
     // DOM já carregado, executar imediatamente
+    moveModalToBody();
     initAddFoodPage();
 }
 

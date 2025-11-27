@@ -257,8 +257,26 @@
             return div.innerHTML;
         }
         
+        // ✅ Mover modais para fora do page-root para funcionar corretamente com position: fixed
+        function moveModalsToBody() {
+            const modals = [
+                document.getElementById('crop-modal'),
+                document.getElementById('restrictions-modal'),
+                document.getElementById('confirm-delete-account-modal')
+            ];
+            modals.forEach(modal => {
+                if (modal && modal.parentElement && modal.parentElement.classList.contains('page-root')) {
+                    document.body.appendChild(modal);
+                    console.log('✅ Modal movido para body:', modal.id);
+                }
+            });
+        }
+        
         // Função principal de inicialização
         async function initEditProfile() {
+            // ✅ Mover modais para body primeiro
+            moveModalsToBody();
+            
             // Verificar se elementos existem
             if (!document.getElementById('edit-profile-form')) {
                 console.log('edit_profile: Form não encontrado, aguardando...');
