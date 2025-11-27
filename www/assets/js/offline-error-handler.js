@@ -21,13 +21,18 @@
     function isNetworkError(error) {
         if (!error) return false;
         
+        // Se erro tem flag silent, sempre tratar como erro de rede silencioso
+        if (error.silent === true) {
+            return true;
+        }
+        
         const errorMsg = error.message || error.toString() || '';
         const errorName = error.name || '';
         
         return errorMsg.includes('Failed to fetch') ||
                errorMsg.includes('NetworkError') ||
+               errorMsg.includes('Network request failed') ||
                errorMsg.includes('network') ||
-               errorMsg.includes('OFFLINE_SILENT') ||
                errorName === 'TypeError' ||
                errorName === 'NetworkError';
     }
@@ -42,7 +47,9 @@
             'Failed to fetch',
             'Erro ao carregar',
             'Error loading',
-            'Verifique o console'
+            'Verifique o console',
+            'OFFLINE_SILENT',
+            'Network request failed'
         ];
         
         errorTexts.forEach(text => {

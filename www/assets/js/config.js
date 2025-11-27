@@ -59,8 +59,11 @@
                     if (offlineModal && typeof window.offlineModal !== 'undefined') {
                         window.offlineModal.show();
                     }
-                    // ✅ Não logar erro quando estiver offline
-                    return Promise.reject(new Error('OFFLINE_SILENT'));
+                    // ✅ Não propagar erro quando offline - erro silencioso
+                    const silentError = new Error('Network request failed');
+                    silentError.name = 'NetworkError';
+                    silentError.silent = true;
+                    return Promise.reject(silentError);
                 }
                 
                 console.error(`❌ [Fetch] Erro: ${url}`, error);
@@ -103,10 +106,12 @@
                 if (offlineModal && typeof window.offlineModal !== 'undefined') {
                     window.offlineModal.show();
                 }
-                // ✅ Não logar erro quando estiver offline (evita poluir console)
-                // throw error; // Comentado para não propagar erro quando offline
-                // Retornar uma resposta vazia ou rejeitar silenciosamente
-                return Promise.reject(new Error('OFFLINE_SILENT')); // Erro especial que não será logado
+                // ✅ Não propagar erro quando offline - retornar erro silencioso
+                // Mas não usar OFFLINE_SILENT para evitar que apareça na tela
+                const silentError = new Error('Network request failed');
+                silentError.name = 'NetworkError';
+                silentError.silent = true; // Flag para não mostrar na tela
+                return Promise.reject(silentError);
             }
             
             console.error(`❌ [Fetch] Erro: ${url}`, error);

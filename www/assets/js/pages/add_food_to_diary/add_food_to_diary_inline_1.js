@@ -994,6 +994,19 @@ async function loadPageData() {
         }
         
     } catch (error) {
+        // ✅ Não mostrar erro se for erro de rede/offline
+        if (error && (
+            error.message && (
+                error.message.includes('Failed to fetch') ||
+                error.message.includes('NetworkError') ||
+                error.message.includes('Network request failed') ||
+                error.silent === true
+            ) ||
+            error.name === 'NetworkError'
+        )) {
+            // Erro de rede - não fazer nada, modal offline cuida
+            return;
+        }
         console.error('Erro ao carregar dados da página:', error);
     }
 }

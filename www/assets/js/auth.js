@@ -95,17 +95,35 @@ async function requireAuth() {
     const currentPath = window.location.pathname;
     if (currentPath.includes('auth_login')) return false;
     
-    // ✅ Se tiver token no localStorage, assumir que está autenticado inicialmente
-    // Isso evita deslogar em caso de problemas temporários de rede
+    // ✅ Verificar se está offline ANTES de verificar token
+    // Se estiver offline e não tiver token, redirecionar para login
     const token = getAuthToken();
     if (!token) {
-        // Sem token, realmente não está autenticado
+        // Sem token, verificar se está offline
+        if (!navigator.onLine) {
+            // Se estiver offline e sem token, mostrar login (usuário não está logado)
+            console.log('[Auth] Offline e sem token - redirecionando para login');
+            if (window.SPARouter) {
+                window.SPARouter.navigate('/fragments/auth_login.html', true);
+            } else {
+                window.location.href = '/auth/login.html';
+            }
+            return false;
+        }
+        // Se estiver online e sem token, redirecionar para login
         if (window.SPARouter) {
             window.SPARouter.navigate('/fragments/auth_login.html', true);
         } else {
             window.location.href = '/auth/login.html';
         }
         return false;
+    }
+    
+    // ✅ Se tem token mas está offline, assumir autenticado (usuário já estava logado)
+    // O modal offline será mostrado pelo offline-modal.js
+    if (!navigator.onLine) {
+        console.log('[Auth] Offline mas com token - assumindo autenticado');
+        return true; // Retornar true para não redirecionar, modal offline cuida do resto
     }
     
     // Limpar cache de autenticação após 5 segundos (evitar cache permanente)
