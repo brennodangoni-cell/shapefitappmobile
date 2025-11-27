@@ -192,16 +192,25 @@
     }
 
     /**
-     * Verificação inicial ao carregar a página
+     * Verificação inicial ao carregar a página - IMEDIATA
      */
     async function initOfflineCheck() {
-        // Aguardar um pouco para garantir que a página carregou
-        setTimeout(async () => {
+        // ✅ Verificar IMEDIATAMENTE se está offline (antes de qualquer requisição)
+        if (!navigator.onLine) {
+            showOfflineModal();
+            return;
+        }
+        
+        // Se navigator.onLine diz que está online, verificar conexão real rapidamente
+        try {
             const isOnline = await checkConnection();
-            if (!isOnline && navigator.onLine === false) {
+            if (!isOnline) {
                 showOfflineModal();
             }
-        }, 2000);
+        } catch (error) {
+            // Se falhar a verificação, assumir offline
+            showOfflineModal();
+        }
     }
 
     // Event listeners
@@ -213,7 +222,21 @@
         retryButton.addEventListener('click', retryConnection);
     }
 
-    // Verificação inicial
+    // ✅ Verificação IMEDIATA (antes de qualquer requisição)
+    // Executar o mais cedo possível, antes mesmo do DOMContentLoaded
+    (function() {
+        // Verificar navigator.onLine imediatamente (síncrono)
+        if (!navigator.onLine) {
+            // Mostrar modal imediatamente se estiver offline
+            setTimeout(() => {
+                if (offlineModal) {
+                    showOfflineModal();
+                }
+            }, 0);
+        }
+    })();
+    
+    // Verificação mais completa quando DOM estiver pronto
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initOfflineCheck);
     } else {

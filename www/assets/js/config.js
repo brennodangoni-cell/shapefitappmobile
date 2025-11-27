@@ -46,6 +46,24 @@
                 return await originalFetch(url, init);
             } catch (error) {
                 console.error(`❌ [Fetch] Erro: ${url}`, error);
+                
+                // ✅ Se for erro de rede (Failed to fetch), mostrar modal offline
+                if (error.message && (
+                    error.message.includes('Failed to fetch') ||
+                    error.message.includes('NetworkError') ||
+                    error.message.includes('network') ||
+                    error.name === 'TypeError'
+                )) {
+                    // Verificar se realmente está offline
+                    if (!navigator.onLine) {
+                        // Mostrar modal offline se existir
+                        const offlineModal = document.getElementById('offline-modal');
+                        if (offlineModal && typeof window.offlineModal !== 'undefined') {
+                            window.offlineModal.show();
+                        }
+                    }
+                }
+                
                 throw error;
             }
         }
@@ -72,6 +90,24 @@
             return await originalFetch(url, init);
         } catch (error) {
             console.error(`❌ [Fetch] Erro: ${url}`, error);
+            
+            // ✅ Se for erro de rede (Failed to fetch), mostrar modal offline
+            if (error.message && (
+                error.message.includes('Failed to fetch') ||
+                error.message.includes('NetworkError') ||
+                error.message.includes('network') ||
+                error.name === 'TypeError'
+            )) {
+                // Verificar se realmente está offline
+                if (!navigator.onLine) {
+                    // Mostrar modal offline se existir
+                    const offlineModal = document.getElementById('offline-modal');
+                    if (offlineModal && typeof window.offlineModal !== 'undefined') {
+                        window.offlineModal.show();
+                    }
+                }
+            }
+            
             throw error;
         }
     };
