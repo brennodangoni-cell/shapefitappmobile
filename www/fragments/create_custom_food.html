@@ -4,7 +4,7 @@
 
 /* Container principal */
 .ccf-container {
-    padding: 20px 16px 100px 16px;
+    padding: calc(20px + env(safe-area-inset-top)) 16px 100px 16px;
     max-width: 100%;
     box-sizing: border-box;
 }
@@ -15,6 +15,7 @@
     align-items: center;
     gap: 16px;
     margin-bottom: 24px;
+    padding-top: env(safe-area-inset-top);
 }
 
 .ccf-back-btn {
