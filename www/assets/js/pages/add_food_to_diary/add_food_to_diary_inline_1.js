@@ -750,38 +750,31 @@ async function searchRecipes(query) {
 // Função para buscar alimentos
 async function searchFoods(query) {
     try {
-        // ✅ Usar URL completa diretamente para evitar problemas de CORS no Capacitor
+        // ✅ TENTAR USAR O MESMO ENDPOINT QUE RECEITAS (que funciona!)
+        // O endpoint ajax_search_foods_recipes.php pode aceitar type=food também
         const apiBase = window.API_BASE_URL || 'https://appshapefit.com/api';
-        const token = window.getAuthToken ? window.getAuthToken() : null;
         
-        // ✅ Para evitar preflight CORS, passar token como query parameter se estiver no Capacitor
-        let url = `${apiBase}/ajax_search_food.php?term=${encodeURIComponent(query)}`;
-        if (typeof window.Capacitor !== 'undefined' && token) {
-            url += `&token=${encodeURIComponent(token)}`;
-            // Fazer requisição GET simples sem headers customizados para evitar preflight
-            const response = await fetch(url, { method: 'GET' });
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            const data = await response.json();
-            if (data.success && data.data.length > 0) {
-                displaySearchResults(data.data, 'food');
-            } else {
-                clearSearchResults();
-            }
+        // Primeiro tentar usar o endpoint de receitas com type=food (que já funciona para receitas)
+        let url = `${apiBase}/ajax_search_foods_recipes.php?term=${encodeURIComponent(query)}&type=food`;
+        let response = await authenticatedFetch(url);
+        
+        // Se não funcionar ou retornar erro, tentar o endpoint específico de alimentos
+        if (!response || response.status !== 200) {
+            url = `${apiBase}/ajax_search_food.php?term=${encodeURIComponent(query)}`;
+            response = await authenticatedFetch(url);
+        }
+        
+        if (!response) {
+            clearSearchResults();
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.data.length > 0) {
+            displaySearchResults(data.data, 'food');
         } else {
-            // Usar authenticatedFetch normalmente para web
-            const response = await authenticatedFetch(url);
-            if (!response) {
-                clearSearchResults();
-                return;
-            }
-            const data = await response.json();
-            if (data.success && data.data.length > 0) {
-                displaySearchResults(data.data, 'food');
-            } else {
-                clearSearchResults();
-            }
+            clearSearchResults();
         }
     } catch (error) {
         console.error('Erro ao buscar alimentos:', error);
