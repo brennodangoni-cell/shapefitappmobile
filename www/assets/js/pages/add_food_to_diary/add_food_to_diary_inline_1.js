@@ -53,7 +53,11 @@ function selectRecipe(recipe) {
     }
     
     // Mostrar modal
-    document.getElementById('recipe-modal').classList.add('visible');
+    const modal = document.getElementById('recipe-modal');
+    modal.classList.add('visible');
+    // ✅ Bloquear scroll do body quando modal está aberto
+    document.body.classList.add('recipe-modal-open');
+    document.body.style.overflow = 'hidden';
     console.log('✅ Modal aberto');
 }
 
@@ -182,6 +186,10 @@ function closeModal() {
     const modal = document.getElementById('recipe-modal');
     const modalContent = modal.querySelector('.modal-content');
     modal.classList.remove('visible');
+    
+    // ✅ Restaurar scroll do body quando modal fecha
+    document.body.classList.remove('recipe-modal-open');
+    document.body.style.overflow = '';
 
     // Adicione esta linha para resetar a posição do modal
     modalContent.style.transform = ''; 

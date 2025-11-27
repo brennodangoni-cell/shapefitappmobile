@@ -283,6 +283,14 @@
     margin: 0;
 }
 
+/* ✅ Bloquear scroll do body quando modal está aberto */
+body.scan-modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
 /* Modal - USANDO PADRÃO DO MAIN_APP */
 .modal-overlay {
     position: fixed !important;
@@ -300,6 +308,9 @@
     z-index: 99999 !important;
     padding: 20px !important;
     box-sizing: border-box !important;
+    /* ✅ Prevenir scroll no modal */
+    overflow: hidden !important;
+    touch-action: none !important;
 }
 
 .modal-overlay.visible {

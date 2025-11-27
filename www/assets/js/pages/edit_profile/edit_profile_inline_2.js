@@ -380,6 +380,9 @@
                 cropImage.style.zIndex = '10';
                 
                 modal.classList.add('visible');
+                // ✅ Bloquear scroll do body quando modal está aberto
+                document.body.classList.add('ep-modal-open');
+                document.body.style.overflow = 'hidden';
                 
                 // Quando a imagem carregar, calcular o zoom inicial e centralizar
                 cropImage.onload = () => {
@@ -408,6 +411,9 @@
                 const modal = document.getElementById('crop-modal');
                 const cropBackground = document.getElementById('crop-background');
                 modal.classList.remove('visible');
+                // ✅ Restaurar scroll do body quando modal fecha
+                document.body.classList.remove('ep-modal-open');
+                document.body.style.overflow = '';
                 isModalOpen = false; // Marcar modal como fechado
                 isProcessingFile = false; // Liberar flag de processamento
                 // Resetar elementos
@@ -672,10 +678,16 @@
             
             document.getElementById('close-restrictions-modal').addEventListener('click', () => {
                 restrictionsModal.classList.remove('visible');
+                // ✅ Restaurar scroll do body quando modal fecha
+                document.body.classList.remove('ep-modal-open');
+                document.body.style.overflow = '';
             });
             
             document.getElementById('cancel-restrictions').addEventListener('click', () => {
                 restrictionsModal.classList.remove('visible');
+                // ✅ Restaurar scroll do body quando modal fecha
+                document.body.classList.remove('ep-modal-open');
+                document.body.style.overflow = '';
                 renderRestrictionsModal(); // Resetar checkboxes
             });
             
@@ -686,12 +698,18 @@
                 });
                 updateRestrictionsCount();
                 restrictionsModal.classList.remove('visible');
+                // ✅ Restaurar scroll do body quando modal fecha
+                document.body.classList.remove('ep-modal-open');
+                document.body.style.overflow = '';
             });
             
             // Fechar modal ao clicar fora dele
             restrictionsModal.addEventListener('click', function(e) {
                 if (e.target === this) {
                     restrictionsModal.classList.remove('visible');
+                    // ✅ Restaurar scroll do body quando modal fecha
+                    document.body.classList.remove('ep-modal-open');
+                    document.body.style.overflow = '';
                     renderRestrictionsModal(); // Resetar checkboxes
                 }
             });
