@@ -131,6 +131,22 @@
     function showOfflineModal() {
         if (isOffline) return; // Já está mostrando
         
+        // ✅ VERIFICAR SE TEM TOKEN ANTES DE MOSTRAR MODAL
+        // Se não tiver token, NÃO mostrar modal - redirecionar para login
+        const token = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                     (localStorage.getItem('shapefit_auth_token') || null);
+        
+        if (!token) {
+            console.log('[OfflineModal] Tentativa de mostrar modal sem token - redirecionando para login');
+            // Redirecionar para login imediatamente
+            if (window.SPARouter && window.SPARouter.navigate) {
+                window.SPARouter.navigate('/fragments/auth_login.html', true);
+            } else {
+                window.location.href = '/auth/login.html';
+            }
+            return; // Não mostrar modal
+        }
+        
         isOffline = true;
         updateModalState(false);
         offlineModal.classList.add('visible');
@@ -168,29 +184,49 @@
             reconnectCheckInterval = null;
         }
         
+        // ✅ VERIFICAR SE TEM TOKEN quando internet volta
+        // Se não tiver token, redirecionar para login (não deveria estar aqui)
+        const token = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                     (localStorage.getItem('shapefit_auth_token') || null);
+        
+        if (!token) {
+            console.log('[OfflineModal] Sem token após reconexão - redirecionando para login');
+            if (window.SPARouter && window.SPARouter.navigate) {
+                window.SPARouter.navigate('/fragments/auth_login.html', true);
+            } else {
+                window.location.href = '/auth/login.html';
+            }
+            return;
+        }
+        
         // ✅ RECARREGAR PÁGINA ATUAL AUTOMATICAMENTE quando internet volta
         // Isso garante que os dados sejam carregados novamente
         setTimeout(() => {
             const currentPath = window.location.pathname;
             const currentSearch = window.location.search;
             
+            // Verificar novamente se tem token (pode ter mudado)
+            const tokenCheck = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                              (localStorage.getItem('shapefit_auth_token') || null);
+            
+            if (!tokenCheck) {
+                console.log('[OfflineModal] Token removido durante delay - redirecionando para login');
+                if (window.SPARouter && window.SPARouter.navigate) {
+                    window.SPARouter.navigate('/fragments/auth_login.html', true);
+                } else {
+                    window.location.href = '/auth/login.html';
+                }
+                return;
+            }
+            
             // Se estiver usando SPA router, recarregar via router
             if (window.SPARouter && window.SPARouter.currentPath) {
                 const currentRoute = window.SPARouter.currentPath;
                 console.log('[OfflineModal] Recarregando página via SPA:', currentRoute);
                 
-                // Disparar evento para recarregar dados da página atual
-                window.dispatchEvent(new CustomEvent('pageReload', { 
-                    detail: { reason: 'connection-restored' } 
-                }));
-                
-                // Se router tem método de reload, usar
-                if (window.SPARouter.reload) {
-                    window.SPARouter.reload();
-                } else {
-                    // Navegar para a mesma página para forçar recarregamento
-                    window.SPARouter.navigate(currentRoute + currentSearch, { forceReload: true });
-                }
+                // ✅ RECARREGAR PÁGINA COMPLETA para garantir que tudo seja atualizado
+                // Navegar para a mesma página para forçar recarregamento completo
+                window.SPARouter.navigate(currentRoute + currentSearch, { forceReload: true });
             } else {
                 // Fallback: recarregar página completa
                 console.log('[OfflineModal] Recarregando página completa');

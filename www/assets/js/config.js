@@ -74,16 +74,27 @@
                     ));
                 
                 if (isOfflineState) {
-                    // ✅ Só mostrar modal se usuário estiver logado (tem token)
+                    // ✅ Se estiver offline e sem token, redirecionar para login IMEDIATAMENTE
                     const hasToken = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
                                     (localStorage.getItem('shapefit_auth_token') || null);
                     
-                    if (hasToken) {
-                        // Se estiver offline, mostrar modal e NÃO propagar erro
-                        const offlineModal = document.getElementById('offline-modal');
-                        if (offlineModal && typeof window.offlineModal !== 'undefined') {
-                            window.offlineModal.show();
+                    if (!hasToken) {
+                        console.log('[Fetch] Offline e sem token no catch - redirecionando para login');
+                        if (window.SPARouter && window.SPARouter.navigate) {
+                            window.SPARouter.navigate('/fragments/auth_login.html', true);
+                        } else {
+                            window.location.href = '/auth/login.html';
                         }
+                        const silentError = new Error('Network request failed');
+                        silentError.name = 'NetworkError';
+                        silentError.silent = true;
+                        return Promise.reject(silentError);
+                    }
+                    
+                    // Se tem token, mostrar modal offline
+                    const offlineModal = document.getElementById('offline-modal');
+                    if (offlineModal && typeof window.offlineModal !== 'undefined') {
+                        window.offlineModal.show();
                     }
                     
                     // ✅ Não propagar erro quando offline - erro silencioso
