@@ -826,24 +826,7 @@ function selectSearchResult(item, type) {
     document.getElementById('search-input').value = '';
 }
 
-// Event listeners
-document.getElementById('quantity').addEventListener('input', updateMacros);
-document.getElementById('unit-select').addEventListener('change', updateMacros);
-
-// Event listeners para as abas
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        switchTab(btn.dataset.tab);
-    });
-});
-
-// Busca em tempo real
-document.getElementById('search-input').addEventListener('input', function() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        performSearch();
-    }, 300);
-});
+// Event listeners (serão adicionados em initAddFoodPage para garantir que funcionem no SPA)
 
 
 // Fechar modal clicando fora
@@ -1085,6 +1068,58 @@ async function initAddFoodPage() {
     }
     if (document.getElementById('meal-type')) {
         document.getElementById('meal-type').addEventListener('change', updateCustomFoodLinks);
+    }
+    
+    // ✅ Event listeners para as abas (movidos para dentro de initAddFoodPage)
+    // Remover listeners antigos se existirem para evitar duplicação
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        // Clonar o botão para remover todos os listeners antigos
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+    });
+    
+    // Adicionar listeners novamente
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchTab(btn.dataset.tab);
+        });
+    });
+    
+    // ✅ Event listeners para busca (movidos para dentro de initAddFoodPage)
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        // Remover listener antigo se existir
+        const newSearchInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+        
+        // Adicionar listener novamente
+        document.getElementById('search-input').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch();
+            }, 300);
+        });
+    }
+    
+    // ✅ Event listeners para modal (movidos para dentro de initAddFoodPage)
+    const quantityInput = document.getElementById('quantity');
+    const unitSelect = document.getElementById('unit-select');
+    if (quantityInput) {
+        quantityInput.addEventListener('input', updateMacros);
+    }
+    if (unitSelect) {
+        unitSelect.addEventListener('change', updateMacros);
+    }
+    
+    // ✅ Event listener para fechar modal clicando fora
+    const recipeModal = document.getElementById('recipe-modal');
+    if (recipeModal) {
+        recipeModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
     }
 }
 
