@@ -1,38 +1,16 @@
 <?php
 // Arquivo: public_html/shapefit/api/ajax_search_food.php
 
-// ✅ CORREÇÃO CORS: Permitir origem do app Capacitor
-$allowed_origins = [
-    'https://localhost',
-    'https://app.shapefit.local',
-    'https://appshapefit.com'
-];
+// Desabilitar exibição de erros para não quebrar o JSON
+error_reporting(0);
+ini_set('display_errors', 0);
 
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowed_origins)) {
-    header("Access-Control-Allow-Origin: " . $origin);
-} else {
-    // Fallback para localhost se não encontrar origem
-    header("Access-Control-Allow-Origin: https://localhost");
-}
-
+// ✅ USAR EXATAMENTE O MESMO PADRÃO DO ajax_search_foods_recipes.php (que funciona!)
+// Headers para CORS
+header("Access-Control-Allow-Origin: *"); 
 header("Access-Control-Allow-Credentials: true");
-// ✅ IMPORTANTE: Não usar * para headers, especificar explicitamente
-header("Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With");
+header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-
-// ✅ Responder imediatamente para requisições OPTIONS (preflight)
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    // Retornar os mesmos headers na resposta OPTIONS
-    header("Access-Control-Allow-Origin: " . ($origin ?: 'https://localhost'));
-    header("Access-Control-Allow-Credentials: true");
-    header("Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With");
-    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-    exit;
-}
-
-// Define o cabeçalho correto para JSON com UTF-8
 header('Content-Type: application/json; charset=utf-8');
 
 // Corrige o caminho para os includes, pois o arquivo agora está em /api/
