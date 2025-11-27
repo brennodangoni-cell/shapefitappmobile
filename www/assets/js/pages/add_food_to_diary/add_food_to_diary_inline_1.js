@@ -1202,6 +1202,22 @@ window.addEventListener('fragmentReady', initAddFoodPage);
 window.addEventListener('pageLoaded', initAddFoodPage);
 
 // ✅ Recarregar dados quando internet volta
+window.addEventListener('reloadPageData', function(e) {
+    if (e.detail && e.detail.reason === 'connection-restored') {
+        console.log('[AddFood] Recarregando dados após conexão restaurada');
+        // Recarregar dados da página
+        if (typeof loadPageData === 'function') {
+            loadPageData().catch(err => {
+                console.error('[AddFood] Erro ao recarregar dados:', err);
+            });
+        } else {
+            // Se não tiver função específica, reinicializar página
+            initAddFoodPage();
+        }
+    }
+});
+
+// ✅ Recarregar dados quando internet volta
 window.addEventListener('pageReload', function(e) {
     if (e.detail && e.detail.reason === 'connection-restored') {
         console.log('[AddFood] Recarregando dados após conexão restaurada');
