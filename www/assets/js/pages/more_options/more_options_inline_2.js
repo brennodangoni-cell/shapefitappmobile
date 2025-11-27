@@ -99,34 +99,54 @@
             }
         }
         
-        async function handleLogout(e) {
+        function handleLogout(e) {
             e.preventDefault();
+            e.stopPropagation();
+            
+            // ✅ DESABILITAR BOTÃO PARA EVITAR CLICKS MÚLTIPLOS
+            const logoutBtn = e.target.closest('#logout-btn') || document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.disabled = true;
+                logoutBtn.style.pointerEvents = 'none';
+                logoutBtn.style.opacity = '0.5';
+            }
             
             // Pegar token antes de limpar
-            const token = localStorage.getItem('shapefitUserToken');
+            const token = localStorage.getItem('shapefitUserToken') || localStorage.getItem('shapefit_auth_token');
             
             // 1. Limpar localStorage LOCAL (importante: antes de redirecionar!)
             localStorage.removeItem('shapefit_auth_token');  // Chave correta do auth.js
             localStorage.removeItem('shapefitUserToken');     // Chave antiga (backup)
             localStorage.removeItem('shapefitUserData');
             
-            // 2. Invalidar token no servidor (em background)
+            // 2. Limpar cache de auth
+            if (window.clearAuthToken) {
+                window.clearAuthToken();
+            }
+            window._authResult = undefined;
+            window._authChecking = false;
+            
+            // 3. Invalidar token no servidor (em background, não bloquear)
             if (token) {
-                try {
-                    await fetch('https://appshapefit.com/api/invalidate_token.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + token
-                        }
-                    });
-                } catch (err) {
+                fetch('https://appshapefit.com/api/invalidate_token.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    }
+                }).catch(() => {
                     // Ignora erro - o importante é limpar local
-                }
+                });
             }
             
-            // 3. Redirecionar para login
-            window.location.href = '/login';
+            // 4. Redirecionar para login usando router SPA (não bloquear)
+            if (window.SPARouter && typeof window.SPARouter.navigate === 'function') {
+                // Usar router SPA
+                window.SPARouter.navigate('/fragments/auth_login.html');
+            } else {
+                // Fallback: redirecionamento direto
+                window.location.href = '/login';
+            }
         }
         
         async function initPage() {
