@@ -294,8 +294,7 @@ body.scan-modal-open {
 /* Modal - USANDO PADRÃO DO MAIN_APP */
 .modal-overlay {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
+    inset: 0 !important; /* top, right, bottom, left: 0 */
     width: 100vw !important;
     height: 100vh !important;
     background: rgba(0, 0, 0, 0.8) !important;
@@ -311,6 +310,8 @@ body.scan-modal-open {
     /* ✅ Prevenir scroll no modal */
     overflow: hidden !important;
     touch-action: none !important;
+    /* ✅ Garantir que fique sempre na viewport */
+    margin: 0 !important;
 }
 
 .modal-overlay.visible {
