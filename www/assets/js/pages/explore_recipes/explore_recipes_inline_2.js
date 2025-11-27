@@ -112,9 +112,9 @@ async function loadPageData(customParams = null) {
         if (customParams) {
             if (isClearingFilters) {
                 // Esconder conteúdo atual antes de mostrar skeleton
-                const recipesList = document.getElementById('recipes-list');
-                const categoriesGrid = document.getElementById('categories-grid');
-                const loadingState = document.getElementById('loading-state');
+        const recipesList = document.getElementById('recipes-list');
+        const categoriesGrid = document.getElementById('categories-grid');
+        const loadingState = document.getElementById('loading-state');
                 if (recipesList) recipesList.style.display = 'none';
                 if (categoriesGrid) categoriesGrid.style.display = 'none';
                 if (loadingState) loadingState.style.display = 'none';
@@ -490,8 +490,8 @@ function initExploreRecipesUI() {
                 }
                 window.scrollTo(0, savedScrollPosition);
                 // Resetar transform quando fechar
-                modalContent.style.transform = '';
-                modalContent.style.transition = '';
+                    modalContent.style.transform = '';
+                    modalContent.style.transition = '';
                 // Mostrar bottom nav sincronizado com o fechamento do modal
                 const bottomNav = document.getElementById('bottom-nav-container');
                 const modalTransition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
@@ -571,8 +571,8 @@ function initExploreRecipesUI() {
                     }
                     window.scrollTo(0, savedScrollPosition);
                     // Resetar transform quando fechar
-                    modalContent.style.transform = '';
-                    modalContent.style.transition = '';
+                        modalContent.style.transform = '';
+                        modalContent.style.transition = '';
                 }
                 
                 // Controlar bottom nav
@@ -588,12 +588,12 @@ function initExploreRecipesUI() {
                     }
                 } else {
                     // Mostrar bottom nav
-                    if (bottomNav) {
-                        bottomNav.style.transform = '';
-                    }
-                    if (window.BottomNavAPI) {
-                        window.BottomNavAPI.show();
-                    }
+                        if (bottomNav) {
+                            bottomNav.style.transform = '';
+                        }
+                        if (window.BottomNavAPI) {
+                            window.BottomNavAPI.show();
+                        }
                 }
             };
             
@@ -736,12 +736,12 @@ function initExploreRecipesUI() {
         }
         // Mostrar bottom nav
         const bottomNav = document.getElementById('bottom-nav-container');
-        if (bottomNav) {
-            bottomNav.style.transform = '';
-        }
-        if (window.BottomNavAPI) {
-            window.BottomNavAPI.show();
-        }
+            if (bottomNav) {
+                bottomNav.style.transform = '';
+            }
+            if (window.BottomNavAPI) {
+                window.BottomNavAPI.show();
+            }
         
         // Resetar inputs do modal
         if (searchInput) searchInput.value = '';
@@ -808,12 +808,12 @@ function initExploreRecipesUI() {
         }
         // Mostrar bottom nav
         const bottomNav = document.getElementById('bottom-nav-container');
-        if (bottomNav) {
-            bottomNav.style.transform = '';
-        }
-        if (window.BottomNavAPI) {
-            window.BottomNavAPI.show();
-        }
+            if (bottomNav) {
+                bottomNav.style.transform = '';
+            }
+            if (window.BottomNavAPI) {
+                window.BottomNavAPI.show();
+            }
         
         // Carregar dados com novos filtros (sem reload!)
         await loadPageData({

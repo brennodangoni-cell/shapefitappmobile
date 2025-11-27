@@ -1148,6 +1148,132 @@ function animatePointsCount(element, startValue, endValue, duration) {
 // ========================================
 // CARREGAR E RENDERIZAR DASHBOARD
 // ========================================
+
+/**
+ * Função reutilizável para carregar dados do dashboard
+ * Pode ser chamada na inicialização e quando a conexão volta
+ */
+async function loadDashboardData() {
+    // Verificar se BASE_APP_URL foi definido
+    if (!window.BASE_APP_URL) {
+        console.error('[ERRO] BASE_APP_URL não foi definido!');
+        const container = document.getElementById('dashboard-container');
+        if (container) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-primary);"><p>Erro: BASE_APP_URL não foi definido</p></div>';
+            container.style.display = 'block';
+        }
+        return;
+    }
+    
+    // Verificar se há token na URL (vindo do login.php)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+        setAuthToken(tokenFromUrl);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    // Verificar autenticação
+    const authenticated = await requireAuth();
+    if (!authenticated) {
+        return;
+    }
+    
+    // ✅ Verificar se está offline ANTES de tentar carregar
+    // Se estiver offline, não mostrar erro - o modal offline já está cuidando disso
+    if (!navigator.onLine) {
+        console.log('[Dashboard] Offline detectado - aguardando conexão');
+        return;
+    }
+    
+    const container = document.getElementById('dashboard-container');
+    if (!container) {
+        console.error('[Dashboard] Container não encontrado');
+        return;
+    }
+    
+    try {
+        // Mostrar skeleton/loading enquanto carrega
+        container.style.display = 'block';
+        
+        // Carregar dados do dashboard
+        const response = await authenticatedFetch('/api/get_dashboard_data.php');
+        if (!response) {
+            console.error('Response é null - token inválido ou erro de autenticação');
+            return;
+        }
+        
+        // Verificar se a resposta é JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const responseText = await response.clone().text();
+            console.error('Resposta não é JSON. Conteúdo completo:', responseText);
+            throw new Error('A API retornou um formato inválido. Verifique o console para mais detalhes.');
+        }
+        
+        // Tentar fazer parse do JSON
+        let result;
+        try {
+            result = await response.json();
+        } catch (parseError) {
+            const responseText = await response.clone().text();
+            console.error('Erro ao fazer parse do JSON:', parseError);
+            throw new Error('Resposta da API não é JSON válido. Verifique o console.');
+        }
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Erro ao carregar dados');
+        }
+        
+        const data = result.data;
+        
+        // ✅ RENDERIZAÇÃO INCREMENTAL - Não bloquear thread
+        renderDashboardOptimized(data).catch(err => {
+            console.error('Erro na renderização incremental:', err);
+            // Fallback: renderização direta
+            renderDashboard(data);
+        });
+        
+        // Mostrar container
+        container.style.display = 'block';
+        
+        // ✅ PÁGINA PRONTA - Remover skeleton APÓS renderização completa
+        if (window.PageLoader) window.PageLoader.ready();
+        
+    } catch (error) {
+        // ✅ Verificar se é erro de rede/offline
+        const isNetworkError = error.message && (
+            error.message.includes('Network request failed') ||
+            error.message.includes('Failed to fetch') ||
+            error.message.includes('NetworkError') ||
+            error.name === 'NetworkError' ||
+            error.silent === true
+        );
+        
+        // Se for erro de rede e estiver offline, não mostrar erro
+        // O modal offline já está cuidando disso
+        if (isNetworkError && (!navigator.onLine || (window.isOffline && window.isOffline()))) {
+            console.log('[Dashboard] Erro de rede detectado e offline - modal offline cuidará disso');
+            return;
+        }
+        
+        console.error('Erro ao carregar dashboard:', error);
+        console.error('Stack:', error.stack);
+        const errorMsg = error.message || 'Erro desconhecido';
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--text-primary);">
+                <p>Erro ao carregar dados: ${errorMsg}</p>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">Verifique o console para mais detalhes.</p>
+            </div>
+        `;
+        container.style.display = 'block';
+        
+        // ✅ Mesmo com erro, remover skeleton
+        if (window.PageLoader) window.PageLoader.ready();
+    }
+}
+
+// Inicialização principal
 (async function() {
     // Aguardar um pouco para garantir que www-config.js foi executado
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -1184,102 +1310,51 @@ function animatePointsCount(element, startValue, endValue, duration) {
         }
     }
     
-    // Verificar se BASE_APP_URL foi definido
-    // Em desenvolvimento, localhost é válido para BASE_APP_URL (redirecionamentos internos)
-    // Apenas verificar se está definido, não se contém localhost
-    if (!window.BASE_APP_URL) {
-        console.error('[ERRO] BASE_APP_URL não foi definido!');
-        const container = document.getElementById('dashboard-container');
-        if (container) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-primary);"><p>Erro: BASE_APP_URL não foi definido</p></div>';
-            container.style.display = 'block';
-        }
-        return;
-    }
+    // Carregar dados inicialmente
+    await loadDashboardData();
     
-    const BASE_URL = window.BASE_APP_URL;
-    // ✅ Logs removidos para performance
+    // ✅ ESCUTAR EVENTO DE RECONEXÃO
+    // Quando a internet volta, recarregar os dados automaticamente
+    window.addEventListener('reloadPageData', async function(e) {
+        if (e.detail && e.detail.reason === 'connection-restored') {
+            console.log('[Dashboard] Conexão restaurada - recarregando dados...');
+            
+            // Limpar mensagens de erro anteriores
+            const container = document.getElementById('dashboard-container');
+            if (container) {
+                // Remover qualquer mensagem de erro que possa estar visível
+                const errorDivs = container.querySelectorAll('div[style*="text-align: center"]');
+                errorDivs.forEach(div => {
+                    if (div.textContent.includes('Erro ao carregar dados')) {
+                        div.remove();
+                    }
+                });
+            }
+            
+            // Recarregar dados
+            await loadDashboardData();
+        }
+    });
     
-    // Verificar se há token na URL (vindo do login.php)
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
-    if (tokenFromUrl) {
-        // ✅ Log removido para performance
-        // Salvar token no localStorage
-        setAuthToken(tokenFromUrl);
-        // Remover token da URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    
-    // Verificar autenticação
-    // ✅ Logs removidos para performance
-    const authenticated = await requireAuth();
-    if (!authenticated) {
-        return;
-    }
-    
-    try {
-        // Carregar dados do dashboard (usar URL relativa para proxy)
-        // ✅ Log removido para performance
-        const response = await authenticatedFetch('/api/get_dashboard_data.php');
-        if (!response) {
-            console.error('Response é null - token inválido ou erro de autenticação');
-            return;
-        }
-        
-        // Verificar se a resposta é JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const responseText = await response.clone().text();
-            console.error('Resposta não é JSON. Conteúdo completo:', responseText);
-            throw new Error('A API retornou um formato inválido. Verifique o console para mais detalhes.');
-        }
-        
-        // Tentar fazer parse do JSON
-        let result;
-        try {
-            result = await response.json();
-        } catch (parseError) {
-            const responseText = await response.clone().text();
-            console.error('Erro ao fazer parse do JSON:', parseError);
-            throw new Error('Resposta da API não é JSON válido. Verifique o console.');
-        }
-        // ✅ Log removido para performance
-        
-        if (!result.success) {
-            throw new Error(result.message || 'Erro ao carregar dados');
-        }
-        
-        const data = result.data;
-        
-        // ✅ RENDERIZAÇÃO INCREMENTAL - Não bloquear thread
-        renderDashboardOptimized(data).catch(err => {
-            console.error('Erro na renderização incremental:', err);
-            // Fallback: renderização direta
-            renderDashboard(data);
-        });
-        
-        // Mostrar container
-        document.getElementById('dashboard-container').style.display = 'block';
-        
-        // ✅ PÁGINA PRONTA - Remover skeleton APÓS renderização completa
-        if (window.PageLoader) window.PageLoader.ready();
-        
-    } catch (error) {
-        console.error('Erro ao carregar dashboard:', error);
-        console.error('Stack:', error.stack);
-        const errorMsg = error.message || 'Erro desconhecido';
-        document.getElementById('dashboard-container').innerHTML = `
-            <div style="text-align: center; padding: 40px; color: var(--text-primary);">
-                <p>Erro ao carregar dados: ${errorMsg}</p>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">Verifique o console para mais detalhes.</p>
-            </div>
-        `;
-        document.getElementById('dashboard-container').style.display = 'block';
-        
-        // ✅ Mesmo com erro, remover skeleton
-        if (window.PageLoader) window.PageLoader.ready();
-    }
+    // ✅ TAMBÉM ESCUTAR EVENTO ONLINE DIRETO (backup)
+    // Caso o evento reloadPageData não seja disparado
+    window.addEventListener('online', async function() {
+        // Aguardar um pouco para garantir que a conexão está estável
+        setTimeout(async () => {
+            // Verificar se realmente está online
+            if (navigator.onLine) {
+                const container = document.getElementById('dashboard-container');
+                if (container) {
+                    // Verificar se há mensagem de erro visível
+                    const hasError = container.innerHTML.includes('Erro ao carregar dados');
+                    if (hasError) {
+                        console.log('[Dashboard] Evento online detectado e há erro - recarregando dados...');
+                        await loadDashboardData();
+                    }
+                }
+            }
+        }, 1000);
+    });
 })();
 
 /**

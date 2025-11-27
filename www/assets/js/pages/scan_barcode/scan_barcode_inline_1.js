@@ -44,6 +44,93 @@
 
         async function initializeScanner() {
             try {
+                // ✅ SOLICITAR PERMISSÃO DE CÂMERA PRIMEIRO (especialmente no Capacitor iOS/Android)
+                const isNative = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+                const isIOS = isNative && window.Capacitor.getPlatform() === 'ios';
+                const isAndroid = isNative && window.Capacitor.getPlatform() === 'android';
+                
+                if (isNative) {
+                    console.log('[Scanner] App nativo detectado (' + window.Capacitor.getPlatform() + ') - solicitando permissão de câmera...');
+                    
+                    let permissionGranted = false;
+                    
+                    // ✅ NO iOS E ANDROID: Usar plugin Camera do Capacitor (mais confiável)
+                    try {
+                        const Camera = window.Capacitor.Plugins?.Camera;
+                        if (Camera) {
+                            console.log('[Scanner] Plugin Camera encontrado, solicitando permissão...');
+                            
+                            // No iOS, o plugin Camera é mais confiável que getUserMedia
+                            const permissionResult = await Camera.requestPermissions({ permissions: ['camera'] });
+                            console.log('[Scanner] Resultado da permissão Camera:', permissionResult);
+                            
+                            // iOS retorna 'granted' ou 'yes', Android pode retornar 'granted'
+                            if (permissionResult.camera === 'granted' || permissionResult.camera === 'yes') {
+                                permissionGranted = true;
+                                console.log('[Scanner] Permissão concedida via plugin Camera');
+                            } else {
+                                const platformName = isIOS ? 'iOS' : 'Android';
+                                showCameraError(`Permissão de câmera negada. Por favor, permita o acesso à câmera nas Configurações > ${platformName === 'iOS' ? 'ShapeFit' : 'App'} > Câmera.`);
+                                return;
+                            }
+                        } else {
+                            console.warn('[Scanner] Plugin Camera não encontrado, tentando getUserMedia...');
+                        }
+                    } catch (capError) {
+                        console.warn('[Scanner] Erro ao solicitar permissão via Capacitor Camera:', capError);
+                        // Continuar tentando com getUserMedia como fallback
+                    }
+                    
+                    // ✅ FALLBACK: Se não conseguiu via plugin, tentar getUserMedia
+                    // No Android pode funcionar, no iOS geralmente não funciona bem no Capacitor
+                    if (!permissionGranted) {
+                        console.log('[Scanner] Tentando solicitar permissão via getUserMedia (fallback)...');
+                    }
+                }
+                
+                // Solicitar permissão via getUserMedia (web ou fallback no nativo)
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        // Solicitar permissão primeiro
+                        const videoConstraints = {
+                            facingMode: 'environment' // Preferir câmera traseira
+                        };
+                        
+                        // No iOS, pode precisar de constraints diferentes
+                        if (isIOS) {
+                            // iOS pode não suportar facingMode, usar constraints mais simples
+                            videoConstraints.facingMode = undefined;
+                        }
+                        
+                        const stream = await navigator.mediaDevices.getUserMedia({ 
+                            video: videoConstraints
+                        });
+                        // Parar o stream imediatamente - só queríamos a permissão
+                        stream.getTracks().forEach(track => track.stop());
+                        console.log('[Scanner] Permissão de câmera concedida via getUserMedia');
+                    } catch (permError) {
+                        console.error('[Scanner] Erro ao solicitar permissão via getUserMedia:', permError);
+                        
+                        // Se já tentou via plugin e falhou, mostrar erro
+                        if (isNative && !permissionGranted) {
+                            const platformName = isIOS ? 'iOS' : 'Android';
+                            showCameraError(`Não foi possível acessar a câmera. Por favor, verifique as permissões em Configurações > ${platformName === 'iOS' ? 'ShapeFit' : 'App'} > Câmera.`);
+                            return;
+                        }
+                        
+                        if (permError.name === 'NotAllowedError' || permError.name === 'PermissionDeniedError') {
+                            showCameraError('Permissão de câmera negada. Por favor, permita o acesso à câmera nas configurações.');
+                            return;
+                        } else if (permError.name === 'NotFoundError' || permError.name === 'DevicesNotFoundError') {
+                            showCameraError('Nenhuma câmera encontrada no dispositivo.');
+                            return;
+                        } else {
+                            showCameraError('Não foi possível acessar a câmera. Verifique as permissões.');
+                            return;
+                        }
+                    }
+                }
+                
                 codeReader = new ZXing.BrowserMultiFormatReader();
                 
                 // Solicitar permissão e obter câmera traseira
@@ -57,8 +144,12 @@
                 // Tentar usar câmera traseira (environment) se disponível
                 selectedDeviceId = videoInputDevices[0].deviceId;
                 for (const device of videoInputDevices) {
-                    if (device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('traseira')) {
+                    if (device.label.toLowerCase().includes('back') || 
+                        device.label.toLowerCase().includes('traseira') ||
+                        device.label.toLowerCase().includes('environment') ||
+                        device.label.toLowerCase().includes('rear')) {
                         selectedDeviceId = device.deviceId;
+                        console.log('[Scanner] Câmera traseira selecionada:', device.label);
                         break;
                     }
                 }

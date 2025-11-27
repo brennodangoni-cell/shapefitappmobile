@@ -199,6 +199,43 @@
             return;
         }
         
+        // ✅ LIMPAR MENSAGENS DE ERRO VISÍVEIS
+        // Remover mensagens de erro que possam estar na tela
+        if (typeof window.hideErrorMessages === 'function') {
+            window.hideErrorMessages();
+        }
+        
+        // Remover mensagens de erro manualmente também
+        const errorSelectors = [
+            '.error-message',
+            '.alert-danger',
+            '[class*="error"]',
+            'div[style*="text-align: center"]'
+        ];
+        
+        errorSelectors.forEach(selector => {
+            try {
+                document.querySelectorAll(selector).forEach(el => {
+                    const text = el.textContent || '';
+                    if (text.includes('Erro ao carregar dados') || 
+                        text.includes('Network request failed') ||
+                        text.includes('Failed to fetch')) {
+                        el.style.display = 'none';
+                        el.classList.add('hidden-by-offline');
+                    }
+                });
+            } catch (e) {
+                // Ignorar erros de seletor
+            }
+        });
+        
+        // ✅ DISPARAR EVENTO DE RECONEXÃO
+        // Isso permite que as páginas recarreguem seus dados automaticamente
+        console.log('[OfflineModal] Disparando evento reloadPageData');
+        window.dispatchEvent(new CustomEvent('reloadPageData', {
+            detail: { reason: 'connection-restored' }
+        }));
+        
         // ✅ RECARREGAR PÁGINA ATUAL AUTOMATICAMENTE quando internet volta
         // Isso garante que os dados sejam carregados novamente
         setTimeout(() => {

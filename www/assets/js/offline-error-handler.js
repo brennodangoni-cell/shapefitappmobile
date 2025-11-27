@@ -138,6 +138,25 @@
         hideErrorMessages();
     }
 
+    // ✅ ESCUTAR EVENTO DE RECONEXÃO
+    // Quando a conexão volta, esconder mensagens de erro
+    window.addEventListener('reloadPageData', function(e) {
+        if (e.detail && e.detail.reason === 'connection-restored') {
+            console.log('[OfflineErrorHandler] Conexão restaurada - escondendo mensagens de erro');
+            hideErrorMessages();
+        }
+    });
+    
+    // ✅ TAMBÉM ESCUTAR EVENTO ONLINE (backup)
+    window.addEventListener('online', function() {
+        setTimeout(() => {
+            if (navigator.onLine) {
+                console.log('[OfflineErrorHandler] Evento online detectado - escondendo mensagens de erro');
+                hideErrorMessages();
+            }
+        }, 500);
+    });
+
     // Expor função globalmente
     window.hideErrorMessages = hideErrorMessages;
     window.isOffline = isOffline;
