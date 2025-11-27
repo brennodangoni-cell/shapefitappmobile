@@ -249,39 +249,61 @@
             if (isAuthPage) {
                 // Adicionar classe ANTES de qualquer renderização
                 document.documentElement.classList.add('auth-initial');
+                document.body.classList.add('auth-mode');
                 
-                // Esconder bottom nav IMEDIATAMENTE - usar MutationObserver para pegar assim que aparecer
+                // Esconder bottom nav IMEDIATAMENTE - função ultra-agressiva
                 function hideBottomNav() {
                     var bottomNav = document.getElementById('bottom-nav-container');
                     if (bottomNav) {
-                        bottomNav.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; position: fixed !important; bottom: -1000px !important;';
+                        // ✅ FORÇAR COM STYLE INLINE ULTRA-AGRESSIVO
+                        bottomNav.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; position: fixed !important; bottom: -1000px !important; height: 0 !important; width: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;';
                         bottomNav.classList.add('hidden');
+                        bottomNav.classList.remove('nav-visible');
                         return true; // Indica que foi escondido
                     }
                     return false;
                 }
                 
-                // Tentar esconder imediatamente (se o elemento já existir)
-                if (!hideBottomNav()) {
-                    // Se não existir ainda, usar MutationObserver para esconder assim que aparecer
+                // ✅ EXECUTAR MÚLTIPLAS VEZES PARA GARANTIR
+                // Tentar imediatamente
+                hideBottomNav();
+                
+                // Se não existir ainda, usar MutationObserver
+                if (!document.getElementById('bottom-nav-container')) {
                     var observer = new MutationObserver(function(mutations, obs) {
                         if (hideBottomNav()) {
-                            obs.disconnect(); // Parar de observar quando conseguir esconder
+                            obs.disconnect();
                         }
                     });
-                    // Começar a observar imediatamente
                     observer.observe(document.documentElement || document.body || document, {
                         childList: true,
-                        subtree: true
+                        subtree: true,
+                        attributes: true
                     });
-                    // Timeout de segurança para desconectar após 1 segundo
-                    setTimeout(function() { observer.disconnect(); }, 1000);
+                    // Timeout de segurança
+                    setTimeout(function() { observer.disconnect(); }, 2000);
                 }
                 
-                // Executar no DOMContentLoaded também (garantia)
+                // ✅ EXECUTAR EM TODOS OS EVENTOS POSSÍVEIS
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', hideBottomNav, { once: true });
+                    document.addEventListener('DOMContentLoaded', function() {
+                        hideBottomNav();
+                        setTimeout(hideBottomNav, 10);
+                        setTimeout(hideBottomNav, 50);
+                        setTimeout(hideBottomNav, 100);
+                    }, { once: false });
+                } else {
+                    hideBottomNav();
+                    setTimeout(hideBottomNav, 10);
+                    setTimeout(hideBottomNav, 50);
+                    setTimeout(hideBottomNav, 100);
                 }
+                
+                // ✅ EXECUTAR NO LOAD TAMBÉM
+                window.addEventListener('load', function() {
+                    hideBottomNav();
+                    setTimeout(hideBottomNav, 10);
+                }, { once: true });
             }
         })();
     </script>

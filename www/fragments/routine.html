@@ -46,10 +46,17 @@
         }
         
         .page-header {
-            padding: calc(env(safe-area-inset-top, 0px) + 16px) 24px 20px;
+            padding: calc(env(safe-area-inset-top, 0px) + 12px) 24px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        
+        /* ✅ REDUZIR MARGEM NO ANDROID */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: calc(env(safe-area-inset-top, 0px) + 8px) 24px 16px !important;
+            }
         }
         
         .page-title {
