@@ -724,7 +724,16 @@ function performSearch() {
 // Função para buscar receitas
 async function searchRecipes(query) {
     try {
-        const response = await authenticatedFetch(`/api/ajax_search_foods_recipes.php?term=${encodeURIComponent(query)}&type=recipes`);
+        // ✅ Usar URL completa diretamente para evitar problemas de CORS no Capacitor
+        const apiBase = window.API_BASE_URL || 'https://appshapefit.com/api';
+        const url = `${apiBase}/ajax_search_foods_recipes.php?term=${encodeURIComponent(query)}&type=recipes`;
+        const response = await authenticatedFetch(url);
+        
+        if (!response) {
+            clearSearchResults();
+            return;
+        }
+        
         const data = await response.json();
         
         if (data.success && data.data.length > 0) {
@@ -741,7 +750,16 @@ async function searchRecipes(query) {
 // Função para buscar alimentos
 async function searchFoods(query) {
     try {
-        const response = await authenticatedFetch(`/api/ajax_search_food.php?term=${encodeURIComponent(query)}`);
+        // ✅ Usar URL completa diretamente para evitar problemas de CORS no Capacitor
+        const apiBase = window.API_BASE_URL || 'https://appshapefit.com/api';
+        const url = `${apiBase}/ajax_search_food.php?term=${encodeURIComponent(query)}`;
+        const response = await authenticatedFetch(url);
+        
+        if (!response) {
+            clearSearchResults();
+            return;
+        }
+        
         const data = await response.json();
         
         if (data.success && data.data.length > 0) {
