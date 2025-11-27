@@ -7,13 +7,11 @@
         // Verificar se estamos na página de edit_profile
         const isEditProfilePage = document.querySelector('.ep-container') || document.querySelector('.edit-profile-container');
         if (!isEditProfilePage) {
-            console.log('edit_profile: não estamos na página, ignorando');
             return;
         }
         
         // Evitar execução duplicada na mesma navegação
         if (window._editProfileLoaded) {
-            console.log('edit_profile: já carregado, ignorando');
             return;
         }
         window._editProfileLoaded = true;
@@ -48,7 +46,6 @@
             // Verificar se ainda estamos na página de edit_profile antes de fazer qualquer coisa
             const isStillOnPage = document.querySelector('.ep-container') || document.querySelector('.edit-profile-container');
             if (!isStillOnPage) {
-                console.log('edit_profile: loadProfileData chamado mas não estamos na página, ignorando');
                 return;
             }
             
@@ -240,7 +237,6 @@
         function showStatus(message, isSuccess) {
             const statusEl = document.getElementById('upload-status');
             if (!statusEl) {
-                console.log('Status:', message, isSuccess ? '✓' : '✗');
                 return;
             }
             statusEl.textContent = message;
@@ -267,7 +263,6 @@
             modals.forEach(modal => {
                 if (modal && modal.parentElement && modal.parentElement.classList.contains('page-root')) {
                     document.body.appendChild(modal);
-                    console.log('✅ Modal movido para body:', modal.id);
                 }
             });
         }
@@ -279,13 +274,11 @@
             
             // Verificar se elementos existem
             if (!document.getElementById('edit-profile-form')) {
-                console.log('edit_profile: Form não encontrado, aguardando...');
                 return;
             }
             
             // Aguardar auth.js estar carregado
             if (typeof requireAuth !== 'function' || typeof authenticatedFetch !== 'function') {
-                console.log('edit_profile: Aguardando auth.js...');
                 setTimeout(initEditProfile, 100);
                 return;
             }
@@ -784,9 +777,7 @@
                     
                     // Depois, fazer upload da foto se houver uma nova
                     const photoInput = document.getElementById('profile-photo-input');
-                    console.log('Verificando foto para upload:', photoInput.files ? photoInput.files.length : 0, 'Arquivo:', photoInput.files && photoInput.files.length > 0 ? photoInput.files[0].name : 'nenhum');
                     if (photoInput.files && photoInput.files.length > 0) {
-                        console.log('Fazendo upload da foto:', photoInput.files[0].name, photoInput.files[0].size, 'bytes');
                         const photoFormData = new FormData();
                         photoFormData.append('profile_photo', photoInput.files[0]);
                         
@@ -798,9 +789,6 @@
                         }
                         
                         const uploadUrl = '/api/upload_profile_photo.php';
-                        console.log('Fazendo upload para:', uploadUrl);
-                        console.log('Token presente:', !!token);
-                        
                         const photoResponse = await fetch(uploadUrl, {
                             method: 'POST',
                             headers: {
@@ -808,9 +796,6 @@
                             },
                             body: photoFormData
                         });
-                        
-                        console.log('Resposta do upload:', photoResponse.status, photoResponse.statusText);
-                        
                         // Se receber 401, redirecionar para login
                         if (photoResponse.status === 401) {
                             clearAuthToken();
@@ -831,13 +816,9 @@
                         }
                         
                         const photoResult = await photoResponse.json();
-                        console.log('Resultado do upload:', photoResult);
                         if (!photoResult.success) {
                             throw new Error(photoResult.message || 'Erro ao fazer upload da foto');
                         }
-                        
-                        console.log('Upload bem-sucedido! URL da imagem:', photoResult.image_url);
-                        
                         // Atualizar a imagem exibida
                         if (photoResult.image_url) {
                             const currentPhoto = document.getElementById('profile-photo-display');
@@ -874,9 +855,6 @@
                             }, 100);
                         }
                     } else {
-                        console.log('Nenhuma foto para fazer upload - input vazio ou sem arquivos');
-                        console.log('photoInput.files:', photoInput.files);
-                        console.log('photoInput.files.length:', photoInput.files ? photoInput.files.length : 'null');
                     }
                     
                     // Depois, atualizar os dados do perfil
@@ -939,7 +917,6 @@
         // ✅ Recarregar dados quando internet volta
         window.addEventListener('reloadPageData', function(e) {
             if (e.detail && e.detail.reason === 'connection-restored') {
-                console.log('[EditProfile] Recarregando dados após conexão restaurada');
                 initEditProfile();
             }
         });

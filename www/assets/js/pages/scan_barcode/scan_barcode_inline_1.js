@@ -50,7 +50,7 @@
                 startScanner();
             }, 500);
         } catch (error) {
-            console.error('[Scanner] Erro na inicialização:', error);
+            // Erro na inicialização - silenciar log
             showCameraError('Erro ao inicializar scanner.');
             if (window.PageLoader) {
                 window.PageLoader.ready();
@@ -77,7 +77,6 @@
 
         // Verificar plugin
         if (!window.Capacitor.Plugins.BarcodeScanner) {
-            console.error('[Scanner] BarcodeScanner plugin não encontrado!');
             showCameraError('Scanner não disponível. Verifique se o plugin está instalado.');
             return;
         }
@@ -114,8 +113,7 @@
             } else if (errorLower.includes('permission') || errorLower.includes('denied')) {
                 showCameraError('Permissão de câmera negada. Permita o acesso nas configurações do app.');
             } else {
-                console.error('[Scanner] Erro:', error);
-                // Tentar novamente após delay
+                // Erro desconhecido - tentar novamente após delay
                 setTimeout(() => startScanner(), 1000);
             }
         }
@@ -136,7 +134,6 @@
 
     async function searchBarcode(barcode) {
         if (!barcode || typeof barcode !== 'string') {
-            console.error('[Scanner] Código inválido:', barcode);
             return;
         }
         
@@ -183,7 +180,6 @@
                 setTimeout(() => startScanner(), 500);
             }
         } catch (error) {
-            console.error('[Scanner] Erro ao buscar produto:', error);
             if (loadingOverlay) loadingOverlay.classList.remove('active');
             showProductNotFoundModal(barcode);
             // Reabrir scanner após erro

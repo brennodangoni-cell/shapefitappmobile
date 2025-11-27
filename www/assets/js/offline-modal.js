@@ -9,7 +9,6 @@
 
     const offlineModal = document.getElementById('offline-modal');
     if (!offlineModal) {
-        console.warn('[OfflineModal] Modal não encontrado no DOM');
         return;
     }
 
@@ -33,8 +32,10 @@
             return false;
         }
 
-        // Segunda verificação: tentar fazer fetch para o servidor
-        const baseUrl = window.BASE_APP_URL || window.location.origin;
+        // ✅ Segunda verificação: tentar fazer fetch para o servidor
+        // ✅ SEMPRE usar origem local para verificação (não usar BASE_APP_URL que aponta para appshapefit.com)
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseUrl = isDev ? window.location.origin : (window.BASE_APP_URL || window.location.origin);
         const testUrls = [
             `${baseUrl}/favicon.ico?t=${Date.now()}`,
             `${baseUrl}/manifest.json?t=${Date.now()}`,
@@ -137,7 +138,6 @@
                      (localStorage.getItem('shapefit_auth_token') || null);
         
         if (!token) {
-            console.log('[OfflineModal] Tentativa de mostrar modal sem token - redirecionando para login');
             // Redirecionar para login imediatamente
             if (window.SPARouter && window.SPARouter.navigate) {
                 window.SPARouter.navigate('/fragments/auth_login.html', true);
@@ -150,8 +150,6 @@
         isOffline = true;
         updateModalState(false);
         offlineModal.classList.add('visible');
-        console.log('[OfflineModal] Modal offline exibido');
-        
         // ✅ Esconder mensagens de erro quando modal aparece
         hideErrorMessages();
         
@@ -176,8 +174,6 @@
         
         isOffline = false;
         offlineModal.classList.remove('visible');
-        console.log('[OfflineModal] Modal offline escondido - conexão restaurada');
-        
         // Parar verificação periódica
         if (reconnectCheckInterval) {
             clearInterval(reconnectCheckInterval);
@@ -190,7 +186,6 @@
                      (localStorage.getItem('shapefit_auth_token') || null);
         
         if (!token) {
-            console.log('[OfflineModal] Sem token após reconexão - redirecionando para login');
             if (window.SPARouter && window.SPARouter.navigate) {
                 window.SPARouter.navigate('/fragments/auth_login.html', true);
             } else {
@@ -231,7 +226,6 @@
         
         // ✅ DISPARAR EVENTO DE RECONEXÃO
         // Isso permite que as páginas recarreguem seus dados automaticamente
-        console.log('[OfflineModal] Disparando evento reloadPageData');
         window.dispatchEvent(new CustomEvent('reloadPageData', {
             detail: { reason: 'connection-restored' }
         }));
@@ -247,7 +241,6 @@
                               (localStorage.getItem('shapefit_auth_token') || null);
             
             if (!tokenCheck) {
-                console.log('[OfflineModal] Token removido durante delay - redirecionando para login');
                 if (window.SPARouter && window.SPARouter.navigate) {
                     window.SPARouter.navigate('/fragments/auth_login.html', true);
                 } else {
@@ -259,14 +252,11 @@
             // Se estiver usando SPA router, recarregar via router
             if (window.SPARouter && window.SPARouter.currentPath) {
                 const currentRoute = window.SPARouter.currentPath;
-                console.log('[OfflineModal] Recarregando página via SPA:', currentRoute);
-                
                 // ✅ RECARREGAR PÁGINA COMPLETA para garantir que tudo seja atualizado
                 // Navegar para a mesma página para forçar recarregamento completo
                 window.SPARouter.navigate(currentRoute + currentSearch, { forceReload: true });
             } else {
                 // Fallback: recarregar página completa
-                console.log('[OfflineModal] Recarregando página completa');
                 window.location.reload();
             }
         }, 500); // Pequeno delay para garantir que conexão está estável
@@ -276,7 +266,6 @@
      * Handler para evento online
      */
     async function handleOnline() {
-        console.log('[OfflineModal] Evento online detectado, verificando conexão...');
         updateModalState(true);
         
         // Aguardar um pouco antes de verificar (pode ser um falso positivo)
@@ -295,8 +284,6 @@
      */
     async function retryConnection() {
         if (isChecking) return;
-        
-        console.log('[OfflineModal] Tentativa manual de reconexão');
         updateModalState(true);
         
         // Verificar múltiplas vezes para garantir
@@ -313,7 +300,6 @@
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
                 updateModalState(false);
-                console.log('[OfflineModal] Ainda offline após', maxAttempts, 'tentativas');
             }
         }, 800);
     }
@@ -322,8 +308,6 @@
      * Handler para evento offline
      */
     function handleOffline() {
-        console.log('[OfflineModal] Evento offline detectado');
-        
         // ✅ Só mostrar modal se usuário estiver logado (tem token)
         const hasToken = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
                         (localStorage.getItem('shapefit_auth_token') || null);
@@ -420,8 +404,6 @@
     // ✅ Listener global para recarregar dados quando internet volta
     window.addEventListener('pageReload', function(e) {
         if (e.detail && e.detail.reason === 'connection-restored') {
-            console.log('[OfflineModal] Evento pageReload disparado - recarregando dados');
-            
             // Disparar evento customizado para cada página recarregar seus dados
             // As páginas podem escutar este evento e recarregar seus dados
             window.dispatchEvent(new CustomEvent('reloadPageData', {

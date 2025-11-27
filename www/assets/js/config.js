@@ -43,7 +43,6 @@
                      (localStorage.getItem('shapefit_auth_token') || null);
         
         if (!navigator.onLine && !token) {
-            console.log('[Fetch] Offline e sem token - redirecionando para login antes de fetch');
             // Redirecionar para login
             if (window.SPARouter && window.SPARouter.navigate) {
                 window.SPARouter.navigate('/fragments/auth_login.html', true);
@@ -87,7 +86,6 @@
                                     (localStorage.getItem('shapefit_auth_token') || null);
                     
                     if (!hasToken) {
-                        console.log('[Fetch] Offline e sem token no catch - redirecionando para login');
                         if (window.SPARouter && window.SPARouter.navigate) {
                             window.SPARouter.navigate('/fragments/auth_login.html', true);
                         } else {
@@ -112,10 +110,17 @@
                     return Promise.reject(silentError);
                 }
                 
-                // Se está online mas deu erro, pode ser problema da API, CORS, etc
-                // NÃO mostrar modal offline
-                console.error(`❌ [Fetch] Erro: ${url}`, error);
+            // ✅ Se for AbortError (timeout esperado), não logar como erro
+            // Isso acontece em verificações de conexão que são canceladas intencionalmente
+            if (error.name === 'AbortError' && error.message.includes('aborted')) {
+                // Erro esperado de timeout/abort - não logar
                 throw error;
+            }
+            
+            // Se está online mas deu erro, pode ser problema da API, CORS, etc
+            // NÃO mostrar modal offline
+            console.error(`❌ [Fetch] Erro: ${url}`, error);
+            throw error;
             }
         }
 
@@ -133,7 +138,6 @@
             } else {
                 // Produção ou Capacitor - usar API remota diretamente
                 url = window.API_BASE_URL + url.replace('/api', '');
-                console.log(`🔀 [API] Remoto: ${url}`);
             }
         }
 
@@ -179,6 +183,13 @@
                 silentError.name = 'NetworkError';
                 silentError.silent = true; // Flag para não mostrar na tela
                 return Promise.reject(silentError);
+            }
+            
+            // ✅ Se for AbortError (timeout esperado), não logar como erro
+            // Isso acontece em verificações de conexão que são canceladas intencionalmente
+            if (error.name === 'AbortError' && error.message.includes('aborted')) {
+                // Erro esperado de timeout/abort - não logar
+                throw error;
             }
             
             // Se está online mas deu erro, pode ser problema da API, CORS, etc

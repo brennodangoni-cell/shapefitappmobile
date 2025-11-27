@@ -9,8 +9,6 @@
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('../sw.js?v=7')
                 .then(function(registration) {
-                    console.log('ServiceWorker registrado:', registration.scope);
-                    
                     // Verificar atualizações periodicamente
                     setInterval(function() {
                         registration.update();
@@ -28,7 +26,6 @@
                     });
                 })
                 .catch(function(error) {
-                    console.log('Falha no registro do ServiceWorker:', error);
                 });
             
             // Forçar atualização ao focar na página

@@ -10,10 +10,6 @@ let pendingItems = [];
 let userSelectedMealType = false;
 
 function selectRecipe(recipe) {
-    console.log('🎯 SELECT RECIPE - INÍCIO');
-    console.log('Recipe recebido:', recipe);
-    console.log('É alimento?', recipe.is_food);
-    
     selectedRecipe = {
         ...recipe,
         is_food: recipe.is_food === true
@@ -37,14 +33,12 @@ function selectRecipe(recipe) {
     const unitSelect = document.getElementById('unit-select');
     
     if (selectedRecipe.is_food) {
-        console.log('🍎 É ALIMENTO - Carregando unidades específicas');
         // Para alimentos, mostrar seletor de unidade
         unitSelect.style.display = 'block';
         quantityLabel.textContent = 'Quantidade';
         document.getElementById('quantity').classList.remove('quantity-input-full-width');
         loadUnitsForFood(selectedRecipe.id, '0');
     } else {
-        console.log('📝 É RECEITA - Ocultando seletor de unidades');
         // Para receitas, ocultar seletor de unidade e usar "porções"
         unitSelect.style.display = 'none';
         quantityLabel.textContent = 'Porções';
@@ -58,7 +52,6 @@ function selectRecipe(recipe) {
     // ✅ Bloquear scroll do body quando modal está aberto
     document.body.classList.add('recipe-modal-open');
     document.body.style.overflow = 'hidden';
-    console.log('✅ Modal aberto');
 }
 
 function updateMacros() {
@@ -121,7 +114,7 @@ function calculateNutritionWithUnits(quantity, unitId) {
         return;
     }
     if (!quantity || quantity <= 0) {
-        console.warn('⏭️ Quantidade inválida para cálculo', quantity);
+        
         document.getElementById('total-kcal').innerHTML = '0 <span class="nutrition-item-unit">kcal</span>';
         document.getElementById('total-protein').innerHTML = '0 <span class="nutrition-item-unit">g</span>';
         document.getElementById('total-carbs').innerHTML = '0 <span class="nutrition-item-unit">g</span>';
@@ -130,9 +123,6 @@ function calculateNutritionWithUnits(quantity, unitId) {
         document.getElementById('quantity-info').style.display = 'none';
         return;
     }
-    
-    console.log('📐 Calculando nutrição', { numericFoodId, unitId, quantity, isFood: selectedRecipe.is_food });
-    
     const payload = new URLSearchParams();
     payload.append('food_id', numericFoodId);
     payload.append('quantity', quantity);
@@ -145,8 +135,6 @@ function calculateNutritionWithUnits(quantity, unitId) {
         unit_id: resolvedUnitId,
         is_recipe: selectedRecipe.is_food ? '0' : '1'
     };
-    console.log('📦 Payload enviado para cálculo:', debugPayload);
-    
     authenticatedFetch(`/api/calculate_nutrition.php`, {
         method: 'POST',
         headers: {
@@ -199,10 +187,6 @@ function closeModal() {
 }
 
 function loadUnitsForFood(foodId, isRecipe) {
-    console.log('🔍 LOAD UNITS FOR FOOD - INÍCIO');
-    console.log('Food ID original:', foodId);
-    console.log('Is Recipe:', isRecipe);
-    
     // Extrair o número do ID se vier com prefixo (ex: "taco_66" -> "66")
     const numericId = extractNumericId(foodId);
     if (!numericId) {
@@ -210,30 +194,21 @@ function loadUnitsForFood(foodId, isRecipe) {
         loadDefaultUnits(() => updateMacros());
         return;
     }
-    
-    console.log('✅ Food ID numérico final:', numericId);
-    
     const unitSelect = document.getElementById('unit-select');
     unitSelect.innerHTML = '<option value="">Carregando...</option>';
     
     const url = `/api/get_units.php?action=for_food&food_id=${numericId}`;
-    console.log('URL da API:', url);
-    
     authenticatedFetch(url)
     .then(response => {
         if (!response) throw new Error('Não autenticado');
-        console.log('📡 Resposta da API recebida:', response.status);
         if (!response.ok) {
             throw new Error(`Erro na rede: ${response.statusText}`);
         }
         return response.json();
     })
     .then(data => {
-        console.log('📊 Dados da API:', data);
-        
         // VERIFICAÇÃO DE SEGURANÇA: Garante que 'data' e 'data.data' existam e que a lista não esteja vazia
         if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
-            console.log('✅ Unidades encontradas:', data.data.length);
             unitSelect.innerHTML = ''; // Limpar "Carregando..."
             data.data.forEach(unit => {
                 const option = document.createElement('option');
@@ -255,7 +230,6 @@ function loadUnitsForFood(foodId, isRecipe) {
             document.getElementById('quantity').classList.remove('quantity-input-full-width');
             updateMacros();
         } else {
-            console.log('⚠️ Nenhuma unidade específica. Carregando unidades padrão.');
             loadDefaultUnits(() => updateMacros());
             return;
         }
@@ -267,8 +241,6 @@ function loadUnitsForFood(foodId, isRecipe) {
 }
 
 function showNoUnitsMessage() {
-    console.log('🚫 Exibindo mensagem de alimento não classificado.');
-    
     const unitSelect = document.getElementById('unit-select');
     const quantityLabel = document.getElementById('quantity-label');
     const quantityInfo = document.getElementById('quantity-info');
@@ -298,8 +270,6 @@ function showNoUnitsMessage() {
 }
 
 function loadDefaultUnits(onComplete) {
-    console.log('🔄 LOAD DEFAULT UNITS - INÍCIO');
-    
     const unitSelect = document.getElementById('unit-select');
     const url = `/api/get_units.php?action=all`;
     console.log('URL da API (todas as unidades):', url);
@@ -314,7 +284,6 @@ function loadDefaultUnits(onComplete) {
         console.log('📊 Dados da API (todas as unidades):', data);
         
         if (data.success) {
-            console.log('✅ Carregando unidades padrão + todas as unidades');
             unitSelect.innerHTML = '';
             
             // Adicionar unidades padrão com IDs reais do banco
@@ -323,8 +292,6 @@ function loadDefaultUnits(onComplete) {
                 { id: '28', name: 'Mililitro', abbreviation: 'ml' }, // ID real do banco  
                 { id: '31', name: 'Unidade', abbreviation: 'un' } // ID real do banco
             ];
-            
-            console.log('➕ Adicionando unidades padrão:', defaultUnits);
             defaultUnits.forEach(unit => {
                 const option = document.createElement('option');
                 option.value = unit.id;
@@ -336,7 +303,6 @@ function loadDefaultUnits(onComplete) {
             });
             
             // Adicionar outras unidades
-            console.log('➕ Adicionando outras unidades:', data.data);
             data.data.forEach(unit => {
                 const option = document.createElement('option');
                 option.value = unit.id;
@@ -347,14 +313,11 @@ function loadDefaultUnits(onComplete) {
             if (!unitSelect.value && unitSelect.options.length > 0) {
                 unitSelect.selectedIndex = 0;
             }
-            
-            console.log('🎯 Total de opções no select:', unitSelect.options.length);
             updateMacros();
             if (typeof onComplete === 'function') {
                 onComplete();
             }
         } else {
-            console.log('❌ Falha ao carregar unidades padrão');
             if (typeof onComplete === 'function') {
                 onComplete();
             }
@@ -770,15 +733,13 @@ async function searchFoods(query) {
             response = await authenticatedFetch(url);
             if (response && response.ok) {
                 data = await response.json();
-                console.log('[SearchFoods] Resposta do ajax_search_food.php:', data);
-                
                 if (data.success && data.data && data.data.length > 0) {
                     displaySearchResults(data.data, 'food');
                     return;
                 }
             }
         } catch (error) {
-            console.warn('[SearchFoods] Erro ao usar ajax_search_food.php, tentando endpoint de receitas:', error);
+            
         }
         
         // ✅ FALLBACK: Tentar usar o endpoint de receitas com type=food
@@ -799,7 +760,6 @@ async function searchFoods(query) {
         }
         
         // Se chegou aqui, não encontrou resultados ou deu erro
-        console.log('[SearchFoods] Nenhum resultado encontrado ou erro na busca');
         clearSearchResults();
         
     } catch (error) {
@@ -840,12 +800,7 @@ function displaySearchResults(results, type) {
 
 // Função para selecionar resultado da busca
 function selectSearchResult(item, type) {
-    console.log('🎯 SELECT SEARCH RESULT - INÍCIO');
-    console.log('Item selecionado:', item);
-    console.log('Tipo:', type);
-    
     if (type === 'recipe') {
-        console.log('📝 Processando como RECEITA');
         // Converter para formato de receita
         const recipe = {
             id: item.id,
@@ -856,10 +811,8 @@ function selectSearchResult(item, type) {
             fat_g_per_serving: item.fat_g_per_serving || 0,
             is_food: false
         };
-        console.log('📝 Receita formatada:', recipe);
         selectRecipe(recipe);
     } else {
-        console.log('🍎 Processando como ALIMENTO');
         // Converter para formato de alimento
         const food = {
             id: item.id,
@@ -871,7 +824,6 @@ function selectSearchResult(item, type) {
             is_food: true,
             source_table: item.source_table
         };
-        console.log('🍎 Alimento formatado:', food);
         selectRecipe(food); // Usar a mesma função, mas marcando como alimento
     }
     
@@ -905,14 +857,10 @@ let pageData = {
 };
 
 async function loadPageData() {
-    console.log('[AddFood] loadPageData iniciado');
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const date = urlParams.get('date') || pageData.date;
         const mealType = urlParams.get('meal_type') || pageData.meal_type;
-        
-        console.log('[AddFood] Buscando dados:', { date, mealType });
-        
         const response = await authenticatedFetch(`/api/get_add_food_data.php?date=${date}&meal_type=${mealType}`);
         if (!response) return;
         
@@ -941,8 +889,6 @@ async function loadPageData() {
         }
         
         pageData = result.data;
-        console.log('[AddFood] Dados recebidos:', pageData);
-        
         // Atualizar campos do formulário
         document.getElementById('meal-date').value = pageData.date;
         
@@ -1048,18 +994,14 @@ function escapeHtml(text) {
 }
 
 async function initAddFoodPage() {
-    console.log('[AddFood] initAddFoodPage chamado');
-    
     // Verificar se estamos na página correta
     const mealTypeEl = document.getElementById('meal-type');
     if (!mealTypeEl) {
-        console.log('[AddFood] Não é a página de adicionar refeição, ignorando');
         return;
     }
     
     // Evitar inicialização duplicada
     if (mealTypeEl.dataset.initialized === 'true') {
-        console.log('[AddFood] Já inicializado, ignorando');
         return;
     }
     mealTypeEl.dataset.initialized = 'true';
@@ -1194,7 +1136,6 @@ function moveModalToBody() {
     const modal = document.getElementById('recipe-modal');
     if (modal && modal.parentElement && modal.parentElement.classList.contains('page-root')) {
         document.body.appendChild(modal);
-        console.log('✅ Modal movido para body');
     }
 }
 
@@ -1217,7 +1158,6 @@ window.addEventListener('pageLoaded', initAddFoodPage);
 // ✅ Recarregar dados quando internet volta
 window.addEventListener('reloadPageData', function(e) {
     if (e.detail && e.detail.reason === 'connection-restored') {
-        console.log('[AddFood] Recarregando dados após conexão restaurada');
         // Recarregar dados da página
         if (typeof loadPageData === 'function') {
             loadPageData().catch(err => {
@@ -1233,7 +1173,6 @@ window.addEventListener('reloadPageData', function(e) {
 // ✅ Recarregar dados quando internet volta
 window.addEventListener('pageReload', function(e) {
     if (e.detail && e.detail.reason === 'connection-restored') {
-        console.log('[AddFood] Recarregando dados após conexão restaurada');
         // Recarregar dados da página
         if (typeof loadPageData === 'function') {
             loadPageData();

@@ -67,10 +67,6 @@
                 // Usar API_BASE_URL - sempre aponta para appshapefit.com/api
                 const apiUrl = window.API_BASE_URL || 'https://appshapefit.com/api';
                 const loginUrl = `${apiUrl}/login.php`;
-                console.log('[Login] Fazendo requisição para:', loginUrl);
-                console.log('[Login] API_BASE_URL:', window.API_BASE_URL);
-                console.log('[Login] Hostname:', window.location.hostname);
-                
                 const response = await fetch(loginUrl, {
                     method: 'POST',
                     headers: {
@@ -106,7 +102,6 @@
                 
                 if (result.success && result.token) {
                     // Save token
-                    console.log('Token recebido, salvando no localStorage...');
                     setAuthToken(result.token);
                     console.log('Token salvo:', getAuthToken() ? 'SIM' : 'NÃO');
                     
@@ -117,19 +112,15 @@
                     // Redirect usando SPA router se disponível
                     if (window.SPARouter) {
                         if (result.user && result.user.onboarding_complete) {
-                            console.log('Redirecionando para main_app via SPA');
                             window.SPARouter.navigate('/fragments/main_app.html', true);
                         } else {
-                            console.log('Redirecionando para onboarding via SPA');
                             window.SPARouter.navigate('/fragments/onboarding_onboarding.html', true);
                         }
                     } else {
                         // Fallback para navegação tradicional
                         if (result.user && result.user.onboarding_complete) {
-                            console.log('Redirecionando para main_app.html');
                             window.location.href = `${window.BASE_APP_URL || window.location.origin}/main_app.html`;
                         } else {
-                            console.log('Redirecionando para onboarding');
                             window.location.href = `${window.BASE_APP_URL || window.location.origin}/onboarding/onboarding.html`;
                         }
                     }
@@ -153,5 +144,27 @@
                 submitBtn.textContent = 'Entrar';
             }
         });
+        
+        // ✅ Interceptar link de cadastro para usar router SPA
+        const registerLink = document.getElementById('register-link');
+        if (registerLink) {
+            registerLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Usar router SPA se disponível
+                if (window.SPARouter && window.SPARouter.navigate) {
+                    window.SPARouter.navigate('/cadastro', true);
+                } else {
+                    // Fallback para web
+                    window.location.href = '/cadastro';
+                }
+            });
+        }
+        
+        // ✅ FINALIZAR LOADING - Mostrar conteúdo após inicialização
+        if (window.PageLoader) {
+            window.PageLoader.ready();
+        }
     
 })();

@@ -222,14 +222,11 @@
                     input.addEventListener('change', function(e) {
                         const file = e.target.files[0];
                         if (file) {
-                            console.log('Arquivo selecionado:', file.name);
                             const reader = new FileReader();
                             reader.onload = function(e) {
                                 const photoType = input.id.replace('photo_', '');
                                 const preview = document.getElementById(photoType + 'Preview');
                                 const slot = document.getElementById('slot-' + photoType);
-                                console.log('Preview element:', preview, 'Photo type:', photoType);
-                                
                                 if (preview) {
                                     preview.innerHTML = '';
                                     
@@ -242,8 +239,6 @@
                                     if (slot) {
                                         slot.classList.add('has-photo');
                                     }
-                                    
-                                    console.log('Preview atualizado com sucesso');
                                 } else {
                                     console.error('Elemento preview não encontrado:', photoType + 'Preview');
                                 }
@@ -293,52 +288,35 @@
                         
                         photoInputs.forEach(inputId => {
                             const input = document.getElementById(inputId);
-                            console.log('Verificando input:', inputId, input);
                             if (input) {
-                                console.log('Input files:', input.files, 'Length:', input.files ? input.files.length : 0);
                                 if (input.files && input.files.length > 0) {
                                     // Verificar se o arquivo tem tamanho maior que 0
                                     const file = input.files[0];
                                     if (file && file.size > 0) {
                                         hasPhoto = true;
                                         photoCount++;
-                                        console.log('Foto encontrada em:', inputId, 'Tamanho:', file.size, 'bytes');
                                     } else {
-                                        console.log('Arquivo vazio ignorado em:', inputId);
                                     }
                                 }
                             }
                         });
-                        
-                        console.log('Total de fotos encontradas:', photoCount, 'hasPhoto:', hasPhoto);
-                        
                         if (!hasPhoto) {
                             console.error('ERRO: Nenhuma foto válida encontrada!');
                             showAlert('Por favor, envie pelo menos uma foto antes de salvar.', 'error');
                             return false;
                         }
-                        
-                        console.log('Validação de foto passou! Prosseguindo com validação de data...');
-                        
                         // Validar data (verificação dupla)
                         if (dateInput) {
                             const selectedDate = new Date(dateInput.value);
                             const todayDate = new Date();
                             todayDate.setHours(0, 0, 0, 0);
-                            
-                            console.log('Data selecionada:', selectedDate, 'Data de hoje:', todayDate);
-                            
                             if (selectedDate > todayDate) {
                                 console.error('ERRO: Data futura detectada!');
                                 showAlert('Não é possível registrar fotos com data futura. Por favor, selecione uma data válida.', 'error');
                                 dateInput.value = getLocalDateString();
                                 return false;
                             }
-                            console.log('Validação de data passou!');
                         }
-                        
-                        console.log('Todas as validações passaram! Enviando para servidor...');
-                        
                         // Desabilitar botão
                         submitBtn.disabled = true;
                         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
@@ -353,9 +331,7 @@
                                 if (pair[1] instanceof File) {
                                     if (pair[1].size > 0) {
                                         cleanFormData.append(pair[0], pair[1]);
-                                        console.log('Arquivo válido adicionado:', pair[0], pair[1].name, pair[1].size, 'bytes');
                                     } else {
-                                        console.log('Arquivo vazio ignorado:', pair[0]);
                                     }
                                 } else {
                                     cleanFormData.append(pair[0], pair[1]);
@@ -363,12 +339,9 @@
                             }
                             
                             // Debug: verificar o que está no FormData limpo
-                            console.log('FormData limpo. Verificando arquivos:');
                             for (let pair of cleanFormData.entries()) {
                                 if (pair[1] instanceof File) {
-                                    console.log('Arquivo encontrado:', pair[0], pair[1].name, pair[1].size, 'bytes');
                                 } else {
-                                    console.log('Campo:', pair[0], pair[1]);
                                 }
                             }
                             
@@ -380,7 +353,6 @@
                             for (let pair of formData.entries()) {
                                 if (pair[1] instanceof File && pair[1].size > 0) {
                                     hasFilesInFormData = true;
-                                    console.log('Arquivo confirmado no FormData antes de enviar:', pair[0], pair[1].name, pair[1].size, 'bytes');
                                 }
                             }
                             
@@ -391,11 +363,6 @@
                                 submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Medidas e Fotos';
                                 return;
                             }
-                            
-                            console.log('Enviando FormData para servidor...');
-                            console.log('FormData é instância de FormData?', formData instanceof FormData);
-                            console.log('Tipo do formData:', typeof formData, formData.constructor.name);
-                            
                             // Obter token para Authorization
                             const token = getAuthToken();
                             
@@ -404,18 +371,12 @@
                             if (token) {
                                 headers['Authorization'] = `Bearer ${token}`;
                             }
-                            
-                            console.log('Headers que serão enviados:', headers);
-                            
                             // Enviar usando fetch direto para garantir que FormData funcione corretamente
                             const response = await fetch(`${BASE_URL}/api/save_measurements.php`, {
                                 method: 'POST',
                                 body: formData,
                                 headers: headers // Apenas Authorization - browser vai adicionar Content-Type automaticamente
                             });
-                            
-                            console.log('Resposta recebida do servidor. Status:', response.status);
-                            
                             // Verificar se recebeu 401 (não autorizado)
                             if (response.status === 401) {
                                 console.error('Token inválido (401) - redirecionando para login');
@@ -431,10 +392,7 @@
                             }
                             
                             const result = await response.json();
-                            console.log('Resultado do servidor:', result);
-                            
                             if (result.success) {
-                                console.log('Sucesso! Medidas salvas.');
                                 showAlert(result.message || 'Medidas salvas com sucesso!', 'success');
                                 
                                 // Limpar formulário

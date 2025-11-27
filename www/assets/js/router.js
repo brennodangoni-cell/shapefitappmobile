@@ -56,15 +56,16 @@
         // Inicializar flag de transição auth
         window._authTransition = false;
         
-        if (!router.container) return;
-        
+        if (!router.container) {
+            console.error('[Router] Container não encontrado!');
+            return;
+        }
         // ✅ VERIFICAR OFFLINE + SEM TOKEN ANTES DE QUALQUER COISA
         // Se estiver offline e sem token, redirecionar IMEDIATAMENTE para login
         const token = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
                      (localStorage.getItem('shapefit_auth_token') || null);
         
         if (!navigator.onLine && !token) {
-            console.log('[Router] Offline e sem token - redirecionando para login IMEDIATAMENTE');
             // Redirecionar para login sem carregar nenhuma página
             if (window.SPARouter && window.SPARouter.navigate) {
                 window.SPARouter.navigate('/fragments/auth_login.html', true);
@@ -82,19 +83,22 @@
         
         const isPublic = PAGES_WITHOUT_MENU.some(page => currentPath.includes(page)) ||
                           ['/login', '/cadastro', '/bem-vindo'].includes(currentPath);
-
-        // NÃO redirecionar automaticamente aqui - deixar as páginas verificarem autenticação
-        // Isso evita redirecionamentos desnecessários quando o token existe mas ainda não foi verificado
-        if (currentPath && currentPath !== '/' && currentPath !== '/index.html') {
+        // ✅ Se o path é '/' ou '/index.html', usar main_app como padrão
+        if (currentPath === '/' || currentPath === '/index.html' || !currentPath) {
+            initialPath = '/fragments/main_app.html';
+        } else if (currentPath && currentPath !== '/' && currentPath !== '/index.html') {
+            // Converter path para fragment
             initialPath = convertUrlToFragment(currentPath);
+            // Se a conversão falhou, usar main_app como fallback
+            if (!initialPath || initialPath === currentPath) {
+                initialPath = '/fragments/main_app.html';
+            }
         }
         
-        // Se não há path específico e não é página pública, tentar carregar main_app
-        // Se não tiver token, a página vai redirecionar via requireAuth()
-        if (!initialPath && !isPublic) {
+        // ✅ Garantir que sempre tenha um path válido
+        if (!initialPath) {
             initialPath = '/fragments/main_app.html';
         }
-        
         // IMPORTANTE: Setar o currentPath ANTES de carregar para View Transitions funcionarem
         router.currentPath = initialPath;
         
@@ -152,16 +156,7 @@
         event.preventDefault();
         event.stopPropagation();
         
-        // ✅ REMOVER CONTEÚDO ANTIGO IMEDIATAMENTE (antes de navegar)
-        if (router.container) {
-            const oldContent = router.container.querySelector('.page-root, .app-container, [class*="page-"]');
-            if (oldContent) {
-                oldContent.style.display = 'none';
-                oldContent.style.opacity = '0';
-                oldContent.style.visibility = 'hidden';
-            }
-        }
-        
+        // ✅ Deixar o navigateTo cuidar da remoção de conteúdo (ele verifica se é mesma página antes)
         navigateTo(convertToFragmentPath(href));
     }
     
@@ -252,13 +247,49 @@
             return; // Não mostrar skeleton para auth
         }
         
-        // ✅ GARANTIR BACKGROUND VISÍVEL IMEDIATAMENTE
-        router.container.style.cssText = `
-            background: #121212 !important;
-            background-color: #121212 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-        `;
+        // ✅ Para onboarding, REMOVER REGISTER E PREPARAR LAYOUT (background já está no CSS)
+        const isOnboarding = pageName === 'onboarding_onboarding';
+        if (isOnboarding) {
+            // Remover TODOS os elementos do register
+            const registerPage = document.querySelector('.register-page');
+            const registerContainer = document.querySelector('.register-container');
+            const registerForm = document.getElementById('registerForm');
+            if (registerPage) registerPage.remove();
+            if (registerContainer) registerContainer.remove();
+            if (registerForm) registerForm.remove();
+            
+            // ✅ PREPARAR LAYOUT (background já está no CSS do onboarding)
+            router.container.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: calc(var(--vh, 1vh) * 100) !important;
+                overflow: hidden !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: stretch !important;
+            `;
+            document.body.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: calc(var(--vh, 1vh) * 100) !important;
+                overflow: hidden !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: stretch !important;
+            `;
+        } else {
+            // ✅ GARANTIR BACKGROUND VISÍVEL IMEDIATAMENTE (para outras páginas)
+            router.container.style.cssText = `
+                background: #121212 !important;
+                background-color: #121212 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            `;
+        }
         
         // ✅ REMOVER MODAIS E CLASSES DO BODY PRIMEIRO (ANTES DE QUALQUER COISA)
         const modalsToRemove = [
@@ -334,6 +365,12 @@
     }
     
     function navigateTo(fragmentPath, options = {}) {
+        // ✅ Aceitar tanto objeto quanto booleano como segundo parâmetro
+        // Se for booleano, converter para objeto com forceReload
+        if (typeof options === 'boolean') {
+            options = { forceReload: options };
+        }
+        
         if (router.loading && !options.forceReload) return;
         
         const { isBack = false, forceReload = false } = options;
@@ -368,17 +405,6 @@
         document.body.style.overflow = '';
         document.body.style.position = '';
         document.body.style.width = '';
-        
-        // ✅ REMOVER CONTEÚDO ANTIGO IMEDIATAMENTE (ANTES DE QUALQUER PROCESSAMENTO)
-        if (router.container) {
-            const oldContent = router.container.querySelector('.page-root, .app-container, [class*="page-"]');
-            if (oldContent) {
-                oldContent.style.display = 'none';
-                oldContent.style.opacity = '0';
-                oldContent.style.visibility = 'hidden';
-                oldContent.style.pointerEvents = 'none';
-            }
-        }
         
         // Separar path da query string
         const [basePath, queryString] = fragmentPath.split('?');
@@ -443,8 +469,33 @@
             actualFragmentPath = basePath;
         }
         
-        // Evitar navegação duplicada (apenas se não tiver query string)
-        if (router.currentPath === actualFragmentPath && !qs) return;
+        // ✅ VERIFICAR NAVEGAÇÃO DUPLICADA ANTES DE REMOVER CONTEÚDO
+        // Se for a mesma página e não for forceReload, apenas fazer scroll para o topo
+        if (router.currentPath === actualFragmentPath && !qs && !forceReload) {
+            // Fazer scroll para o topo e resetar estado da página
+            if (router.container) {
+                router.container.scrollTop = 0;
+            }
+            window.scrollTo(0, 0);
+            
+            // Disparar evento para página recarregar seus dados se necessário
+            window.dispatchEvent(new CustomEvent('pageRefresh', { 
+                detail: { path: actualFragmentPath, container: router.container } 
+            }));
+            
+            return;
+        }
+        
+        // ✅ REMOVER CONTEÚDO ANTIGO APENAS SE FOR PÁGINA DIFERENTE OU FORCE RELOAD
+        if (router.container) {
+            const oldContent = router.container.querySelector('.page-root, .app-container, [class*="page-"]');
+            if (oldContent) {
+                oldContent.style.display = 'none';
+                oldContent.style.opacity = '0';
+                oldContent.style.visibility = 'hidden';
+                oldContent.style.pointerEvents = 'none';
+            }
+        }
 
         // Detectar se é transição entre páginas de auth (login <-> register)
         const currentPageName = router.currentPath.split('/').pop().replace('.html', '');
@@ -456,6 +507,10 @@
         
         router.currentPath = actualFragmentPath;
         
+        // ✅ MOSTRAR SKELETON IMEDIATAMENTE (ANTES DE QUALQUER COISA)
+        // ✅ IMPORTANTE: mostrar ANTES de qualquer fetch/load, mesmo em view transitions
+        showSkeleton(targetPageName);
+        
         // ✅ USAR VIEW TRANSITIONS PARA TRANSIÇÕES AUTH (como na pasta REFFFF)
         // IMPORTANTE: fazer ANTES de showSkeleton e outras coisas
         if (isAuthTransition && document.startViewTransition) {
@@ -466,10 +521,6 @@
             });
         } else {
             window._authTransition = false;
-            
-            // ✅ MOSTRAR SKELETON IMEDIATAMENTE (ANTES DE QUALQUER COISA)
-            // ✅ IMPORTANTE: mostrar ANTES de qualquer fetch/load
-            showSkeleton(targetPageName);
             
             // ✅ ESCONDER BOTTOM NAV EM PÁGINAS AUTH
             const bottomNav = document.getElementById('bottom-nav-container');
@@ -529,20 +580,20 @@
     }
     
     async function loadPage(path, showLoading = true) {
-        if (router.loading) return;
+        if (router.loading) {
+            return;
+        }
         
         // ✅ VERIFICAR OFFLINE + SEM TOKEN ANTES DE CARREGAR QUALQUER PÁGINA
         const pathWithoutQuery = path.split('?')[0];
         const pageName = pathWithoutQuery.split('/').pop().replace('.html', '');
         const isAuthPageCheck = PAGES_WITHOUT_MENU.includes(pageName);
-        
         // Se não for página auth, verificar se está offline e sem token
         if (!isAuthPageCheck) {
             const token = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
                          (localStorage.getItem('shapefit_auth_token') || null);
             
             if (!navigator.onLine && !token) {
-                console.log('[Router] loadPage: Offline e sem token - redirecionando para login');
                 router.loading = false;
                 if (window.SPARouter && window.SPARouter.navigate) {
                     window.SPARouter.navigate('/fragments/auth_login.html', true);
@@ -554,13 +605,13 @@
         }
         
         router.loading = true;
-        
         // Timer de segurança
         const safetyTimer = setTimeout(() => {
             if (router.loading) {
-                console.warn('[Router] Timeout forçado.');
-                router.container.classList.remove('page-loading');
-                router.container.classList.add('page-loaded');
+                if (router.container) {
+                    router.container.classList.remove('page-loading');
+                    router.container.classList.add('page-loaded');
+                }
                 router.loading = false;
             }
         }, 3000);
@@ -640,12 +691,60 @@
             } else {
                 // Fetch usa apenas o path sem query string (arquivo estático)
                 const response = await fetch(pathWithoutQuery);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 html = await response.text();
             }
             
             // ✅ COMPORTAMENTO ESPECIAL PARA PÁGINAS AUTH (carregar direto, sem skeleton/PageLoader)
             if (window._authTransition || isAuthPageCheck) {
+                // ✅ REMOVER REGISTER E PREPARAR LAYOUT (background já está no CSS)
+                const isOnboardingPage = pageName === 'onboarding_onboarding';
+                if (isOnboardingPage) {
+                    // Remover TODOS os elementos do register
+                    const registerPage = document.querySelector('.register-page');
+                    const registerContainer = document.querySelector('.register-container');
+                    const registerForm = document.getElementById('registerForm');
+                    if (registerPage) registerPage.remove();
+                    if (registerContainer) registerContainer.remove();
+                    if (registerForm) registerForm.remove();
+                    
+                    // ✅ PREPARAR LAYOUT (background já está no CSS do onboarding)
+                    router.container.style.cssText = `
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        height: calc(var(--vh, 1vh) * 100) !important;
+                        overflow: hidden !important;
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: stretch !important;
+                    `;
+                    document.body.style.cssText = `
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        height: calc(var(--vh, 1vh) * 100) !important;
+                        overflow: hidden !important;
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: stretch !important;
+                    `;
+                }
+                
+                // ✅ REMOVER LOADING OVERLAYS PRIMEIRO (antes de qualquer coisa)
+                const registerLoading = document.getElementById('register-loading');
+                const onboardingLoading = document.getElementById('onboarding-loading');
+                if (registerLoading) {
+                    registerLoading.remove();
+                }
+                if (onboardingLoading) {
+                    onboardingLoading.remove();
+                }
+                
                 // Limpar container completamente
                 router.container.innerHTML = '';
                 
@@ -723,7 +822,6 @@
                 modalsToRemove.forEach(modal => {
                     if (modal && modal.parentElement === document.body) {
                         modal.remove();
-                        console.log('✅ Modal removido do body:', modal.id);
                     }
                 });
                 
@@ -733,13 +831,116 @@
                 // Corrigir valores PHP antes de inserir no DOM para evitar warnings
                 htmlWithoutScripts = fixPHPValues(htmlWithoutScripts);
                 
+                // ✅ REMOVER LOADING OVERLAYS se existirem (com fade out suave)
+                const registerLoading = document.getElementById('register-loading');
+                const onboardingLoading = document.getElementById('onboarding-loading');
+                if (registerLoading) {
+                    registerLoading.style.opacity = '0';
+                    registerLoading.style.transition = 'opacity 0.2s ease';
+                    setTimeout(() => registerLoading.remove(), 200);
+                }
+                if (onboardingLoading) {
+                    onboardingLoading.style.opacity = '0';
+                    onboardingLoading.style.transition = 'opacity 0.2s ease';
+                    setTimeout(() => onboardingLoading.remove(), 200);
+                }
+                
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = htmlWithoutScripts;
                 let content = tempDiv.querySelector('.page-root') || tempDiv;
                 
+                // ✅ Para onboarding, DESTRUIR BACKGROUND ANTIGO E APLICAR NOVO
+                const isOnboardingPage = pageName === 'onboarding_onboarding';
+                if (isOnboardingPage) {
+                    // ✅ DESTRUIR QUALQUER BACKGROUND ANTIGO PRIMEIRO
+                    // Remover TODOS os elementos do register
+                    const registerPage = document.querySelector('.register-page');
+                    const registerContainer = document.querySelector('.register-container');
+                    const registerForm = document.getElementById('registerForm');
+                    if (registerPage) registerPage.remove();
+                    if (registerContainer) registerContainer.remove();
+                    if (registerForm) registerForm.remove();
+                    
+                    // ✅ PREPARAR LAYOUT COM BACKGROUND PRETO E ILUMINAÇÃO (o lindo!)
+                    router.container.style.cssText = `
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        height: calc(var(--vh, 1vh) * 100) !important;
+                        overflow: hidden !important;
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: stretch !important;
+                        background: radial-gradient(circle at top, #1b1b1b 0, #050505 55%) !important;
+                        background-color: #050505 !important;
+                    `;
+                    document.body.style.cssText = `
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        height: calc(var(--vh, 1vh) * 100) !important;
+                        overflow: hidden !important;
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: stretch !important;
+                        background: radial-gradient(circle at top, #1b1b1b 0, #050505 55%) !important;
+                        background-color: #050505 !important;
+                    `;
+                    document.documentElement.style.cssText = `
+                        background: radial-gradient(circle at top, #1b1b1b 0, #050505 55%) !important;
+                        background-color: #050505 !important;
+                    `;
+                }
+                
                 // ✅ Inserir conteúdo mas mantê-lo COMPLETAMENTE ESCONDIDO
                 // O conteúdo só aparecerá quando PageLoader.ready() for chamado
                 const clonedContent = content.cloneNode(true);
+                
+                // ✅ Para onboarding, garantir que o page-root tenha os estilos corretos
+                if (isOnboardingPage && clonedContent.classList.contains('page-root')) {
+                    // Garantir que o app-container dentro do page-root tenha os estilos corretos
+                    const appContainer = clonedContent.querySelector('.app-container');
+                    const onboardingForm = clonedContent.querySelector('#onboarding-form');
+                    const footerNav = clonedContent.querySelector('.footer-nav');
+                    
+                    if (appContainer) {
+                        appContainer.style.width = '100%';
+                        appContainer.style.maxWidth = '480px';
+                        appContainer.style.height = '100%';
+                        appContainer.style.display = 'flex';
+                        appContainer.style.flexDirection = 'column';
+                    }
+                    
+                    // ✅ GARANTIR que o form tenha display flex
+                    if (onboardingForm) {
+                        onboardingForm.style.display = 'flex';
+                        onboardingForm.style.flexDirection = 'column';
+                        onboardingForm.style.minHeight = '0';
+                        onboardingForm.style.overflow = 'hidden';
+                    }
+                    
+                    // ✅ GARANTIR que o footer fique EM CIMA (sem margin-top: auto)
+                    if (footerNav) {
+                        footerNav.style.cssText = `
+                            padding: 18px 20px calc(env(safe-area-inset-bottom, 0px) + 22px) !important;
+                            flex: 0 0 auto !important;
+                            flex-shrink: 0 !important;
+                            flex-grow: 0 !important;
+                            margin-top: 0 !important;
+                            margin-bottom: 0 !important;
+                            display: flex !important;
+                            flex-direction: column !important;
+                            gap: 12px !important;
+                            align-self: flex-start !important;
+                            width: 100% !important;
+                            position: relative !important;
+                            order: 2 !important;
+                        `;
+                    }
+                }
+                
                 clonedContent.style.cssText = `
                     display: none !important;
                     opacity: 0 !important;
@@ -773,10 +974,38 @@
             }
             
         } catch (error) {
-            console.error('[Router] Erro:', path, error);
-            if (path.includes('main_app')) window.location.href = '/';
-            // Em caso de erro, forçar ready
-            if (window.PageLoader) window.PageLoader.forceReady();
+            console.error('[Router] Erro ao carregar página:', path, error);
+            
+            // ✅ Se falhar ao carregar main_app, tentar login como fallback
+            if (path && path.includes('main_app')) {
+                const token = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                             (localStorage.getItem('shapefit_auth_token') || null);
+                if (!token) {
+                    if (window.SPARouter && window.SPARouter.navigate) {
+                        window.SPARouter.navigate('/fragments/auth_login.html', true);
+                    } else {
+                        window.location.href = '/login';
+                    }
+                    return;
+                }
+            }
+            
+            // ✅ Em caso de erro, forçar ready para não ficar travado
+            if (window.PageLoader) {
+                window.PageLoader.forceReady();
+            }
+            
+            // ✅ Mostrar mensagem de erro no container
+            if (router.container) {
+                router.container.innerHTML = `
+                    <div style="padding: 40px 20px; text-align: center; color: #F5F5F5;">
+                        <p style="margin-bottom: 20px;">Erro ao carregar a página.</p>
+                        <button onclick="window.location.reload()" style="padding: 12px 24px; background: #FF6B00; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            Recarregar
+                        </button>
+                    </div>
+                `;
+            }
         } finally {
             clearTimeout(safetyTimer);
             router.loading = false;
@@ -869,7 +1098,7 @@
 
             // Se for global e já existir, pula
             if (isGlobalLib && document.querySelector(`script[src*="${cleanSrc}"]`)) {
-                // console.log(`[Router] Mantendo global: ${cleanSrc}`);
+                // 
                 resolve(); 
                 return;
             }
@@ -879,7 +1108,7 @@
             const oldScript = document.querySelector(`script[src*="${cleanSrc}"]`);
             if (oldScript) {
                 oldScript.remove();
-                // console.log(`[Router] Recarregando lógica: ${cleanSrc}`);
+                // 
             }
 
             // 3. Injetar novo script
@@ -888,7 +1117,6 @@
             script.async = false;
             script.onload = resolve;
             script.onerror = () => {
-                console.warn(`[Router] Falha script: ${cleanSrc}`);
                 resolve();
             };
             

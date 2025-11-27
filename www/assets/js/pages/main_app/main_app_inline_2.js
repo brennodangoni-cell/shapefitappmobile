@@ -514,7 +514,6 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
     
     // Função para mostrar modal de duração de exercício
     function showExerciseDurationModal(missionId, currentSlide, durationButton) {
-                console.log('showExerciseDurationModal chamada!');
                 const exerciseName = missionId.replace('onboarding_', '');
                 const modal = document.getElementById('exercise-duration-modal');
                 const durationInput = document.getElementById('exercise-duration-input');
@@ -539,8 +538,6 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
                 
                 modal.classList.add('modal-visible');
                 document.body.style.overflow = 'hidden'; // Bloquear scroll
-                console.log('Modal deve estar visível agora!');
-                
                 // Event listener global já cuida do fechamento via [data-action="close-modal"]
                 
                 document.getElementById('confirm-exercise-duration').onclick = () => {
@@ -569,8 +566,6 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
                             durationDisplay.innerHTML = `<i class="fas fa-stopwatch" style="font-size: 0.8em;"></i> ${duration} min`;
                             durationDisplay.style.display = 'flex';
                         }
-                        
-                        console.log('Duração definida:', duration, 'minutos');
                     } else {
                         alert('Por favor, insira uma duração entre 15 e 300 minutos.');
                     }

@@ -32,8 +32,6 @@
         }
 
         function initOnboarding() {
-            console.log('[Onboarding] Iniciando...');
-            
             loadStates();
             loadUserName();
 
@@ -62,15 +60,11 @@
             const headerNav = document.querySelector('.header-nav');
             const progressBarFill = document.getElementById('progress-bar-fill');
             const stepIndicatorText = document.getElementById('step-indicator-text');
-
-            console.log('[Onboarding] Elementos encontrados:', { form: !!form, steps: steps.length, actionBtn: !!actionBtn, exitBtn: !!exitBtn });
-
             // Verificar se usuário já completou onboarding antes (para mostrar botão de sair)
             async function checkIfUserCompletedOnboarding() {
                 try {
                     const token = typeof getAuthToken === 'function' ? getAuthToken() : null;
                     if (!token) {
-                        console.log('[Onboarding] Sem token, assumindo primeira vez');
                         return false;
                     }
 
@@ -83,7 +77,6 @@
 
                     if (response.ok) {
                         const result = await response.json();
-                        console.log('[Onboarding] Verificação de onboarding completo:', result);
                         if (result.success && result.user && result.user.onboarding_complete) {
                             return true;
                         }
@@ -98,9 +91,6 @@
             const urlParams = new URLSearchParams(window.location.search);
             const isRefazerUrl = urlParams.get('refazer') === 'true';
             let isRefazer = isRefazerUrl; // Já começar como true se veio da URL
-            
-            console.log('[Onboarding] isRefazerUrl:', isRefazerUrl);
-            
             // Se veio com ?refazer=true, mostrar botão de sair imediatamente
             if (isRefazerUrl && exitBtn) {
                 exitBtn.classList.add('show');
@@ -110,11 +100,8 @@
             // Verificar se já completou onboarding e esconder steps desnecessários
             checkIfUserCompletedOnboarding().then(hasCompleted => {
                 isRefazer = isRefazerUrl || hasCompleted;
-                console.log('[Onboarding] isRefazer final:', isRefazer, '| hasCompleted:', hasCompleted);
-                
                 if (isRefazer && exitBtn) {
                     exitBtn.classList.add('show');
-                    console.log('Botão de sair mostrado - usuário já completou onboarding');
                 }
                 
                 // Esconder steps que não são necessários ao refazer
@@ -210,11 +197,10 @@
             const activityInput = document.getElementById('custom-activity-input');
             const activityList = document.getElementById('custom-activities-list');
             const hiddenInput = document.getElementById('custom-activities-hidden-input');
-
             const noneCheckbox = document.getElementById('ex-none');
             const exerciseOptionsWrapper = document.getElementById('exercise-options-wrapper');
             const frequencyWrapper = document.getElementById('frequency-wrapper');
-            const allExerciseCheckboxes = exerciseOptionsWrapper.querySelectorAll('input[type="checkbox"]');
+            const allExerciseCheckboxes = exerciseOptionsWrapper ? exerciseOptionsWrapper.querySelectorAll('input[type="checkbox"]') : [];
 
             let stepHistory = [0];
             let customActivities = [];
@@ -247,25 +233,35 @@
             }
 
             function renderTags() {
-                activityList.innerHTML = '';
-                customActivities.forEach(activity => {
-                    const tag = document.createElement('div');
-                    tag.className = 'activity-tag';
-                    const tagText = document.createTextNode(activity);
-                    tag.appendChild(tagText);
-                    const removeBtn = document.createElement('button');
-                    removeBtn.className = 'remove-tag';
-                    removeBtn.innerHTML = '&times;';
-                    removeBtn.onclick = () => {
-                        customActivities = customActivities.filter(item => item !== activity);
-                        renderTags();
-                        updateButtonState();
-                    };
-                    tag.appendChild(removeBtn);
-                    activityList.appendChild(tag);
-                });
-                hiddenInput.value = customActivities.join(',');
-                otherActivityBtn.classList.toggle('active', customActivities.length > 0);
+                const currentActivityList = document.getElementById('custom-activities-list');
+                const currentHiddenInput = document.getElementById('custom-activities-hidden-input');
+                const currentOtherActivityBtn = document.getElementById('other-activity-btn');
+                
+                if (currentActivityList) {
+                    currentActivityList.innerHTML = '';
+                    customActivities.forEach(activity => {
+                        const tag = document.createElement('div');
+                        tag.className = 'activity-tag';
+                        const tagText = document.createTextNode(activity);
+                        tag.appendChild(tagText);
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-tag';
+                        removeBtn.innerHTML = '&times;';
+                        removeBtn.onclick = () => {
+                            customActivities = customActivities.filter(item => item !== activity);
+                            renderTags();
+                            updateButtonState();
+                        };
+                        tag.appendChild(removeBtn);
+                        currentActivityList.appendChild(tag);
+                    });
+                }
+                if (currentHiddenInput) {
+                    currentHiddenInput.value = customActivities.join(',');
+                }
+                if (currentOtherActivityBtn) {
+                    currentOtherActivityBtn.classList.toggle('active', customActivities.length > 0);
+                }
 
                 // Se tiver atividade customizada e não estiver marcado "Nenhuma", selecionar frequência mínima por padrão
                 if (customActivities.length > 0 && frequencyWrapper && !noneCheckbox.checked) {
@@ -283,40 +279,155 @@
             }
 
             function addActivity() {
-                const newActivity = activityInput.value.trim();
+                const currentActivityInput = document.getElementById('custom-activity-input');
+                if (!currentActivityInput) return;
+                
+                const newActivity = currentActivityInput.value.trim();
                 if (newActivity && !customActivities.includes(newActivity)) {
                     customActivities.push(newActivity);
-                    activityInput.value = '';
+                    currentActivityInput.value = '';
                     renderTags();
                 }
-                activityInput.focus();
+                currentActivityInput.focus();
             }
 
-            // Modal de atividade
-            otherActivityBtn.addEventListener('click', () => {
-                modal.classList.add('active');
-                setTimeout(() => {
-                    activityInput.focus();
-                }, 80);
-            });
+            // Modal de atividade - garantir que sempre seja clicável
+            if (otherActivityBtn) {
+                // Garantir que o botão sempre seja clicável
+                otherActivityBtn.style.pointerEvents = 'auto';
+                otherActivityBtn.disabled = false;
+                
+                otherActivityBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Se "Nenhum" estiver marcado, desmarcar primeiro
+                    if (noneCheckbox && noneCheckbox.checked) {
+                        noneCheckbox.checked = false;
+                        
+                        // Reabilitar todos os exercícios
+                        allExerciseCheckboxes.forEach(cb => {
+                            if (cb.id !== 'ex-none') {
+                                cb.disabled = false;
+                                cb.checked = false;
+                            }
+                        });
+
+                        // Limpar atividades custom
+                        customActivities = [];
+                        renderTags();
+
+                        // Reabilitar frequência
+                        if (frequencyWrapper) {
+                            const freqRadios = frequencyWrapper.querySelectorAll('input[type="radio"]');
+                            freqRadios.forEach(radio => {
+                                radio.disabled = false;
+                                radio.checked = false;
+                            });
+                        }
+
+                        // Reabilitar botão "Outro"
+                        otherActivityBtn.disabled = false;
+                        otherActivityBtn.style.opacity = '1';
+                        otherActivityBtn.style.pointerEvents = 'auto';
+
+                        // Remover classe disabled
+                        if (exerciseOptionsWrapper) {
+                            exerciseOptionsWrapper.classList.remove('disabled');
+                        }
+                        if (frequencyWrapper) {
+                            frequencyWrapper.classList.remove('disabled');
+                        }
+                    }
+                    
+                    // Abrir o modal - buscar dinamicamente para garantir que está no DOM
+                    let currentModal = document.getElementById('custom-activity-modal');
+                    if (!currentModal) {
+                        // Tentar buscar de outras formas
+                        currentModal = document.querySelector('.modal-overlay#custom-activity-modal');
+                    }
+                    if (!currentModal) {
+                        // Tentar buscar em todo o documento
+                        currentModal = document.querySelector('#custom-activity-modal');
+                    }
+                    
+                    if (currentModal) {
+                        // Garantir que o modal está no body (para evitar problemas de z-index/overflow)
+                        if (currentModal.parentElement !== document.body) {
+                            document.body.appendChild(currentModal);
+                        }
+                        
+                        // Configurar listeners do modal antes de abrir
+                        setupModalListeners();
+                        
+                        // Forçar reflow antes de adicionar a classe active
+                        currentModal.offsetHeight;
+                        
+                        currentModal.classList.add('active');
+                        console.log('[Onboarding] Modal display:', window.getComputedStyle(currentModal).display);
+                        console.log('[Onboarding] Modal visibility:', window.getComputedStyle(currentModal).visibility);
+                        console.log('[Onboarding] Modal opacity:', window.getComputedStyle(currentModal).opacity);
+                        console.log('[Onboarding] Modal z-index:', window.getComputedStyle(currentModal).zIndex);
+                        
+                        // Buscar elementos do modal dinamicamente também
+                        const currentActivityInput = document.getElementById('custom-activity-input');
+                        setTimeout(() => {
+                            if (currentActivityInput) {
+                                currentActivityInput.focus();
+                            }
+                        }, 80);
+                    } else {
+                        console.error('[Onboarding] Modal não encontrado no DOM!');
+                        console.error('[Onboarding] Tentando buscar todos os modais:', document.querySelectorAll('.modal-overlay'));
+                    }
+                });
+            } else {
+                console.error('[Onboarding] Botão Outro não encontrado!');
+            }
 
             function closeModal() {
-                modal.classList.remove('active');
+                const currentModal = document.getElementById('custom-activity-modal');
+                if (currentModal) {
+                    currentModal.classList.remove('active');
+                }
             }
 
-            closeModalBtn.addEventListener('click', closeModal);
-            closeModalIcon.addEventListener('click', closeModal);
-
-            addActivityBtn.addEventListener('click', addActivity);
-            activityInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addActivity();
+            // Função para configurar event listeners do modal (chamada quando necessário)
+            function setupModalListeners() {
+                const currentCloseModalBtn = document.getElementById('close-modal-btn');
+                const currentCloseModalIcon = document.getElementById('close-modal-icon');
+                const currentAddActivityBtn = document.getElementById('add-activity-btn');
+                const currentActivityInput = document.getElementById('custom-activity-input');
+                
+                if (currentCloseModalBtn && !currentCloseModalBtn.dataset.listenerAdded) {
+                    currentCloseModalBtn.addEventListener('click', closeModal);
+                    currentCloseModalBtn.dataset.listenerAdded = 'true';
                 }
-            });
+                if (currentCloseModalIcon && !currentCloseModalIcon.dataset.listenerAdded) {
+                    currentCloseModalIcon.addEventListener('click', closeModal);
+                    currentCloseModalIcon.dataset.listenerAdded = 'true';
+                }
+                if (currentAddActivityBtn && !currentAddActivityBtn.dataset.listenerAdded) {
+                    currentAddActivityBtn.addEventListener('click', addActivity);
+                    currentAddActivityBtn.dataset.listenerAdded = 'true';
+                }
+                if (currentActivityInput && !currentActivityInput.dataset.listenerAdded) {
+                    currentActivityInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addActivity();
+                        }
+                    });
+                    currentActivityInput.dataset.listenerAdded = 'true';
+                }
+            }
+
+            // Tentar configurar listeners imediatamente
+            setupModalListeners();
 
             // Lógica "Nenhum"
-            noneCheckbox.addEventListener('change', function() {
+            if (noneCheckbox) {
+                noneCheckbox.addEventListener('change', function() {
                 const isChecked = this.checked;
 
                 if (isChecked) {
@@ -341,11 +452,12 @@
                         });
                     }
 
-                    // Desabilitar botão "Outro"
+                    // NÃO desabilitar botão "Outro" - ele deve sempre abrir o modal
+                    // O botão vai desmarcar "Nenhum" automaticamente ao abrir o modal
                     if (otherActivityBtn) {
-                        otherActivityBtn.disabled = true;
-                        otherActivityBtn.style.opacity = '0.5';
-                        otherActivityBtn.style.pointerEvents = 'none';
+                        otherActivityBtn.disabled = false;
+                        otherActivityBtn.style.opacity = '1';
+                        otherActivityBtn.style.pointerEvents = 'auto';
                     }
 
                     // Adicionar classe disabled (apenas para desabilitar inputs, não visual)
@@ -390,21 +502,28 @@
                 }
 
                 updateButtonState();
-            });
+                });
+            }
 
             // Reagir a cliques no wrapper para "cancelar" o Nenhum automaticamente
-            exerciseOptionsWrapper.addEventListener('click', function(e) {
+            if (exerciseOptionsWrapper) {
+                exerciseOptionsWrapper.addEventListener('click', function(e) {
+                const clickedElement = e.target.closest('label, .option-button, button');
+                
+                // Se clicou no botão "Outro", não fazer nada aqui (deixar o event listener do botão tratar)
+                if (clickedElement && clickedElement.id === 'other-activity-btn') {
+                    return; // Deixa o event listener do botão tratar
+                }
+                
                 if (noneCheckbox && noneCheckbox.checked) {
-                    const clickedElement = e.target.closest('label, .option-button, button');
                     const noneLabel = noneCheckbox.closest('label');
 
                     // Se clicou em qualquer exercício (exceto o próprio "Nenhum"), desmarcar "Nenhum"
                     if (clickedElement && clickedElement !== noneLabel) {
-                        // Verificar se é um label de exercício ou o botão "Outro"
+                        // Verificar se é um label de exercício
                         const isExerciseLabel = clickedElement.tagName === 'LABEL' && clickedElement.getAttribute('for') && clickedElement.getAttribute('for') !== 'ex-none';
-                        const isOtherButton = clickedElement.id === 'other-activity-btn' || clickedElement.classList.contains('option-button');
                         
-                        if (isExerciseLabel || isOtherButton) {
+                        if (isExerciseLabel) {
                             e.preventDefault();
                             e.stopPropagation();
 
@@ -451,7 +570,8 @@
                         }
                     }
                 }
-            });
+                });
+            }
 
             allExerciseCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
@@ -505,15 +625,11 @@
                 const currentStepIndex = stepHistory[stepHistory.length - 1];
                 const currentStepDiv = steps[currentStepIndex];
                 if (!currentStepDiv) {
-                    console.log('[Onboarding] updateButtonState: currentStepDiv é null, index:', currentStepIndex);
                     return;
                 }
 
                 const stepId = currentStepDiv.dataset.stepId;
                 let isStepValid = false;
-                
-                console.log('[Onboarding] updateButtonState: stepId =', stepId, '| index =', currentStepIndex);
-
                 if (stepId === 'exercise_types') {
                     if (noneCheckbox && noneCheckbox.checked) {
                         isStepValid = true;
@@ -534,7 +650,6 @@
                     isStepValid = !!selected;
                 } else if (stepId === 'gluten') {
                     const selected = form.querySelector('input[name="gluten_intolerance"]:checked');
-                    console.log('[Onboarding] Gluten - selected:', selected, '| isValid:', !!selected);
                     isStepValid = !!selected;
                 } else if (stepId === 'lactose') {
                     const selected = form.querySelector('input[name="lactose_intolerance"]:checked');
@@ -564,8 +679,6 @@
                         return input.value.trim() !== '' && input.checkValidity();
                     });
                 }
-
-                console.log('[Onboarding] updateButtonState FINAL: stepId =', stepId, '| isStepValid =', isStepValid, '| button disabled =', !isStepValid);
                 actionBtn.disabled = !isStepValid;
             };
 
@@ -575,6 +688,24 @@
                 });
 
                 headerNav.style.visibility = (stepIndex > 0) ? 'visible' : 'hidden';
+                
+                // Mover o botão para dentro do step-content ativo
+                const currentStep = steps[stepIndex];
+                const stepContent = currentStep.querySelector('.step-content');
+                if (stepContent) {
+                    // Verificar se já existe um wrapper .step-actions
+                    let stepActions = stepContent.querySelector('.step-actions');
+                    if (!stepActions) {
+                        // Criar o wrapper se não existir
+                        stepActions = document.createElement('div');
+                        stepActions.className = 'step-actions';
+                        stepContent.appendChild(stepActions);
+                    }
+                    // Mover o botão para dentro do wrapper
+                    if (actionBtn.parentNode !== stepActions) {
+                        stepActions.appendChild(actionBtn);
+                    }
+                }
                 
                 // Verificar se este é o último step visível
                 let isLastVisibleStep = (stepIndex === steps.length - 1);
@@ -596,17 +727,13 @@
             };
 
             actionBtn.addEventListener('click', async () => {
-                console.log('[Onboarding] Botão clicado! disabled =', actionBtn.disabled);
                 if (actionBtn.disabled) {
-                    console.log('[Onboarding] Botão está disabled, ignorando clique');
                     return;
                 }
 
                 let currentStepIndex = stepHistory[stepHistory.length - 1];
                 const currentStepDiv = steps[currentStepIndex];
                 const currentStepId = currentStepDiv.dataset.stepId;
-                console.log('[Onboarding] Navegando do step:', currentStepId, '| index:', currentStepIndex);
-
                 // Último passo -> enviar
                 if (currentStepIndex === steps.length - 1) {
                     actionBtn.disabled = true;
@@ -647,11 +774,13 @@
                             if (result.token) {
                                 setAuthToken(result.token);
                             }
-                            // Usar router SPA se disponível, senão redirecionar normalmente
+                            // ✅ Usar router SPA se disponível, senão redirecionar normalmente
                             if (window.SPARouter && window.SPARouter.navigate) {
-                                window.SPARouter.navigate('/metas');
+                                window.SPARouter.navigate('/fragments/main_app.html', true);
                             } else {
-                                window.location.href = result.redirect_url || `${window.BASE_APP_URL}/fragments/dashboard.html`;
+                                const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                                const redirectUrl = isDev ? '/fragments/main_app.html' : (result.redirect_url || '/fragments/main_app.html');
+                                window.location.href = redirectUrl;
                             }
                         } else {
                             alert(result.message || 'Erro ao processar onboarding. Tente novamente.');
@@ -697,8 +826,6 @@
                 // Se todos os próximos steps estão escondidos, este é o último step visível
                 // Nesse caso, devemos enviar o formulário
                 if (nextStepIndex >= steps.length || nextStepIndex <= currentStepIndex) {
-                    console.log('[Onboarding] Último step visível detectado, enviando formulário...');
-                    
                     // Mudar texto do botão e enviar
                     actionBtn.disabled = true;
                     actionBtn.textContent = 'Processando...';
@@ -739,10 +866,13 @@
                             if (result.token) {
                                 setAuthToken(result.token);
                             }
+                            // ✅ Usar router SPA se disponível, senão redirecionar normalmente
                             if (window.SPARouter && window.SPARouter.navigate) {
-                                window.SPARouter.navigate('/metas');
+                                window.SPARouter.navigate('/fragments/main_app.html', true);
                             } else {
-                                window.location.href = result.redirect_url || `${window.BASE_APP_URL}/fragments/dashboard.html`;
+                                const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                                const redirectUrl = isDev ? '/fragments/main_app.html' : (result.redirect_url || '/fragments/main_app.html');
+                                window.location.href = redirectUrl;
                             }
                         } else {
                             alert(result.message || 'Erro ao processar. Tente novamente.');
@@ -781,11 +911,13 @@
             // Botão de sair (só aparece quando é refazer)
             if (exitBtn) {
                 exitBtn.addEventListener('click', () => {
-                    // Usar router SPA se disponível
+                    // ✅ Usar router SPA se disponível, senão redirecionar normalmente
                     if (window.SPARouter && window.SPARouter.navigate) {
-                        window.SPARouter.navigate('/metas');
+                        window.SPARouter.navigate('/fragments/main_app.html', true);
                     } else {
-                        window.location.href = window.BASE_APP_URL + '/fragments/dashboard.html';
+                        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                        const redirectUrl = isDev ? '/fragments/main_app.html' : '/fragments/main_app.html';
+                        window.location.href = redirectUrl;
                     }
                 });
             }
@@ -796,7 +928,6 @@
             // Garantir que radio buttons e checkboxes disparem updateButtonState
             form.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
                 input.addEventListener('change', () => {
-                    console.log('[Onboarding] Input changed:', input.name, '| checked:', input.checked);
                     updateButtonState();
                 });
             });

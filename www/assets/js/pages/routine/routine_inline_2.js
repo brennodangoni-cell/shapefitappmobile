@@ -11,14 +11,10 @@
         // Carregar dados da rotina
         async function loadRoutineData() {
             try {
-                console.log('[Routine] Verificando autenticação...');
                 const authenticated = await requireAuth();
                 if (!authenticated) {
-                    console.log('[Routine] Usuário não autenticado, redirecionando...');
                     return; // Já redirecionou para login
                 }
-                
-                console.log('[Routine] Carregando dados de:', `${window.API_BASE_URL}/get_routine_data.php`);
                 const response = await authenticatedFetch(`${window.API_BASE_URL}/get_routine_data.php`);
                 
                 if (!response) {
@@ -39,8 +35,6 @@
                 }
                 
                 const data = result.data;
-                console.log('[Routine] Dados recebidos:', data);
-                
                 // Atualizar progresso
                 updateProgress(data.progress);
                 
@@ -72,7 +66,7 @@
         
         function renderTodoList(items) {
             if (!todoList) {
-                console.warn('[Routine] todoList não encontrado');
+                
                 return;
             }
             
@@ -100,7 +94,7 @@
         
         function renderCompletedList(items) {
             if (!completedList) {
-                console.warn('[Routine] completedList não encontrado');
+                
                 return;
             }
             
@@ -630,7 +624,7 @@
             const currentCompletedList = document.getElementById('routine-list-completed');
             
             if (!currentTodoList || !currentCompletedList) {
-                console.warn('[Routine] Listas não encontradas para updateUI');
+                
                 return;
             }
             
@@ -690,7 +684,7 @@
                 if (initAttempts < MAX_INIT_ATTEMPTS) {
                     setTimeout(initRoutine, 100);
                 } else {
-                    console.warn('[Routine] Elementos não encontrados após', MAX_INIT_ATTEMPTS, 'tentativas. Parando.');
+                    
                     initAttempts = 0;
                 }
                 return;

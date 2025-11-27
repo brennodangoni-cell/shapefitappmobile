@@ -185,7 +185,27 @@
             </div>`,
 
         // Auth (login/register) - sem skeleton, transição direta
-        auth: `<div class="page-skeleton" data-type="auth"></div>`
+        auth: `<div class="page-skeleton" data-type="auth"></div>`,
+        
+        // Onboarding - skeleton limpo e simples, similar ao dashboard
+        onboarding: `
+            <div class="page-skeleton" data-type="onboarding" style="width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; margin: 0 auto;">
+                <div style="padding: calc(env(safe-area-inset-top, 0px) + 10px) 20px 10px; flex-shrink: 0;">
+                    <div class="skeleton" style="width: 100%; height: 4px; border-radius: 2px; margin-bottom: 10px;"></div>
+                </div>
+                <div style="flex-grow: 1; padding: 20px; display: flex; flex-direction: column; gap: 18px;">
+                    <div class="skeleton" style="height: 32px; width: 70%; border-radius: 8px;"></div>
+                    <div class="skeleton" style="height: 20px; width: 90%; border-radius: 8px;"></div>
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                        <div class="skeleton" style="height: 54px; border-radius: 14px;"></div>
+                        <div class="skeleton" style="height: 54px; border-radius: 14px;"></div>
+                        <div class="skeleton" style="height: 54px; border-radius: 14px;"></div>
+                    </div>
+                </div>
+                <div style="padding: 20px; flex-shrink: 0;">
+                    <div class="skeleton" style="width: 100%; height: 50px; border-radius: 16px;"></div>
+                </div>
+            </div>`
     };
 
     // === MAPA DE PÁGINAS PARA TIPO DE SKELETON ===
@@ -211,7 +231,7 @@
         'progress': 'dashboard',
         'auth_login': 'auth',
         'auth_register': 'auth',
-        'onboarding_onboarding': 'auth',
+        'onboarding_onboarding': 'onboarding',
         'scan_barcode': 'scanner'
     };
 
@@ -229,19 +249,53 @@
         const container = document.getElementById('app-container');
         if (!container) return;
 
-        // ✅ GARANTIR BACKGROUND SEMPRE VISÍVEL
-        container.style.cssText = `
-            background: #121212 !important;
-            background-color: #121212 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-        `;
-        document.body.style.cssText = `
-            background: #121212 !important;
-            background-color: #121212 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-        `;
+        // ✅ Para onboarding, REMOVER REGISTER E PREPARAR LAYOUT (background já está no CSS)
+        const isOnboardingPage = pageName === 'onboarding_onboarding';
+        
+        if (isOnboardingPage) {
+            // ✅ REMOVER TODOS os elementos do register (se ainda existirem)
+            const registerPage = document.querySelector('.register-page');
+            const registerContainer = document.querySelector('.register-container');
+            const registerForm = document.getElementById('registerForm');
+            if (registerPage) registerPage.remove();
+            if (registerContainer) registerContainer.remove();
+            if (registerForm) registerForm.remove();
+            
+            // ✅ GARANTIR BACKGROUND (se não foi aplicado ainda)
+            if (!container.style.background || !container.style.background.includes('radial-gradient')) {
+                container.style.background = 'radial-gradient(circle at top, #1b1b1b 0, #050505 55%)';
+                container.style.backgroundColor = '#050505';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'center';
+                container.style.alignItems = 'center';
+            }
+            if (!document.body.style.background || !document.body.style.background.includes('radial-gradient')) {
+                document.body.style.background = 'radial-gradient(circle at top, #1b1b1b 0, #050505 55%)';
+                document.body.style.backgroundColor = '#050505';
+                document.body.style.display = 'flex';
+                document.body.style.justifyContent = 'center';
+                document.body.style.alignItems = 'center';
+            }
+        } else {
+            // ✅ Para outras páginas, apenas garantir visibilidade
+            // NÃO aplicar background aqui se já foi aplicado (evita piscada)
+            if (!container.style.background || container.style.background.includes('radial-gradient')) {
+                // Background já foi aplicado, não sobrescrever
+            } else {
+                container.style.cssText = `
+                    background: #121212 !important;
+                    background-color: #121212 !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                `;
+                document.body.style.cssText = `
+                    background: #121212 !important;
+                    background-color: #121212 !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                `;
+            }
+        }
 
         // Determinar tipo de skeleton
         const skeletonType = PAGE_TYPE_MAP[pageName] || 'dashboard';
@@ -252,41 +306,100 @@
         if (!skeletonEl) {
             skeletonEl = document.createElement('div');
             skeletonEl.className = 'page-skeleton';
+            skeletonEl.setAttribute('data-type', skeletonType);
             container.appendChild(skeletonEl);
+        } else {
+            skeletonEl.setAttribute('data-type', skeletonType);
         }
         skeletonEl.innerHTML = skeleton;
         skeletonEl.classList.remove('skeleton-fade-out');
         
-        // ✅ GARANTIR SKELETON SEMPRE VISÍVEL COM PADDING CORRETO
-        // ✅ MESMO PADDING QUE O CONTEÚDO REAL (16px + safe-area)
-        // ✅ IMPORTANTE: aplicar padding ANTES de inserir conteúdo para evitar "pulo"
+        // ✅ GARANTIR SKELETON 100% VISÍVEL IMEDIATAMENTE (SEM DELAY)
         skeletonEl.style.cssText = `
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
+            z-index: 9999 !important;
             opacity: 1 !important;
             visibility: visible !important;
-            transform: translateZ(0) !important;
-            -webkit-transform: translateZ(0) !important;
-            padding: 0 !important;
-            padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
-            padding-left: 16px !important;
-            padding-right: 16px !important;
-            padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-            margin: 0 !important;
-            box-sizing: border-box !important;
-            gap: 16px !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            -webkit-overflow-scrolling: touch !important;
+            display: flex !important;
         `;
+        
+        // ✅ GARANTIR SKELETON SEMPRE VISÍVEL
+        if (isOnboardingPage) {
+            // ✅ Container - layout
+            container.style.display = 'flex';
+            container.style.justifyContent = 'center';
+            container.style.alignItems = 'center';
+            
+            // ✅ Skeleton - 100% VISÍVEL E CENTRALIZADO
+            skeletonEl.setAttribute('style', `
+                position: relative !important;
+                width: 100% !important;
+                max-width: 480px !important;
+                height: 100% !important;
+                max-height: 100vh !important;
+                display: flex !important;
+                flex-direction: column !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                padding: 0 !important;
+                margin: 0 auto !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+                background: transparent !important;
+                z-index: 9999 !important;
+            `);
+            
+            // ✅ Body - layout com centralização (background já aplicado acima)
+            document.body.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: calc(var(--vh, 1vh) * 100) !important;
+                overflow: hidden !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                justify-content: center !important;
+                align-items: stretch !important;
+            `;
+            
+            // ✅ GARANTIR SCROLL NO TOPO imediatamente
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+        } else {
+            skeletonEl.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                transform: translateZ(0) !important;
+                -webkit-transform: translateZ(0) !important;
+                padding: 0 !important;
+                padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
+                padding-left: 16px !important;
+                padding-right: 16px !important;
+                padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+                gap: 16px !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch !important;
+            `;
+        }
         
         // ✅ FORÇAR RE-FLOW para garantir que padding está aplicado
         skeletonEl.offsetHeight;
+        
+        // ✅ GARANTIR SKELETON VISÍVEL COM Z-INDEX ALTO
+        skeletonEl.style.zIndex = '9999';
+        skeletonEl.style.position = 'relative';
         
         // Marcar container como loading
         container.classList.add('page-loading');
@@ -301,6 +414,10 @@
                 visibility: hidden !important;
             `;
         }
+        
+        // ✅ FORÇAR RE-FLOW FINAL para garantir que skeleton está visível
+        skeletonEl.offsetHeight;
+        document.body.offsetHeight;
         
         // ✅ Log removido para performance
     }
@@ -345,14 +462,177 @@
         if (pageContent) {
             // Remover classe de escondido
             pageContent.classList.remove('page-content-hidden');
-            pageContent.style.cssText = `
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                pointer-events: auto !important;
-                transform: translateZ(0) !important;
-                -webkit-transform: translateZ(0) !important;
-            `;
+            
+            // ✅ Para onboarding, garantir EXATAMENTE o mesmo layout do skeleton
+            const isOnboarding = state.currentPage === 'onboarding_onboarding';
+            if (isOnboarding) {
+                // ✅ GARANTIR layout COM BACKGROUND PRETO E ILUMINAÇÃO (o lindo!)
+                container.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: calc(var(--vh, 1vh) * 100) !important;
+                    overflow: hidden !important;
+                    display: flex !important;
+                    justify-content: center !important;
+                    align-items: stretch !important;
+                    background: radial-gradient(circle at top, #1b1b1b 0, #050505 55%) !important;
+                    background-color: #050505 !important;
+                `;
+                
+                // ✅ GARANTIR layout do body COM BACKGROUND PRETO E ILUMINAÇÃO
+                document.body.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: calc(var(--vh, 1vh) * 100) !important;
+                    overflow: hidden !important;
+                    display: flex !important;
+                    justify-content: center !important;
+                    align-items: stretch !important;
+                    background: radial-gradient(circle at top, #1b1b1b 0, #050505 55%) !important;
+                    background-color: #050505 !important;
+                `;
+                
+                // ✅ GARANTIR background no html também
+                document.documentElement.style.cssText = `
+                    background: radial-gradient(circle at top, #1b1b1b 0, #050505 55%) !important;
+                    background-color: #050505 !important;
+                `;
+                
+                // Resetar scroll ANTES de mostrar o conteúdo
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+                if (container) container.scrollTop = 0;
+                
+                // ✅ Garantir que o conteúdo do onboarding tenha EXATAMENTE o mesmo posicionamento do skeleton
+                const appContainer = pageContent.querySelector('.app-container');
+                const onboardingForm = pageContent.querySelector('#onboarding-form');
+                const footerNav = pageContent.querySelector('.footer-nav');
+                
+                if (appContainer) {
+                    appContainer.scrollTop = 0;
+                    // ✅ Forçar o mesmo posicionamento do skeleton (centralizado via container justify-content)
+                    appContainer.style.width = '100%';
+                    appContainer.style.maxWidth = '480px';
+                    appContainer.style.height = '100%';
+                    appContainer.style.margin = '0';
+                    appContainer.style.display = 'flex';
+                    appContainer.style.flexDirection = 'column';
+                }
+                
+                // ✅ GARANTIR que o form tenha display flex
+                if (onboardingForm) {
+                    onboardingForm.style.display = 'flex';
+                    onboardingForm.style.flexDirection = 'column';
+                    onboardingForm.style.minHeight = '0';
+                    onboardingForm.style.overflow = 'hidden';
+                }
+                
+                // ✅ GARANTIR que o footer fique EM CIMA (sem margin-top: auto)
+                if (footerNav) {
+                    footerNav.style.cssText = `
+                        padding: 18px 20px calc(env(safe-area-inset-bottom, 0px) + 22px) !important;
+                        flex: 0 0 auto !important;
+                        flex-shrink: 0 !important;
+                        flex-grow: 0 !important;
+                        margin-top: 0 !important;
+                        margin-bottom: 0 !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        gap: 12px !important;
+                        align-self: flex-start !important;
+                        width: 100% !important;
+                        position: relative !important;
+                        order: 2 !important;
+                    `;
+                }
+                
+                // ✅ Garantir que o page-root também tenha o layout correto
+                if (pageContent.classList.contains('page-root')) {
+                    pageContent.style.cssText = `
+                        display: block !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                        pointer-events: auto !important;
+                        transform: translateZ(0) !important;
+                        -webkit-transform: translateZ(0) !important;
+                        width: 100% !important;
+                        max-width: 480px !important;
+                        height: 100% !important;
+                    `;
+                } else {
+                    pageContent.style.cssText = `
+                        display: block !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                        pointer-events: auto !important;
+                        transform: translateZ(0) !important;
+                        -webkit-transform: translateZ(0) !important;
+                    `;
+                }
+            } else {
+                pageContent.style.cssText = `
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    pointer-events: auto !important;
+                    transform: translateZ(0) !important;
+                    -webkit-transform: translateZ(0) !important;
+                `;
+            }
+            
+            // ✅ Resetar scroll novamente após mostrar (para garantir) - múltiplos resets
+            if (isOnboarding) {
+                // ✅ GARANTIR que o body mantenha EXATAMENTE o mesmo estilo (justify-content: center)
+                document.body.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: calc(var(--vh, 1vh) * 100) !important;
+                    overflow: hidden !important;
+                    display: flex !important;
+                    justify-content: center !important;
+                    align-items: stretch !important;
+                `;
+                
+                requestAnimationFrame(() => {
+                    window.scrollTo(0, 0);
+                    document.documentElement.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                    if (container) container.scrollTop = 0;
+                    const appContainer = pageContent.querySelector('.app-container');
+                    if (appContainer) {
+                        appContainer.scrollTop = 0;
+                    }
+                });
+                
+                setTimeout(() => {
+                    window.scrollTo(0, 0);
+                    document.documentElement.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                    if (container) container.scrollTop = 0;
+                    const appContainer = pageContent.querySelector('.app-container');
+                    if (appContainer) {
+                        appContainer.scrollTop = 0;
+                    }
+                }, 50);
+                
+                setTimeout(() => {
+                    window.scrollTo(0, 0);
+                    document.documentElement.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                    if (container) container.scrollTop = 0;
+                    const appContainer = pageContent.querySelector('.app-container');
+                    if (appContainer) {
+                        appContainer.scrollTop = 0;
+                    }
+                }, 150);
+            }
             
             // ✅ ATIVAR ANIMAÇÕES DE AUTH (login/register) se não for transição auth
             if (!window._authTransition) {

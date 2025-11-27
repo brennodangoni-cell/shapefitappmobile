@@ -201,7 +201,7 @@ function renderMeals(mealGroups, mealTypes) {
     for (const [mealType, meals] of Object.entries(processedGroups)) {
         // Garantir que meals seja um array
         if (!Array.isArray(meals)) {
-            console.warn(`mealGroups[${mealType}] não é um array:`, meals);
+            
             continue;
         }
         

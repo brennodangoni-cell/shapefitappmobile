@@ -142,7 +142,7 @@
     // Quando a conexão volta, esconder mensagens de erro
     window.addEventListener('reloadPageData', function(e) {
         if (e.detail && e.detail.reason === 'connection-restored') {
-            console.log('[OfflineErrorHandler] Conexão restaurada - escondendo mensagens de erro');
+            
             hideErrorMessages();
         }
     });
@@ -151,7 +151,7 @@
     window.addEventListener('online', function() {
         setTimeout(() => {
             if (navigator.onLine) {
-                console.log('[OfflineErrorHandler] Evento online detectado - escondendo mensagens de erro');
+                
                 hideErrorMessages();
             }
         }, 500);

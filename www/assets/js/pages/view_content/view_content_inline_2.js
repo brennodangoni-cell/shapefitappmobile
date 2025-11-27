@@ -9,7 +9,7 @@
         const contentTitle = document.getElementById('content-title');
         
         if (!contentContainer || !contentTitle) {
-            console.warn('[ViewContent] Elementos do DOM não encontrados');
+            
             return;
         }
         
@@ -83,7 +83,7 @@
                 // Registrar visualização de forma não-bloqueante (não aguardar)
                 registerContentView(contentId).catch(err => {
                     // Ignorar erros de registro de visualização
-                    console.warn('[ViewContent] Erro ao registrar visualização:', err);
+                    
                 });
                 
             } catch (error) {

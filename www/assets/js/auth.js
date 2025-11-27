@@ -17,7 +17,6 @@ function clearAuthToken() {
 async function isAuthenticated() {
     const token = getAuthToken();
     if (!token) {
-        console.log('[Auth] Nenhum token encontrado');
         return false;
     }
     
@@ -25,7 +24,7 @@ async function isAuthenticated() {
         // Usar window.API_BASE_URL - sempre aponta para appshapefit.com/api
         const apiBase = window.API_BASE_URL || 'https://appshapefit.com/api';
         const verifyUrl = `${apiBase}/verify_token.php`;
-        console.log('[Auth] Verificando token em:', verifyUrl);
+        // ✅ Log removido para performance (verificação de token é normal)
         
         // Criar AbortController para timeout
         const controller = new AbortController();
@@ -41,13 +40,11 @@ async function isAuthenticated() {
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-            console.log('[Auth] Resposta não OK:', response.status);
             // Se for 401, realmente não está autenticado
             if (response.status === 401) {
                 return false;
             }
             // Para outros erros, assumir que ainda está autenticado (pode ser erro temporário)
-            console.log('[Auth] Erro temporário, mantendo autenticação');
             return true;
         }
         
@@ -62,7 +59,6 @@ async function isAuthenticated() {
         
         const result = await response.json();
         const isAuth = result.success === true;
-        console.log('[Auth] Token válido:', isAuth);
         return isAuth;
     } catch (error) {
         console.error('[Auth] Erro verificação:', error);
@@ -74,7 +70,6 @@ async function isAuthenticated() {
             error.message.includes('Failed to fetch') ||
             error.message.includes('NetworkError') ||
             error.message.includes('network')) {
-            console.log('[Auth] Erro de rede detectado, mantendo autenticação');
             return true; // Manter autenticado se for erro de rede
         }
         
@@ -86,7 +81,6 @@ async function isAuthenticated() {
         }
         
         // Para outros erros desconhecidos, também manter autenticado (melhor que deslogar)
-        console.log('[Auth] Erro desconhecido, mantendo autenticação por segurança');
         return true;
     }
 }
@@ -102,7 +96,6 @@ async function requireAuth() {
         // Sem token, verificar se está offline
         if (!navigator.onLine) {
             // Se estiver offline e sem token, mostrar login (usuário não está logado)
-            console.log('[Auth] Offline e sem token - redirecionando para login');
             // ✅ Redirecionar IMEDIATAMENTE sem tentar fazer requisições
             if (window.SPARouter && window.SPARouter.navigate) {
                 window.SPARouter.navigate('/fragments/auth_login.html', true);
@@ -123,7 +116,6 @@ async function requireAuth() {
     // ✅ Se tem token mas está offline, assumir autenticado (usuário já estava logado)
     // O modal offline será mostrado pelo offline-modal.js
     if (!navigator.onLine) {
-        console.log('[Auth] Offline mas com token - assumindo autenticado');
         return true; // Retornar true para não redirecionar, modal offline cuida do resto
     }
     

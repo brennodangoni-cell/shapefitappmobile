@@ -719,7 +719,7 @@ function _saveCheckinProgressToLocalStorage() {
         console.error('[Check-in] Erro ao salvar no localStorage:', error);
         // Se o localStorage estiver cheio, tentar limpar dados antigos
         if (error.name === 'QuotaExceededError' || error.code === 22) {
-            console.warn('[Check-in] localStorage cheio, tentando limpar dados antigos...');
+            
             clearOldCheckinProgress();
             // Tentar novamente
             try {
@@ -1182,7 +1182,6 @@ async function loadDashboardData() {
     // ✅ Verificar se está offline ANTES de tentar carregar
     // Se estiver offline, não mostrar erro - o modal offline já está cuidando disso
     if (!navigator.onLine) {
-        console.log('[Dashboard] Offline detectado - aguardando conexão');
         return;
     }
     
@@ -1253,7 +1252,6 @@ async function loadDashboardData() {
         // Se for erro de rede e estiver offline, não mostrar erro
         // O modal offline já está cuidando disso
         if (isNetworkError && (!navigator.onLine || (window.isOffline && window.isOffline()))) {
-            console.log('[Dashboard] Erro de rede detectado e offline - modal offline cuidará disso');
             return;
         }
         
@@ -1313,12 +1311,20 @@ async function loadDashboardData() {
     // Carregar dados inicialmente
     await loadDashboardData();
     
+    // ✅ FORÇAR INICIALIZAÇÃO DO CARROSSEL APÓS DADOS CARREGAREM
+    // Aguardar um pouco para garantir que o DOM está pronto
+    setTimeout(() => {
+        if (window.tryInitCarousel && typeof window.tryInitCarousel === 'function') {
+            window.tryInitCarousel();
+        } else if (typeof tryInitCarousel === 'function') {
+            tryInitCarousel();
+        }
+    }, 500);
+    
     // ✅ ESCUTAR EVENTO DE RECONEXÃO
     // Quando a internet volta, recarregar os dados automaticamente
     window.addEventListener('reloadPageData', async function(e) {
         if (e.detail && e.detail.reason === 'connection-restored') {
-            console.log('[Dashboard] Conexão restaurada - recarregando dados...');
-            
             // Limpar mensagens de erro anteriores
             const container = document.getElementById('dashboard-container');
             if (container) {
@@ -1348,7 +1354,6 @@ async function loadDashboardData() {
                     // Verificar se há mensagem de erro visível
                     const hasError = container.innerHTML.includes('Erro ao carregar dados');
                     if (hasError) {
-                        console.log('[Dashboard] Evento online detectado e há erro - recarregando dados...');
                         await loadDashboardData();
                     }
                 }

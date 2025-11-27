@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateFoodDisplay(unitOptionsHTML, defaultUnit);
                 } else {
                     // Se não houver unidades no banco, mostrar mensagem
-                    console.log('Nenhuma unidade encontrada no banco para este alimento');
+                    
                     showNoUnitsMessage();
                 }
             })

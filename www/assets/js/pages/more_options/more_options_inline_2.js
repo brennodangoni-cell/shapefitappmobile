@@ -6,7 +6,6 @@
 (function() {
         // Evitar execução duplicada na mesma navegação
         if (window._moreOptionsLoaded) {
-            console.log('more_options: já carregado');
             return;
         }
         window._moreOptionsLoaded = true;
@@ -152,7 +151,6 @@
         async function initPage() {
             // Aguardar auth.js estar carregado
             if (typeof requireAuth !== 'function' || typeof authenticatedFetch !== 'function') {
-                console.log('more_options: Aguardando auth.js...');
                 setTimeout(initPage, 100);
                 return;
             }

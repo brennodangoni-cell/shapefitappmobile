@@ -77,8 +77,6 @@
                     if (consumed) consumed.textContent = goals.water.consumed || 0;
                     if (goal) goal.textContent = goals.water.goal || 0;
                 }
-                
-                console.log('[Dashboard] Dados carregados!');
                 window._dashboardLoaded = true;
                 
             } catch (error) {
@@ -90,5 +88,105 @@
         
         // Executar imediatamente (SPA)
         loadDashboardData();
+        
+        // ✅ ANIMAÇÃO PARA REFAZER QUESTIONÁRIO (similar ao register -> onboarding)
+        (function setupRefazerAnimation() {
+            const refazerLink = document.querySelector('a[href*="onboarding_onboarding.html?refazer=true"]');
+            if (!refazerLink) return;
+            
+            refazerLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const container = document.getElementById('app-container') || document.querySelector('.page-root')?.parentElement;
+                if (!container) {
+                    // Fallback: usar router normal
+                    if (window.SPARouter && window.SPARouter.navigate) {
+                        window.SPARouter.navigate('/fragments/onboarding_onboarding.html?refazer=true', true);
+                    } else {
+                        window.location.href = refazerLink.href;
+                    }
+                    return;
+                }
+                
+                const onboardingPath = '/fragments/onboarding_onboarding.html?refazer=true';
+                const currentPageRoot = document.querySelector('.page-root');
+                
+                // 1. ANIMAR PÁGINA ATUAL SAINDO (para cima)
+                if (currentPageRoot) {
+                    currentPageRoot.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease';
+                    currentPageRoot.style.transform = 'translateY(-100%)';
+                    currentPageRoot.style.opacity = '0';
+                }
+                
+                // 2. CARREGAR ONBOARDING
+                fetch(onboardingPath)
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const onboardingPageRoot = doc.querySelector('.page-root');
+                        
+                        if (!onboardingPageRoot) {
+                            // Fallback: usar router
+                            if (window.SPARouter && window.SPARouter.navigate) {
+                                window.SPARouter.navigate(onboardingPath, true);
+                            } else {
+                                window.location.href = onboardingPath;
+                            }
+                            return;
+                        }
+                        
+                        // Remover scripts do HTML (vão ser executados depois)
+                        const scripts = onboardingPageRoot.querySelectorAll('script');
+                        scripts.forEach(script => script.remove());
+                        
+                        // 3. AGUARDAR ANIMAÇÃO E INSERIR ONBOARDING
+                        setTimeout(() => {
+                            // Remover página atual
+                            if (currentPageRoot) currentPageRoot.remove();
+                            
+                            // Inserir onboarding com animação de baixo para cima
+                            onboardingPageRoot.style.cssText = `
+                                transform: translateY(100%);
+                                opacity: 0;
+                                transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+                            `;
+                            container.appendChild(onboardingPageRoot);
+                            
+                            // Forçar reflow e animar
+                            requestAnimationFrame(() => {
+                                onboardingPageRoot.style.transform = 'translateY(0)';
+                                onboardingPageRoot.style.opacity = '1';
+                            });
+                            
+                            // Executar scripts do onboarding
+                            const allScripts = doc.querySelectorAll('script');
+                            allScripts.forEach(script => {
+                                const newScript = document.createElement('script');
+                                if (script.src) {
+                                    newScript.src = script.src;
+                                } else {
+                                    newScript.textContent = script.textContent;
+                                }
+                                document.head.appendChild(newScript);
+                            });
+                            
+                            // Atualizar URL sem recarregar
+                            if (window.history && window.history.pushState) {
+                                window.history.pushState({}, '', '/bem-vindo?refazer=true');
+                            }
+                        }, 400);
+                    })
+                    .catch(error => {
+                        console.error('[Dashboard] Erro ao carregar onboarding:', error);
+                        // Fallback: usar router
+                        if (window.SPARouter && window.SPARouter.navigate) {
+                            window.SPARouter.navigate(onboardingPath, true);
+                        } else {
+                            window.location.href = onboardingPath;
+                        }
+                    });
+            });
+        })();
     
 })();

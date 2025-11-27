@@ -22,7 +22,6 @@ function cleanupCarousel() {
       try {
         anim.destroy();
       } catch (e) {
-        console.warn('[Banner Carousel] Erro ao destruir animação:', e);
       }
     }
   });
@@ -38,10 +37,9 @@ function cleanupCarousel() {
 // Função para carregar banners da API
 async function loadBannersFromAPI() {
   try {
-    // ✅ DETECTAR SE É APP NATIVO (iOS/Android) OU DEV
-    const isNative = typeof window.Capacitor !== 'undefined';
-    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
-    const apiUrl = (isNative || isDev)
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isMobile = typeof window.Capacitor !== 'undefined';
+    const apiUrl = isDev || isMobile
       ? 'https://appshapefit.com/api/get_banners.php'
       : '/api/get_banners.php';
     
@@ -64,19 +62,25 @@ async function loadBannersFromAPI() {
         return 0; // mantém ordem original
       });
       
-      // ✅ Em app nativo ou dev, garantir URLs completas
-      if (isNative || isDev) {
-        return banners.map(b => ({
-          ...b,
-          json_path: b.json_path.startsWith('http') 
-            ? b.json_path 
-            : `https://appshapefit.com${b.json_path}`
-        }));
+      // ✅ SEMPRE garantir URLs completas no mobile ou dev
+      if (isDev || isMobile) {
+        return banners.map(b => {
+          let jsonPath = b.json_path;
+          // Se já é URL completa, usar direto
+          if (jsonPath.startsWith('http://') || jsonPath.startsWith('https://')) {
+            return { ...b, json_path: jsonPath };
+          }
+          // Se começa com /, adicionar domínio
+          if (jsonPath.startsWith('/')) {
+            return { ...b, json_path: `https://appshapefit.com${jsonPath}` };
+          }
+          // Caso contrário, adicionar / antes
+          return { ...b, json_path: `https://appshapefit.com/${jsonPath}` };
+        });
       }
       
       return banners;
     } else {
-      console.warn('[Banner Carousel] API vazia, usando fallback');
       return getFallbackBanners();
     }
   } catch (error) {
@@ -86,11 +90,10 @@ async function loadBannersFromAPI() {
 }
 
 function getFallbackBanners() {
-  // ✅ DETECTAR SE É APP NATIVO (iOS/Android) OU DEV
-  const isNative = typeof window.Capacitor !== 'undefined';
-  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
-  // ✅ Em app nativo ou dev, usar URL completa
-  const baseUrl = (isNative || isDev) ? 'https://appshapefit.com' : '';
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isMobile = typeof window.Capacitor !== 'undefined';
+  // ✅ SEMPRE usar URL completa no mobile ou dev
+  const baseUrl = (isDev || isMobile) ? 'https://appshapefit.com' : '';
   
   // ✅ OTIMIZADO: Receitas por último (mais pesado)
   return [
@@ -157,7 +160,6 @@ async function initLottieCarousel() {
   const bannerData = await loadBannersFromAPI();
   
   if (bannerData.length === 0) {
-    console.log('[Banner Carousel] Nenhum banner disponível.');
     carousel.style.display = 'none';
     return;
   }
@@ -193,7 +195,6 @@ async function initLottieCarousel() {
       }
     }
     if (paginationContainer) paginationContainer.style.display = 'none';
-    console.log('[Banner Carousel] Apenas 1 slide, carrossel desabilitado.');
     return;
   }
 

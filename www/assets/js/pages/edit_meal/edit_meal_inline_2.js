@@ -16,14 +16,8 @@
     const BASE_URL = window.BASE_APP_URL;
     
     // Debug: ver o que está na URL
-    console.log('[EditMeal] window.location.href:', window.location.href);
-    console.log('[EditMeal] window.location.search:', window.location.search);
-    
     const urlParams = new URLSearchParams(window.location.search);
     const mealId = parseInt(urlParams.get('id')) || 0;
-    
-    console.log('[EditMeal] mealId extraído:', mealId);
-    
     if (!mealId) {
         alert('ID da refeição inválido.');
         if (window.SPARouter) {
@@ -206,14 +200,10 @@ document.getElementById('servings').addEventListener('input', updateNutrition);
             });
             
             if (!response) return; // Token inválido, já redirecionou
-            
-            console.log('[EditMeal] Response status:', response.status);
             console.log('[EditMeal] Response headers:', response.headers.get('content-type'));
             
             // Verificar se a resposta tem conteúdo
             const text = await response.text();
-            console.log('[EditMeal] Response text:', text);
-            
             if (!response.ok) {
                 // Erro HTTP
                 let errorMsg = `Erro do servidor (${response.status})`;

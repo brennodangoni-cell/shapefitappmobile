@@ -87,8 +87,128 @@
                     // Save token
                     setAuthToken(result.token);
                     
-                    // Redirect to onboarding
-                    window.location.href = `${window.BASE_APP_URL}/onboarding/onboarding.html`;
+                    // Limpar cache de autenticação
+                    window._authResult = undefined;
+                    window._authLastCheck = undefined;
+                    
+                    // 1. MOSTRAR LOADING NO REGISTER
+                    const loadingOverlay = document.getElementById('registerLoadingOverlay');
+                    if (loadingOverlay) {
+                        loadingOverlay.classList.add('active');
+                    }
+                    
+                    // 2. APLICAR BACKGROUND DO ONBOARDING IMEDIATAMENTE
+                    const container = document.getElementById('app-container');
+                    const onboardingBg = 'radial-gradient(circle at top, #1b1b1b 0, #050505 55%)';
+                    
+                    if (container) {
+                        container.style.background = onboardingBg;
+                        container.style.backgroundColor = '#050505';
+                        container.style.display = 'flex';
+                        container.style.justifyContent = 'center';
+                        container.style.alignItems = 'center';
+                    }
+                    document.body.style.background = onboardingBg;
+                    document.body.style.backgroundColor = '#050505';
+                    document.body.style.display = 'flex';
+                    document.body.style.justifyContent = 'center';
+                    document.body.style.alignItems = 'center';
+                    
+                    // 3. CARREGAR ONBOARDING MANUALMENTE E AGUARDAR 100% PRONTO
+                    const onboardingPath = '/fragments/onboarding_onboarding.html';
+                    
+                    fetch(onboardingPath)
+                        .then(response => response.text())
+                        .then(html => {
+                            // Parse do HTML
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const onboardingPageRoot = doc.querySelector('.page-root');
+                            
+                            if (!onboardingPageRoot || !container) {
+                                // Fallback: usar router
+                                if (loadingOverlay) loadingOverlay.remove();
+                                if (window.SPARouter && window.SPARouter.navigate) {
+                                    window.SPARouter.navigate(onboardingPath, true);
+                                }
+                                return;
+                            }
+                            
+                            // Remover scripts do HTML (vão ser executados depois)
+                            const scripts = onboardingPageRoot.querySelectorAll('script');
+                            scripts.forEach(script => script.remove());
+                            
+                            // 4. REMOVER REGISTER COM ANIMAÇÃO
+                            const registerPage = document.querySelector('.register-page');
+                            const registerContainer = document.querySelector('.register-container');
+                            const registerForm = document.getElementById('registerForm');
+                            const currentPageRoot = document.querySelector('.page-root');
+                            
+                            if (registerContainer) {
+                                registerContainer.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease';
+                                registerContainer.style.transform = 'translateY(-100%)';
+                                registerContainer.style.opacity = '0';
+                            }
+                            
+                            // 5. AGUARDAR ANIMAÇÃO E INSERIR ONBOARDING
+                            setTimeout(() => {
+                                // Remover register
+                                if (registerPage) registerPage.remove();
+                                if (registerContainer) registerContainer.remove();
+                                if (registerForm) registerForm.remove();
+                                if (currentPageRoot) currentPageRoot.remove();
+                                
+                                // Remover loading overlay
+                                if (loadingOverlay) {
+                                    loadingOverlay.classList.remove('active');
+                                    setTimeout(() => loadingOverlay.remove(), 300);
+                                }
+                                
+                                // Inserir onboarding com animação de baixo para cima
+                                onboardingPageRoot.style.cssText = `
+                                    transform: translateY(100%);
+                                    opacity: 0;
+                                    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+                                `;
+                                container.appendChild(onboardingPageRoot);
+                                
+                                // Forçar reflow e animar
+                                requestAnimationFrame(() => {
+                                    onboardingPageRoot.style.transform = 'translateY(0)';
+                                    onboardingPageRoot.style.opacity = '1';
+                                });
+                                
+                                // Executar scripts do onboarding
+                                const allScripts = doc.querySelectorAll('script');
+                                allScripts.forEach(script => {
+                                    const newScript = document.createElement('script');
+                                    if (script.src) {
+                                        newScript.src = script.src;
+                                    } else {
+                                        newScript.textContent = script.textContent;
+                                    }
+                                    document.head.appendChild(newScript);
+                                });
+                                
+                                // Atualizar URL sem recarregar
+                                if (window.history && window.history.pushState) {
+                                    window.history.pushState({}, '', '/bem-vindo');
+                                }
+                            }, 400);
+                        })
+                        .catch(error => {
+                            console.error('Erro ao carregar onboarding:', error);
+                            // Fallback: usar router
+                            if (loadingOverlay) loadingOverlay.remove();
+                            const isNative = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
+                            if (window.SPARouter && window.SPARouter.navigate) {
+                                window.SPARouter.navigate(onboardingPath, true);
+                            } else if (!isNative) {
+                                window.location.href = onboardingPath;
+                            } else {
+                                window.location.reload();
+                            }
+                        });
                 } else {
                     // Show errors
                     if (result.errors) {
@@ -123,5 +243,27 @@
                 submitBtn.textContent = 'Cadastrar';
             }
         });
+        
+        // ✅ Interceptar link de login para usar router SPA
+        const loginLink = document.getElementById('login-link');
+        if (loginLink) {
+            loginLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Usar router SPA se disponível
+                if (window.SPARouter && window.SPARouter.navigate) {
+                    window.SPARouter.navigate('/login', true);
+                } else {
+                    // Fallback para web
+                    window.location.href = '/login';
+                }
+            });
+        }
+        
+        // ✅ FINALIZAR LOADING - Mostrar conteúdo após inicialização
+        if (window.PageLoader) {
+            window.PageLoader.ready();
+        }
     
 })();

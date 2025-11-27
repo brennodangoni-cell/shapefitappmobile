@@ -11,13 +11,11 @@
         const container = document.querySelector('.ccf-container');
         
         if (!form) {
-            console.log('[CreateCustomFood] Formulário não encontrado.');
             return;
         }
         
         // Evitar inicialização duplicada
         if (form.dataset.initialized === 'true') {
-            console.log('[CreateCustomFood] Já inicializado.');
             return;
         }
         

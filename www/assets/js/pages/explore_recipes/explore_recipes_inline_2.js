@@ -436,7 +436,7 @@ function waitForAllImages(container) {
         // ✅ Timeout de segurança (5 segundos)
         setTimeout(() => {
             if (loadedCount < totalImages) {
-                console.warn(`[ExploreRecipes] Timeout: ${totalImages - loadedCount} imagens não carregaram`);
+                
                 resolve(); // Resolver mesmo assim para não travar
             }
         }, 5000);

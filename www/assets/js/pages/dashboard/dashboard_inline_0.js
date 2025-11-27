@@ -13,6 +13,4 @@
                 window.BASE_APP_URL = window.BASE_APP_URL.slice(0, -1);
             }
         }
-        console.log('[dashboard] BASE_APP_URL:', window.BASE_APP_URL);
-    
 })();
