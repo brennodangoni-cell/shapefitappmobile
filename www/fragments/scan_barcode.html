@@ -283,28 +283,42 @@
     margin: 0;
 }
 
-/* Modal */
+/* Modal - USANDO PADRÃO DO MAIN_APP */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    padding: 20px;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    display: flex !important;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 99999 !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+}
+
+.modal-overlay.visible {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0s;
 }
 
 .modal-content {
-    background: rgba(26, 26, 26, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
-    padding: 24px;
-    max-width: 400px;
-    width: 100%;
+    background: rgba(26, 26, 26, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    max-width: 400px !important;
+    width: 100% !important;
+    position: relative !important;
+    z-index: 100000 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
 }
 
 .modal-content h3 {
