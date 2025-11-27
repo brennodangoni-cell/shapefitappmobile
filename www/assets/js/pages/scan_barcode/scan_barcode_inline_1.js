@@ -39,14 +39,13 @@
                 });
             }
             
+            // Inicializar scanner imediatamente (sem delay)
+            initializeScanner();
+            
+            // Marcar página como pronta após iniciar scanner
             if (window.PageLoader) {
                 window.PageLoader.ready();
             }
-            
-            // Aguardar um pouco e inicializar scanner
-            setTimeout(() => {
-                initializeScanner();
-            }, 300);
             
         } catch (error) {
             showCameraError('Erro ao inicializar scanner.');
@@ -63,25 +62,33 @@
     }
 
     /**
-     * Inicializar scanner ZXing (biblioteca web pura)
+     * Inicializar scanner ZXing (biblioteca web pura) - OTIMIZADO
      */
     async function initializeScanner() {
         try {
-            // Carregar ZXing se ainda não estiver carregado
-            if (typeof ZXing === 'undefined') {
-                // Criar script dinamicamente
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/@zxing/library@latest';
-                script.onload = () => {
-                    initZXing();
-                };
-                script.onerror = () => {
-                    showCameraError('Erro ao carregar biblioteca de scanner.');
-                };
-                document.head.appendChild(script);
-            } else {
-                initZXing();
+            // Se ZXing já está carregado, iniciar imediatamente
+            if (typeof ZXing !== 'undefined') {
+                await initZXing();
+                return;
             }
+            
+            // Se não está carregado, aguardar um pouco (script está no HTML)
+            // Verificar periodicamente se já carregou
+            let attempts = 0;
+            const maxAttempts = 20; // 2 segundos máximo
+            
+            const checkZXing = setInterval(() => {
+                attempts++;
+                
+                if (typeof ZXing !== 'undefined') {
+                    clearInterval(checkZXing);
+                    initZXing();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkZXing);
+                    showCameraError('Erro ao carregar biblioteca de scanner.');
+                }
+            }, 100);
+            
         } catch (err) {
             showCameraError('Erro ao inicializar scanner: ' + err.message);
         }
@@ -91,7 +98,13 @@
         try {
             codeReader = new ZXing.BrowserMultiFormatReader();
             
-            // Solicitar permissão e obter câmera traseira
+            // Mostrar vídeo imediatamente (antes de solicitar permissão)
+            const videoElement = document.getElementById('camera-video');
+            if (videoElement) {
+                videoElement.style.display = 'block';
+            }
+            
+            // Solicitar permissão e obter câmera traseira (em paralelo quando possível)
             const videoInputDevices = await codeReader.listVideoInputDevices();
             
             if (videoInputDevices.length === 0) {
@@ -109,6 +122,7 @@
                 }
             }
 
+            // Iniciar scanning imediatamente
             startScanning();
         } catch (err) {
             showCameraError('Não foi possível acessar a câmera. Verifique as permissões.');
@@ -122,9 +136,14 @@
         const videoElement = document.getElementById('camera-video');
         if (!videoElement) {
             showCameraError('Elemento de vídeo não encontrado.');
+            scanning = false;
             return;
         }
         
+        // Garantir que vídeo está visível
+        videoElement.style.display = 'block';
+        
+        // Iniciar scanning (decodeFromVideoDevice já solicita permissão automaticamente)
         codeReader.decodeFromVideoDevice(selectedDeviceId, videoElement, (result, err) => {
             if (result) {
                 // Código de barras detectado!
