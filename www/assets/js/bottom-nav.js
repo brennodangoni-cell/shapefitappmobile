@@ -492,10 +492,73 @@
         updateActiveMenuItem();
     });
 
-    // Iniciar
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+    // ✅ VERIFICAR SE É PÁGINA AUTH ANTES DE INICIALIZAR
+    function shouldInit() {
+        const path = window.location.pathname;
+        const pageName = getPageNameFromPath(path);
+        const isAuth = shouldHideNav(pageName) || 
+                      document.documentElement.classList.contains('auth-initial') ||
+                      document.body.classList.contains('auth-mode');
+        
+        if (isAuth) {
+            // ✅ GARANTIR QUE ESTÁ ESCONDIDO E NÃO INICIALIZAR
+            const navContainer = document.getElementById('bottom-nav-container');
+            if (navContainer) {
+                navContainer.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; position: fixed !important; bottom: -1000px !important; height: 0 !important; width: 0 !important; overflow: hidden !important;';
+                navContainer.classList.add('hidden');
+                navContainer.classList.remove('nav-visible');
+            }
+            return false; // Não inicializar
+        }
+        return true; // Pode inicializar
+    }
+    
+    // Iniciar apenas se não for página auth
+    if (shouldInit()) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                // Verificar novamente antes de inicializar
+                if (shouldInit()) {
+                    init();
+                }
+            });
+        } else {
+            init();
+        }
     } else {
-        init();
+        // ✅ Se for auth, garantir que fica escondido e monitorar mudanças
+        const navContainer = document.getElementById('bottom-nav-container');
+        if (navContainer) {
+            // Esconder imediatamente
+            navContainer.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; position: fixed !important; bottom: -1000px !important; height: 0 !important; width: 0 !important; overflow: hidden !important;';
+            navContainer.classList.add('hidden');
+            navContainer.classList.remove('nav-visible');
+            
+            // ✅ MONITORAR MUDANÇAS E FORÇAR ESCONDER
+            var authObserver = new MutationObserver(function() {
+                const path = window.location.pathname;
+                const pageName = getPageNameFromPath(path);
+                const isAuth = shouldHideNav(pageName) || 
+                              document.documentElement.classList.contains('auth-initial') ||
+                              document.body.classList.contains('auth-mode');
+                
+                if (isAuth && navContainer) {
+                    navContainer.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; position: fixed !important; bottom: -1000px !important; height: 0 !important; width: 0 !important; overflow: hidden !important;';
+                    navContainer.classList.add('hidden');
+                    navContainer.classList.remove('nav-visible');
+                }
+            });
+            
+            authObserver.observe(navContainer, {
+                attributes: true,
+                attributeFilter: ['style', 'class']
+            });
+            
+            // Observar mudanças no body/html também
+            authObserver.observe(document.body || document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        }
     }
 })();
