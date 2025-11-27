@@ -58,6 +58,22 @@
         
         if (!router.container) return;
         
+        // ✅ VERIFICAR OFFLINE + SEM TOKEN ANTES DE QUALQUER COISA
+        // Se estiver offline e sem token, redirecionar IMEDIATAMENTE para login
+        const token = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                     (localStorage.getItem('shapefit_auth_token') || null);
+        
+        if (!navigator.onLine && !token) {
+            console.log('[Router] Offline e sem token - redirecionando para login IMEDIATAMENTE');
+            // Redirecionar para login sem carregar nenhuma página
+            if (window.SPARouter && window.SPARouter.navigate) {
+                window.SPARouter.navigate('/fragments/auth_login.html', true);
+            } else {
+                window.location.href = '/auth/login.html';
+            }
+            return; // Não continuar inicialização
+        }
+        
         document.addEventListener('click', handleLinkClick, true);
         window.addEventListener('popstate', handlePopState);
         
@@ -419,6 +435,29 @@
     
     async function loadPage(path, showLoading = true) {
         if (router.loading) return;
+        
+        // ✅ VERIFICAR OFFLINE + SEM TOKEN ANTES DE CARREGAR QUALQUER PÁGINA
+        const pathWithoutQuery = path.split('?')[0];
+        const pageName = pathWithoutQuery.split('/').pop().replace('.html', '');
+        const isAuthPageCheck = PAGES_WITHOUT_MENU.includes(pageName);
+        
+        // Se não for página auth, verificar se está offline e sem token
+        if (!isAuthPageCheck) {
+            const token = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                         (localStorage.getItem('shapefit_auth_token') || null);
+            
+            if (!navigator.onLine && !token) {
+                console.log('[Router] loadPage: Offline e sem token - redirecionando para login');
+                router.loading = false;
+                if (window.SPARouter && window.SPARouter.navigate) {
+                    window.SPARouter.navigate('/fragments/auth_login.html', true);
+                } else {
+                    window.location.href = '/auth/login.html';
+                }
+                return; // Não carregar página
+            }
+        }
+        
         router.loading = true;
         
         // Timer de segurança
@@ -450,10 +489,6 @@
         }
 
         try {
-            // Remover query string para extrair nome da página
-            const pathWithoutQuery = path.split('?')[0];
-            const pageName = pathWithoutQuery.split('/').pop().replace('.html', '');
-            const isAuthPageCheck = PAGES_WITHOUT_MENU.includes(pageName);
             
             if (router.bottomNav) {
                 if (isAuthPageCheck) {
