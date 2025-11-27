@@ -239,6 +239,7 @@
             function setupFilterModal() {
                 const filterButton = document.getElementById('filter-button');
                 const filterModal = document.getElementById('filter-modal');
+                const closeFilterBtn = document.getElementById('close-filter-modal-btn');
                 
                 if (filterButton && filterModal) {
                     const modalContent = filterModal.querySelector('.modal-content');
@@ -382,6 +383,15 @@
                         e.stopPropagation();
                         toggleModal();
                     });
+                    
+                    // Fechar ao clicar no botão X
+                    if (closeFilterBtn) {
+                        closeFilterBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            closeModal();
+                        });
+                    }
                     
                     // Fechar ao clicar no overlay (fora do modal)
                     filterModal.addEventListener('click', (e) => {

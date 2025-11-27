@@ -455,6 +455,40 @@ body.modal-open .modal-overlay * {
     padding: 16px 24px 10px;
     text-align: center;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    color: var(--text-primary);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+    padding: 0;
+    margin: 0;
+}
+
+.modal-close-btn:hover,
+.modal-close-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+.modal-close-btn:active {
+    transform: scale(0.95);
 }
 
 .modal-header::before {
@@ -690,6 +724,9 @@ body.modal-open .modal-overlay * {
 <div class="modal-overlay" id="filter-modal">
     <div class="modal-content">
         <div class="modal-header">
+            <button class="modal-close-btn" id="close-filter-modal-btn" aria-label="Fechar">
+                <i class="fas fa-times"></i>
+            </button>
             <h2 class="modal-title">Filtros</h2>
         </div>
         
