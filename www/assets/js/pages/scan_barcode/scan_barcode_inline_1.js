@@ -1,11 +1,12 @@
 
 /**
- * Scanner de código de barras - VERSÃO SIMPLES E ESTÁVEL
- * Sem reabertura automática - botão para escanear
+ * Scanner de código de barras - VERSÃO CLEAN
+ * Câmera abre automaticamente ao carregar página
  */
 (function() {
 
-    let isScanning = false; // Prevenir múltiplas chamadas
+    let isScanning = false;
+    let scannerActive = false;
 
     function moveModalToBody() {
         const modal = document.getElementById('product-not-found-modal');
@@ -37,12 +38,15 @@
                 });
             }
             
-            // Mostrar botão de escanear ao invés de abrir automaticamente
-            showScanButton();
-            
             if (window.PageLoader) {
                 window.PageLoader.ready();
             }
+            
+            // Aguardar um pouco e abrir scanner automaticamente
+            setTimeout(() => {
+                startScanner();
+            }, 300);
+            
         } catch (error) {
             showCameraError('Erro ao inicializar scanner.');
             if (window.PageLoader) {
@@ -58,34 +62,10 @@
     }
 
     /**
-     * Mostrar botão para escanear
-     */
-    function showScanButton() {
-        const container = document.getElementById('camera-container');
-        if (!container) return;
-        
-        container.innerHTML = `
-            <div style="text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-                <i class="fas fa-qrcode" style="font-size: 80px; color: var(--accent-orange); margin-bottom: 30px;"></i>
-                <h3 style="margin: 0 0 12px 0; font-size: 20px; color: var(--text-primary);">Escanear Código de Barras</h3>
-                <p style="margin: 0 0 40px 0; color: var(--text-secondary); font-size: 14px; max-width: 280px;">Toque no botão abaixo para abrir a câmera e escanear um código de barras</p>
-                <button id="scan-button" style="padding: 18px 36px; background: var(--accent-orange); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);">
-                    <i class="fas fa-camera"></i> Escanear Agora
-                </button>
-            </div>
-        `;
-        
-        const scanBtn = document.getElementById('scan-button');
-        if (scanBtn) {
-            scanBtn.addEventListener('click', startScanner);
-        }
-    }
-
-    /**
-     * Iniciar scanner - UMA VEZ por vez
+     * Iniciar scanner automaticamente
      */
     async function startScanner() {
-        if (isScanning) return; // Prevenir múltiplas chamadas
+        if (isScanning || scannerActive) return;
         isScanning = true;
 
         if (!window.Capacitor || !window.Capacitor.isNativePlatform()) {
@@ -101,45 +81,35 @@
         }
 
         const { BarcodeScanner } = window.Capacitor.Plugins;
-        
-        // Mostrar loading
-        const container = document.getElementById('camera-container');
-        if (container) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: var(--accent-orange); margin-bottom: 20px;"></i>
-                    <p style="margin: 0; color: var(--text-secondary);">Abrindo câmera...</p>
-                </div>
-            `;
-        }
 
         try {
-            // MLKit solicita permissão automaticamente
+            scannerActive = true;
             const result = await BarcodeScanner.startScan();
             
+            scannerActive = false;
             isScanning = false;
             
             if (result && result.hasContent && result.content) {
-                // Código escaneado - buscar produto
                 await searchBarcode(result.content);
             } else {
-                // Cancelado ou sem resultado - mostrar botão novamente
-                showScanButton();
+                // Cancelado - reabrir automaticamente
+                setTimeout(() => startScanner(), 300);
             }
 
         } catch (error) {
+            scannerActive = false;
             isScanning = false;
             const errorMsg = error.message || error.toString() || '';
             const errorLower = errorMsg.toLowerCase();
             
             if (errorLower.includes('cancelled') || errorLower.includes('cancel')) {
-                // Usuário cancelou - mostrar botão
-                showScanButton();
+                // Usuário cancelou - reabrir automaticamente
+                setTimeout(() => startScanner(), 300);
             } else if (errorLower.includes('permission') || errorLower.includes('denied')) {
                 showCameraError('Permissão de câmera negada. Permita o acesso nas configurações do app.');
             } else {
                 showCameraError('Erro ao abrir câmera. Tente novamente.');
-                setTimeout(() => showScanButton(), 2000);
+                setTimeout(() => startScanner(), 1000);
             }
         }
     }
@@ -152,9 +122,6 @@
                     <i class="fas fa-camera-slash" style="font-size: 48px; color: var(--accent-orange); margin-bottom: 20px;"></i>
                     <h3 style="margin: 0 0 12px 0;">Câmera Indisponível</h3>
                     <p style="margin: 0 0 24px 0; color: var(--text-secondary);">${message}</p>
-                    <button onclick="location.reload()" style="padding: 12px 24px; background: var(--accent-orange); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
-                        Tentar Novamente
-                    </button>
                 </div>
             `;
         }
@@ -165,7 +132,7 @@
      */
     async function searchBarcode(barcode) {
         if (!barcode || typeof barcode !== 'string') {
-            showScanButton();
+            setTimeout(() => startScanner(), 300);
             return;
         }
         
@@ -237,8 +204,7 @@
         const barcodeInput = document.getElementById('manual-barcode-input');
         
         if (!modal) {
-            // Se não tem modal, voltar para botão de escanear
-            showScanButton();
+            setTimeout(() => startScanner(), 300);
             return;
         }
         
@@ -259,8 +225,8 @@
             document.body.classList.remove('scan-modal-open');
             document.body.style.overflow = '';
         }
-        // Voltar para botão de escanear
-        showScanButton();
+        // Reabrir scanner após fechar modal
+        setTimeout(() => startScanner(), 300);
     }
 
     function registerManually() {

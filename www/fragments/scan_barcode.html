@@ -402,15 +402,7 @@ body.scan-modal-open {
 
         <!-- Camera Container -->
         <div class="camera-container" id="camera-container">
-            <video id="camera-video" autoplay playsinline></video>
-            <div class="scanning-overlay">
-                <div class="scan-frame">
-                    <div class="scan-line"></div>
-                </div>
-                <div class="scan-instruction">
-                    Aponte a câmera para o código de barras
-                </div>
-            </div>
+            <!-- Câmera será aberta automaticamente -->
         </div>
 
         <!-- Controls -->
@@ -429,17 +421,6 @@ body.scan-modal-open {
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-            </div>
-
-            <div class="action-buttons">
-                <a href="/criar-alimento" class="action-btn" onclick="event.preventDefault(); if(window.SPARouter) window.SPARouter.navigate('/criar-alimento'); else window.location.href='/criar-alimento'; return false;">
-                    <i class="fas fa-plus"></i>
-                    Cadastrar Manual
-                </a>
-                <a href="/adicionar-refeicao" class="action-btn" onclick="event.preventDefault(); if(window.SPARouter) window.SPARouter.navigate('/adicionar-refeicao'); else window.location.href='/adicionar-refeicao'; return false;">
-                    <i class="fas fa-arrow-left"></i>
-                    Voltar
-                </a>
             </div>
         </div>
     </div>
