@@ -241,50 +241,82 @@
         *::-webkit-scrollbar { display: none; }
     </style>
     <script>
+        // ✅ EXECUTAR ANTES DE QUALQUER COISA - MÁXIMA PRIORIDADE
         // Esconder menu IMEDIATAMENTE se for página de auth (antes do DOM carregar)
-        // Executar ANTES de qualquer coisa, até antes do body ser renderizado
         (function() {
             var path = window.location.pathname;
             var isAuthPage = path.includes('login') || path.includes('cadastro') || path.includes('register') || path.includes('bem-vindo') || path.includes('onboarding');
+            
+            // ✅ ADICIONAR CLASSE NO HTML ANTES DE QUALQUER COISA
             if (isAuthPage) {
-                // Adicionar classe ANTES de qualquer renderização
                 document.documentElement.classList.add('auth-initial');
-                document.body.classList.add('auth-mode');
-                
-                // Esconder bottom nav IMEDIATAMENTE - função ultra-agressiva
-                function hideBottomNav() {
-                    var bottomNav = document.getElementById('bottom-nav-container');
-                    if (bottomNav) {
-                        // ✅ FORÇAR COM STYLE INLINE ULTRA-AGRESSIVO
-                        bottomNav.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; position: fixed !important; bottom: -1000px !important; height: 0 !important; width: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important;';
-                        bottomNav.classList.add('hidden');
-                        bottomNav.classList.remove('nav-visible');
-                        return true; // Indica que foi escondido
-                    }
-                    return false;
-                }
-                
-                // ✅ EXECUTAR MÚLTIPLAS VEZES PARA GARANTIR
-                // Tentar imediatamente
-                hideBottomNav();
-                
-                // Se não existir ainda, usar MutationObserver
-                if (!document.getElementById('bottom-nav-container')) {
-                    var observer = new MutationObserver(function(mutations, obs) {
-                        if (hideBottomNav()) {
-                            obs.disconnect();
+                // Tentar adicionar no body também (pode não existir ainda)
+                if (document.body) {
+                    document.body.classList.add('auth-mode');
+                } else {
+                    // Se body não existe, adicionar quando existir
+                    var bodyObserver = new MutationObserver(function() {
+                        if (document.body) {
+                            document.body.classList.add('auth-mode');
+                            bodyObserver.disconnect();
                         }
                     });
-                    observer.observe(document.documentElement || document.body || document, {
-                        childList: true,
-                        subtree: true,
-                        attributes: true
+                    bodyObserver.observe(document.documentElement, { childList: true });
+                }
+            }
+            
+            // ✅ FUNÇÃO ULTRA-AGRESSIVA PARA ESCONDER
+            function hideBottomNav() {
+                var bottomNav = document.getElementById('bottom-nav-container');
+                if (bottomNav) {
+                    // ✅ FORÇAR COM STYLE INLINE ULTRA-AGRESSIVO - SOBRESCREVER TUDO
+                    bottomNav.setAttribute('style', 'display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; position: fixed !important; bottom: -1000px !important; height: 0 !important; width: 0 !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important; z-index: -1 !important;');
+                    bottomNav.classList.add('hidden');
+                    bottomNav.classList.remove('nav-visible');
+                    return true;
+                }
+                return false;
+            }
+            
+            if (isAuthPage) {
+                // ✅ EXECUTAR IMEDIATAMENTE (ANTES DE QUALQUER COISA)
+                // Usar requestAnimationFrame para garantir que execute no próximo frame
+                if (window.requestAnimationFrame) {
+                    requestAnimationFrame(function() {
+                        hideBottomNav();
+                        requestAnimationFrame(hideBottomNav);
                     });
-                    // Timeout de segurança
-                    setTimeout(function() { observer.disconnect(); }, 2000);
                 }
                 
-                // ✅ EXECUTAR EM TODOS OS EVENTOS POSSÍVEIS
+                // ✅ EXECUTAR MÚLTIPLAS VEZES COM DIFERENTES TIMINGS
+                setTimeout(hideBottomNav, 0);
+                setTimeout(hideBottomNav, 1);
+                setTimeout(hideBottomNav, 5);
+                setTimeout(hideBottomNav, 10);
+                setTimeout(hideBottomNav, 50);
+                setTimeout(hideBottomNav, 100);
+                setTimeout(hideBottomNav, 200);
+                
+                // ✅ MUTATIONOBSERVER PARA PEGAR QUANDO ELEMENTO APARECER
+                var observer = new MutationObserver(function(mutations, obs) {
+                    if (hideBottomNav()) {
+                        // Continuar observando por mais tempo para garantir
+                        setTimeout(function() { obs.disconnect(); }, 500);
+                    }
+                });
+                
+                // Observar tudo
+                observer.observe(document.documentElement || document, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['style', 'class']
+                });
+                
+                // Desconectar após 3 segundos
+                setTimeout(function() { observer.disconnect(); }, 3000);
+                
+                // ✅ EXECUTAR EM TODOS OS EVENTOS
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', function() {
                         hideBottomNav();
@@ -296,14 +328,21 @@
                     hideBottomNav();
                     setTimeout(hideBottomNav, 10);
                     setTimeout(hideBottomNav, 50);
-                    setTimeout(hideBottomNav, 100);
                 }
                 
-                // ✅ EXECUTAR NO LOAD TAMBÉM
+                // ✅ EXECUTAR NO LOAD
                 window.addEventListener('load', function() {
                     hideBottomNav();
                     setTimeout(hideBottomNav, 10);
+                    setTimeout(hideBottomNav, 50);
                 }, { once: true });
+                
+                // ✅ EXECUTAR QUANDO PÁGINA FICAR VISÍVEL
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        hideBottomNav();
+                    }
+                });
             }
         })();
     </script>
@@ -311,7 +350,7 @@
 <body>
     <div id="app-container"></div>
     
-    <div id="bottom-nav-container" style="display: none;">
+    <div id="bottom-nav-container" style="display: none; opacity: 0; visibility: hidden; pointer-events: none; position: fixed; bottom: -1000px; height: 0; width: 0; overflow: hidden;">
         <nav class="bottom-nav">
             <a href="/main_app.html" class="nav-item" data-page="home">
                 <i class="fas fa-home"></i>
