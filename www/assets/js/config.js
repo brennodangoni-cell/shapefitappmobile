@@ -37,6 +37,26 @@
     const originalFetch = window.fetch;
 
     window.fetch = async function(input, init) {
+        // ✅ VERIFICAR OFFLINE + SEM TOKEN ANTES DE QUALQUER FETCH
+        // Se estiver offline e sem token, não fazer requisição e redirecionar
+        const token = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                     (localStorage.getItem('shapefit_auth_token') || null);
+        
+        if (!navigator.onLine && !token) {
+            console.log('[Fetch] Offline e sem token - redirecionando para login antes de fetch');
+            // Redirecionar para login
+            if (window.SPARouter && window.SPARouter.navigate) {
+                window.SPARouter.navigate('/fragments/auth_login.html', true);
+            } else {
+                window.location.href = '/auth/login.html';
+            }
+            // Retornar erro silencioso para não propagar
+            const silentError = new Error('Network request failed');
+            silentError.name = 'NetworkError';
+            silentError.silent = true;
+            return Promise.reject(silentError);
+        }
+        
         let url = input;
 
         // Se a URL já é completa (https://), usar diretamente
