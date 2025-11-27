@@ -935,5 +935,13 @@
         
         // Executar imediatamente (script carregado dinamicamente no SPA)
         initEditProfile();
+        
+        // ✅ Recarregar dados quando internet volta
+        window.addEventListener('reloadPageData', function(e) {
+            if (e.detail && e.detail.reason === 'connection-restored') {
+                console.log('[EditProfile] Recarregando dados após conexão restaurada');
+                initEditProfile();
+            }
+        });
     
 })();

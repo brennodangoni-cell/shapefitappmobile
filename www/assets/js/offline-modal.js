@@ -317,6 +317,19 @@
         }
     });
 
+    // ✅ Listener global para recarregar dados quando internet volta
+    window.addEventListener('pageReload', function(e) {
+        if (e.detail && e.detail.reason === 'connection-restored') {
+            console.log('[OfflineModal] Evento pageReload disparado - recarregando dados');
+            
+            // Disparar evento customizado para cada página recarregar seus dados
+            // As páginas podem escutar este evento e recarregar seus dados
+            window.dispatchEvent(new CustomEvent('reloadPageData', {
+                detail: { reason: 'connection-restored' }
+            }));
+        }
+    });
+
     // Expor função globalmente para debug (opcional)
     window.offlineModal = {
         show: showOfflineModal,
