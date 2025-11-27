@@ -119,9 +119,12 @@ async function authenticatedFetch(url, options = {}) {
 
     const token = getAuthToken();
     const isFormData = options.body instanceof FormData;
+    const method = options.method || 'GET';
     const headers = options.headers || {};
     
-    if (!isFormData) {
+    // ✅ Para requisições GET simples, não adicionar Content-Type para evitar preflight
+    // Apenas adicionar Content-Type se for POST/PUT/PATCH e não for FormData
+    if (method !== 'GET' && !isFormData) {
         headers['Content-Type'] = headers['Content-Type'] || 'application/json';
     }
     
@@ -130,10 +133,30 @@ async function authenticatedFetch(url, options = {}) {
     }
     
     const fetchOptions = {
-        method: options.method || 'GET',
+        method: method,
         headers: headers,
         body: options.body
     };
+    
+    // ✅ No Capacitor, usar mode 'no-cors' pode ajudar, mas não permite ler resposta
+    // Em vez disso, vamos garantir que a requisição seja feita corretamente
+    // Se estiver no Capacitor e for GET, tentar sem headers customizados primeiro
+    if (typeof window.Capacitor !== 'undefined' && method === 'GET' && Object.keys(headers).length === 0) {
+        // GET simples sem headers - não deve fazer preflight
+        try {
+            const response = await fetch(url, { method: 'GET' });
+            if (response.status === 401) {
+                clearAuthToken();
+                if (window.SPARouter) window.SPARouter.navigate('/fragments/auth_login.html');
+                else window.location.href = '/auth/login.html';
+                return null;
+            }
+            return response;
+        } catch (error) {
+            console.error('[Auth] Erro requisição (fallback):', error);
+            // Continuar com a requisição normal
+        }
+    }
     
     try {
         const response = await fetch(url, fetchOptions);
