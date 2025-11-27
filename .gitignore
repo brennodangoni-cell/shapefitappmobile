@@ -6,6 +6,15 @@ package-lock.json
 # Pasta de arquivos de desenvolvimento (não vai pro build)
 org/
 APPSHAPEFITCURSOR/
+wwwref/
+
+# Arquivos de referência/documentação que não devem ir pro repositório
+PLUGIN_OPTIONS.md
+check-mlkit-setup.md
+ajax_search_foods_recipes.php
+get_add_food_data.php
+serve.js
+APPFLOW_STORE_DESTINATION_FIELDS.md
 
 # Capacitor / Android
 android/.gradle/
