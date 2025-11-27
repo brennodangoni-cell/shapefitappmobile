@@ -103,12 +103,31 @@
             transform: none !important;
         }
         
-        /* Esconder bottom nav por padrão - só mostrar quando necessário */
+        /* ✅ ESCONDER BOTTOM NAV POR PADRÃO - SÓ MOSTRAR QUANDO NECESSÁRIO */
         #bottom-nav-container:not(.nav-visible) {
             display: none !important;
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
+        }
+        
+        /* ✅ FORÇAR ESCONDER EM PÁGINAS AUTH - CSS PURO BASEADO EM ATRIBUTO DATA */
+        body[data-auth="true"] #bottom-nav-container,
+        html[data-auth="true"] #bottom-nav-container,
+        body[data-auth="true"] #bottom-nav-container.nav-visible,
+        html[data-auth="true"] #bottom-nav-container.nav-visible {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            position: fixed !important;
+            bottom: -1000px !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            z-index: -1 !important;
         }
         
         /* === SKELETON BASE (inline para carregamento rápido) === */
@@ -247,16 +266,21 @@
             var path = window.location.pathname;
             var isAuthPage = path.includes('login') || path.includes('cadastro') || path.includes('register') || path.includes('bem-vindo') || path.includes('onboarding');
             
-            // ✅ ADICIONAR CLASSE NO HTML ANTES DE QUALQUER COISA
+            // ✅ ADICIONAR ATRIBUTO DATA NO HTML E BODY ANTES DE QUALQUER COISA
+            // Isso permite que o CSS puro esconda sem depender de JavaScript
             if (isAuthPage) {
+                document.documentElement.setAttribute('data-auth', 'true');
                 document.documentElement.classList.add('auth-initial');
+                
                 // Tentar adicionar no body também (pode não existir ainda)
                 if (document.body) {
+                    document.body.setAttribute('data-auth', 'true');
                     document.body.classList.add('auth-mode');
                 } else {
                     // Se body não existe, adicionar quando existir
                     var bodyObserver = new MutationObserver(function() {
                         if (document.body) {
+                            document.body.setAttribute('data-auth', 'true');
                             document.body.classList.add('auth-mode');
                             bodyObserver.disconnect();
                         }

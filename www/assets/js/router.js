@@ -461,7 +461,9 @@
                     router.bottomNav.classList.add('hidden');
                     router.bottomNav.classList.remove('nav-visible');
                     document.body.classList.add('auth-mode');
+                    document.body.setAttribute('data-auth', 'true');
                     document.documentElement.classList.add('auth-initial');
+                    document.documentElement.setAttribute('data-auth', 'true');
                     // ✅ FORÇAR COM STYLE INLINE TAMBÉM
                     router.bottomNav.style.cssText = `
                         display: none !important;
@@ -479,7 +481,9 @@
                     router.bottomNav.classList.remove('hidden');
                     router.bottomNav.classList.add('nav-visible');
                     document.body.classList.remove('auth-mode');
+                    document.body.removeAttribute('data-auth');
                     document.documentElement.classList.remove('auth-initial');
+                    document.documentElement.removeAttribute('data-auth');
                     router.bottomNav.style.cssText = `
                         position: fixed !important;
                         bottom: 0 !important;
