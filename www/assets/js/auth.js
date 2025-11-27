@@ -95,6 +95,19 @@ async function requireAuth() {
     const currentPath = window.location.pathname;
     if (currentPath.includes('auth_login')) return false;
     
+    // ✅ Se tiver token no localStorage, assumir que está autenticado inicialmente
+    // Isso evita deslogar em caso de problemas temporários de rede
+    const token = getAuthToken();
+    if (!token) {
+        // Sem token, realmente não está autenticado
+        if (window.SPARouter) {
+            window.SPARouter.navigate('/fragments/auth_login.html', true);
+        } else {
+            window.location.href = '/auth/login.html';
+        }
+        return false;
+    }
+    
     // Limpar cache de autenticação após 5 segundos (evitar cache permanente)
     if (window._authLastCheck && Date.now() - window._authLastCheck > 5000) {
         window._authResult = undefined;
@@ -111,7 +124,8 @@ async function requireAuth() {
                 }
             }, 50);
         });
-        return window._authResult || false;
+        // Se ainda está verificando e tem token, assumir autenticado
+        return window._authResult !== undefined ? window._authResult : true;
     }
     
     window._authChecking = true;
@@ -121,7 +135,9 @@ async function requireAuth() {
         const authenticated = await isAuthenticated();
         window._authResult = authenticated;
         
-        if (!authenticated) {
+        // ✅ Só redirecionar se realmente não estiver autenticado E não tiver token
+        // Se tiver token mas a verificação falhou por erro de rede, manter autenticado
+        if (!authenticated && !token) {
             if (window.SPARouter) {
                 window.SPARouter.navigate('/fragments/auth_login.html', true);
             } else {
@@ -129,7 +145,9 @@ async function requireAuth() {
             }
             return false;
         }
-        return authenticated;
+        
+        // Se tem token, mesmo que verificação falhe, manter autenticado (pode ser erro temporário)
+        return authenticated || !!token;
     } finally {
         window._authChecking = false;
     }
