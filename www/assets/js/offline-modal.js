@@ -250,16 +250,31 @@
      */
     function handleOffline() {
         console.log('[OfflineModal] Evento offline detectado');
-        showOfflineModal();
+        
+        // ✅ Só mostrar modal se usuário estiver logado (tem token)
+        const hasToken = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                        (localStorage.getItem('shapefit_auth_token') || null);
+        
+        if (hasToken) {
+            showOfflineModal();
+        }
     }
 
     /**
      * Verificação inicial ao carregar a página - IMEDIATA
      */
     async function initOfflineCheck() {
+        // ✅ Verificar se usuário está logado antes de mostrar modal offline
+        // Se não tiver token, não mostrar modal (auth.js vai redirecionar para login)
+        const hasToken = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                        (localStorage.getItem('shapefit_auth_token') || null);
+        
         // ✅ Verificar IMEDIATAMENTE se está offline (antes de qualquer requisição)
         if (!navigator.onLine) {
-            showOfflineModal();
+            // Só mostrar modal se tiver token (usuário está logado)
+            if (hasToken) {
+                showOfflineModal();
+            }
             return;
         }
         
@@ -267,11 +282,17 @@
         try {
             const isOnline = await checkConnection();
             if (!isOnline) {
-                showOfflineModal();
+                // Só mostrar modal se tiver token (usuário está logado)
+                if (hasToken) {
+                    showOfflineModal();
+                }
             }
         } catch (error) {
             // Se falhar a verificação, assumir offline
-            showOfflineModal();
+            // Só mostrar modal se tiver token (usuário está logado)
+            if (hasToken) {
+                showOfflineModal();
+            }
         }
     }
 
@@ -289,12 +310,18 @@
     (function() {
         // Verificar navigator.onLine imediatamente (síncrono)
         if (!navigator.onLine) {
-            // Mostrar modal imediatamente se estiver offline
-            setTimeout(() => {
-                if (offlineModal) {
-                    showOfflineModal();
-                }
-            }, 0);
+            // Verificar se tem token antes de mostrar modal
+            const hasToken = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                            (localStorage.getItem('shapefit_auth_token') || null);
+            
+            // Só mostrar modal se tiver token (usuário está logado)
+            if (hasToken) {
+                setTimeout(() => {
+                    if (offlineModal) {
+                        showOfflineModal();
+                    }
+                }, 0);
+            }
         }
     })();
     

@@ -54,11 +54,18 @@
                     ));
                 
                 if (isOfflineState) {
-                    // Se estiver offline, mostrar modal e NÃO propagar erro
-                    const offlineModal = document.getElementById('offline-modal');
-                    if (offlineModal && typeof window.offlineModal !== 'undefined') {
-                        window.offlineModal.show();
+                    // ✅ Só mostrar modal se usuário estiver logado (tem token)
+                    const hasToken = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                                    (localStorage.getItem('shapefit_auth_token') || null);
+                    
+                    if (hasToken) {
+                        // Se estiver offline, mostrar modal e NÃO propagar erro
+                        const offlineModal = document.getElementById('offline-modal');
+                        if (offlineModal && typeof window.offlineModal !== 'undefined') {
+                            window.offlineModal.show();
+                        }
                     }
+                    
                     // ✅ Não propagar erro quando offline - erro silencioso
                     const silentError = new Error('Network request failed');
                     silentError.name = 'NetworkError';
@@ -101,13 +108,19 @@
                 ));
             
             if (isOfflineState) {
-                // Se estiver offline, mostrar modal e NÃO propagar erro
-                const offlineModal = document.getElementById('offline-modal');
-                if (offlineModal && typeof window.offlineModal !== 'undefined') {
-                    window.offlineModal.show();
+                // ✅ Só mostrar modal se usuário estiver logado (tem token)
+                const hasToken = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
+                                (localStorage.getItem('shapefit_auth_token') || null);
+                
+                if (hasToken) {
+                    // Se estiver offline, mostrar modal e NÃO propagar erro
+                    const offlineModal = document.getElementById('offline-modal');
+                    if (offlineModal && typeof window.offlineModal !== 'undefined') {
+                        window.offlineModal.show();
+                    }
                 }
+                
                 // ✅ Não propagar erro quando offline - retornar erro silencioso
-                // Mas não usar OFFLINE_SILENT para evitar que apareça na tela
                 const silentError = new Error('Network request failed');
                 silentError.name = 'NetworkError';
                 silentError.silent = true; // Flag para não mostrar na tela
