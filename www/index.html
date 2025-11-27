@@ -347,12 +347,9 @@
             </div>
             <h3 class="offline-modal-title">Sem conexão</h3>
             <p class="offline-modal-message" id="offline-modal-message">Você está offline. Verifique sua conexão com a internet.</p>
-            <div class="offline-modal-spinner" id="offline-modal-spinner" style="display: none;">
-                <i class="fas fa-spinner fa-spin"></i>
-            </div>
             <button class="offline-modal-button" id="offline-retry-button">
-                <i class="fas fa-sync-alt"></i>
-                Tentar novamente
+                <i class="fas fa-sync-alt" id="offline-retry-icon"></i>
+                <span id="offline-retry-text">Tentar novamente</span>
             </button>
         </div>
     </div>
@@ -431,12 +428,6 @@
             font-size: 14px !important;
             margin: 0 0 20px 0 !important;
             line-height: 1.5 !important;
-        }
-
-        .offline-modal-spinner {
-            font-size: 20px !important;
-            color: var(--accent-orange, #ff6b00) !important;
-            margin: 8px 0 16px 0 !important;
         }
 
         .offline-modal-button {

@@ -18,9 +18,10 @@
     let isChecking = false;
 
     const retryButton = document.getElementById('offline-retry-button');
+    const retryIcon = document.getElementById('offline-retry-icon');
+    const retryText = document.getElementById('offline-retry-text');
     const modalIcon = document.getElementById('offline-modal-icon');
     const modalMessage = document.getElementById('offline-modal-message');
-    const modalSpinner = document.getElementById('offline-modal-spinner');
 
     /**
      * Verifica se está realmente offline (não apenas navigator.onLine)
@@ -74,15 +75,23 @@
             isChecking = true;
             retryButton.disabled = true;
             retryButton.classList.add('checking');
-            modalIcon.classList.add('checking');
-            modalSpinner.style.display = 'block';
+            if (retryIcon) {
+                retryIcon.className = 'fas fa-spinner fa-spin';
+            }
+            if (retryText) {
+                retryText.textContent = 'Verificando...';
+            }
             modalMessage.textContent = 'Verificando conexão...';
         } else {
             isChecking = false;
             retryButton.disabled = false;
             retryButton.classList.remove('checking');
-            modalIcon.classList.remove('checking');
-            modalSpinner.style.display = 'none';
+            if (retryIcon) {
+                retryIcon.className = 'fas fa-sync-alt';
+            }
+            if (retryText) {
+                retryText.textContent = 'Tentar novamente';
+            }
             modalMessage.textContent = 'Você está offline. Verifique sua conexão com a internet.';
         }
     }
