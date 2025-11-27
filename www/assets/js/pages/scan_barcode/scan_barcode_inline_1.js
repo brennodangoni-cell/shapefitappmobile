@@ -1,12 +1,10 @@
 
 /**
- * Script Inline Protegido - inline_1
- * Scanner de código de barras - VERSÃO SIMPLIFICADA
- * Abre câmera automaticamente ao carregar página
+ * Scanner de código de barras - VERSÃO REFATORADA
+ * MLKit solicita permissão automaticamente - NÃO usa plugin Camera
  */
 (function() {
 
-    // Mover modal para fora do page-root
     function moveModalToBody() {
         const modal = document.getElementById('product-not-found-modal');
         if (modal && modal.parentElement && modal.parentElement.classList.contains('page-root')) {
@@ -14,12 +12,10 @@
         }
     }
     
-    // Inicializar página
     async function initPage() {
         try {
             moveModalToBody();
             
-            // Mostrar container
             const scannerContainer = document.querySelector('.scanner-container');
             if (scannerContainer) {
                 scannerContainer.style.display = '';
@@ -27,7 +23,6 @@
                 scannerContainer.style.visibility = 'visible';
             }
             
-            // Configurar input manual
             const manualInput = document.getElementById('manual-barcode-input');
             if (manualInput) {
                 manualInput.addEventListener('click', function() {
@@ -40,17 +35,15 @@
                 });
             }
             
-            // Página pronta primeiro
             if (window.PageLoader) {
                 window.PageLoader.ready();
             }
             
-            // Aguardar um pouco e então abrir scanner automaticamente
+            // Abrir scanner automaticamente após delay
             setTimeout(() => {
                 startScanner();
             }, 500);
         } catch (error) {
-            // Erro na inicialização - silenciar log
             showCameraError('Erro ao inicializar scanner.');
             if (window.PageLoader) {
                 window.PageLoader.ready();
@@ -58,7 +51,6 @@
         }
     }
     
-    // Aguardar DOM
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initPage);
     } else {
@@ -66,36 +58,26 @@
     }
 
     /**
-     * Iniciar scanner - VERSÃO SIMPLIFICADA baseada no add_food_logic.js
+     * Iniciar scanner - MLKit solicita permissão automaticamente
      */
     async function startScanner() {
-        // Verificar se está em app nativo
         if (!window.Capacitor || !window.Capacitor.isNativePlatform()) {
             showCameraError('Scanner disponível apenas no app mobile (iOS/Android).');
             return;
         }
 
-        // Verificar plugin
         if (!window.Capacitor.Plugins.BarcodeScanner) {
             showCameraError('Scanner não disponível. Verifique se o plugin está instalado.');
             return;
         }
 
         const { BarcodeScanner } = window.Capacitor.Plugins;
-        const { Camera } = window.Capacitor.Plugins;
 
         try {
-            // Solicitar permissão de câmera (igual ao add_food_logic.js)
-            const permissionStatus = await Camera.requestPermissions();
-            if (permissionStatus.camera !== 'granted' && permissionStatus.camera !== 'yes') {
-                showCameraError('Permissão de câmera negada. Permita o acesso nas configurações do app.');
-                return;
-            }
-            
-            // Abrir scanner (igual ao add_food_logic.js)
+            // MLKit solicita permissão automaticamente ao chamar startScan()
+            // NÃO precisamos usar plugin Camera para solicitar permissão
             const result = await BarcodeScanner.startScan();
             
-            // Processar resultado
             if (result && result.hasContent && result.content) {
                 await searchBarcode(result.content);
             } else {
@@ -112,8 +94,10 @@
                 setTimeout(() => startScanner(), 300);
             } else if (errorLower.includes('permission') || errorLower.includes('denied')) {
                 showCameraError('Permissão de câmera negada. Permita o acesso nas configurações do app.');
+                // Tentar novamente após mostrar erro
+                setTimeout(() => startScanner(), 2000);
             } else {
-                // Erro desconhecido - tentar novamente após delay
+                // Outro erro - tentar novamente
                 setTimeout(() => startScanner(), 1000);
             }
         }
@@ -156,7 +140,6 @@
             if (loadingOverlay) loadingOverlay.classList.remove('active');
             
             if (data.success) {
-                // Produto encontrado - redirecionar
                 const product = data.data;
                 const params = new URLSearchParams({
                     food_name: product.name || '',
@@ -174,15 +157,12 @@
                     window.location.href = `create_custom_food.html?${params.toString()}`;
                 }
             } else {
-                // Produto não encontrado - mostrar modal
                 showProductNotFoundModal(barcode);
-                // Reabrir scanner após mostrar modal
                 setTimeout(() => startScanner(), 500);
             }
         } catch (error) {
             if (loadingOverlay) loadingOverlay.classList.remove('active');
             showProductNotFoundModal(barcode);
-            // Reabrir scanner após erro
             setTimeout(() => startScanner(), 500);
         }
     }
@@ -227,7 +207,6 @@
             document.body.classList.remove('scan-modal-open');
             document.body.style.overflow = '';
         }
-        // Reabrir scanner após fechar modal
         setTimeout(() => startScanner(), 300);
     }
 
@@ -253,7 +232,6 @@
         }
     }
     
-    // Expor funções globalmente
     window.searchManualBarcode = searchManualBarcode;
     window.closeProductNotFoundModal = closeProductNotFoundModal;
     window.registerManually = registerManually;
