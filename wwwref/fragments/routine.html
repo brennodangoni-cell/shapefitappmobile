@@ -1,0 +1,587 @@
+<div class="page-root">
+    
+    <!-- PWA Meta Tags -->
+    
+    <!-- PWA Manifest -->
+    
+    <!-- Script Critical -->
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Ícones -->
+    
+    <!-- CSS Principal -->
+    
+    <!-- Variáveis Globais -->
+
+    <!-- Auth Script -->
+
+    <style>
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+        
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Botão de sono - IDÊNTICO ao duration-btn */
+        .action-btn.sleep-btn {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .action-btn.sleep-btn:hover {
+            background-color: rgba(255, 193, 7, 0.3);
+        }
+        
+        .action-btn.sleep-btn:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        
+        .page-header {
+            padding: calc(env(safe-area-inset-top, 0px) + 20px) 24px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .routine-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding: 0 24px;
+            padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+        }
+        
+        .glass-card {
+            background-color: var(--surface-color);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        
+        /* Card de Progresso */
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .progress-text,
+        .progress-percentage {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--glass-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background-image: var(--primary-orange-gradient);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Seções e Listas */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .routine-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        /* Item da lista */
+        .routine-list-item {
+            background-color: var(--glass-bg);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+            transition: all 0.4s ease;
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .routine-list-item.fading-out {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        
+        .routine-info {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .routine-list-item p {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 500;
+            flex-grow: 1;
+            text-align: left;
+        }
+        
+        .routine-duration-display {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 4px;
+            margin-left: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Container para botões de ação */
+        .routine-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Estilo base para botões circulares */
+        .action-btn {
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .action-btn.skip-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+        }
+        
+        .action-btn.skip-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .action-btn.complete-btn {
+            background-image: var(--primary-orange-gradient);
+            color: var(--text-primary);
+        }
+        
+        .action-btn.complete-btn:hover {
+            filter: brightness(1.1);
+        }
+        
+        .action-btn.duration-btn {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .action-btn.duration-btn:hover {
+            background-color: rgba(255, 193, 7, 0.3);
+        }
+        
+        .action-btn.duration-btn:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        
+        .action-btn.complete-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: none;
+        }
+        
+        .action-btn.complete-btn.disabled:hover {
+            filter: none;
+        }
+        
+        .action-btn.complete-btn.disabled:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        
+        .action-btn.uncomplete-btn {
+            background-color: rgba(229, 57, 53, 0.2);
+            color: #ef5350;
+        }
+        
+        .action-btn.uncomplete-btn:hover {
+            background-color: rgba(229, 57, 53, 0.4);
+        }
+        
+        /* Estilos para itens concluídos */
+        .routine-list-item.is-completed {
+            opacity: 0.7;
+        }
+        
+        .routine-list-item.is-completed p {
+            text-decoration: line-through;
+        }
+        
+        /* Mensagem de placeholder */
+        .placeholder-card {
+            text-align: center;
+            padding: 24px;
+            opacity: 0.7;
+        }
+        
+        .placeholder-card i {
+            font-size: 2.5rem;
+            color: #4CAF50;
+            margin-bottom: 12px;
+        }
+        
+        .placeholder-card p {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        /* Estilos para o modal de duração de exercício */
+        .duration-input-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .duration-input-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            box-sizing: border-box;
+        }
+        
+        .duration-input-group input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+        }
+        
+        .duration-unit {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            min-width: 60px;
+        }
+        
+        .form-help {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: block;
+        }
+        
+        /* --- ESTILOS DEFINITIVOS PARA MODAIS --- */
+        .modal-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            display: flex !important;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 99999 !important;
+            padding: 20px !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+        }
+        
+        .modal-overlay.modal-visible {
+            visibility: visible;
+            opacity: 1;
+            transition-delay: 0s;
+        }
+        
+        .modal-content {
+            background: var(--surface-color) !important;
+            border-radius: 16px !important;
+            padding: 24px !important;
+            width: 100% !important;
+            max-width: 400px !important;
+            max-height: calc(100vh - 40px) !important;
+            overflow-y: auto !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+            position: relative !important;
+            z-index: 100000 !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            overflow-x: visible !important;
+        }
+        
+        .modal-content h2 {
+            margin: 0 0 20px 0;
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            text-align: center;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-primary);
+            font-size: 1rem;
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+        }
+        
+        .time-input {
+            width: 100%;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            letter-spacing: 1px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .time-input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+        
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+        
+        .primary-button {
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .primary-button.secondary-button {
+            background: var(--surface-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .primary-button.secondary-button:hover {
+            background: var(--border-color);
+        }
+        
+        .primary-button:not(.secondary-button) {
+            background: var(--accent-orange);
+            color: white;
+        }
+        
+        .primary-button:not(.secondary-button):hover {
+            background: #e55a00;
+        }
+        
+        @media (max-width: 480px) {
+            .form-input {
+                font-size: 16px !important;
+            }
+            
+            .modal-overlay {
+                padding: 20px !important;
+                box-sizing: border-box !important;
+            }
+            
+            .modal-content {
+                max-width: 95vw !important;
+                padding: 20px 16px !important;
+            }
+            
+            .time-input {
+                padding: 14px 16px;
+                font-size: 1.1rem;
+            }
+            
+            .modal-actions {
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+            
+            .primary-button {
+                width: 100% !important;
+            }
+        }
+        
+        @media (min-width: 400px) {
+            .modal-actions {
+                flex-direction: row !important;
+            }
+        }
+    </style>
+    <div class="app-container">
+        <div class="page-header">
+            <h1 class="page-title">Sua Rotina</h1>
+        </div>
+        
+        <section class="routine-content-wrapper">
+            <div class="glass-card">
+                <div class="progress-info">
+                    <span class="progress-text" id="progress-text">0/0 concluídas</span>
+                    <span class="progress-percentage" id="progress-percentage">0%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progress-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+            
+            <div>
+                <h2 class="section-title">A Fazer</h2>
+                <ul class="routine-list" id="routine-list-todo">
+                    <li class="placeholder-card" id="all-done-placeholder" style="display: none;">
+                        <i class="fas fa-trophy"></i>
+                        <p>Parabéns! Você completou tudo.</p>
+                    </li>
+                </ul>
+            </div>
+            
+            <div>
+                <h2 class="section-title">Concluídas</h2>
+                <ul class="routine-list" id="routine-list-completed">
+                    <li class="placeholder-card" id="none-completed-placeholder" style="display: none;">
+                        <p>Nenhuma tarefa concluída ainda.</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Modal para duração de exercício -->
+    <div class="modal-overlay" id="exercise-duration-modal">
+        <div class="modal-content glass-card">
+            <h2>⏱️ Duração do Exercício</h2>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="exercise-duration-input">Quanto tempo durou o exercício?</label>
+                    <div class="duration-input-group">
+                        <input type="number" id="exercise-duration-input" class="form-input" placeholder="Ex: 45" min="15" max="300" value="60">
+                        <span class="duration-unit">minutos</span>
+                    </div>
+                    <small class="form-help">Entre 15 e 300 minutos</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="primary-button secondary-button" data-action="close-modal">Cancelar</button>
+                    <button type="button" class="primary-button" id="confirm-exercise-duration">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Sono -->
+    <div class="modal-overlay" id="sleep-modal-main">
+        <div class="modal-content glass-card">
+            <h2>😴 Registrar Sono</h2>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="sleep-time-main">Hora que deitou:</label>
+                    <input type="time" id="sleep-time-main" class="time-input" value="22:00">
+                </div>
+                <div class="form-group">
+                    <label for="wake-time-main">Hora que acordou:</label>
+                    <input type="time" id="wake-time-main" class="time-input" value="07:00">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="primary-button secondary-button" data-action="close-modal">Cancelar</button>
+                <button type="button" class="primary-button" id="confirm-sleep-main">Registrar Sono</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+
+
+</div>
+
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/bottom-nav.js"></script>
+<script src="/assets/js/pages/routine/routine_inline_0.js"></script>
+<script src="/assets/js/pages/routine/routine_inline_1.js"></script>
+<script src="/assets/js/pages/routine/routine_inline_2.js"></script>

@@ -1,0 +1,1123 @@
+<div class="page-root">
+    
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Ícones -->
+    
+    <!-- CSS -->
+
+    <style>
+/* === ADD FOOD PAGE - ESTILO COMPACTO E MODERNO === */
+
+/* Header compacto */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-orange);
+}
+
+/* Formulário de configuração compacto */
+.meal-setup {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    -webkit-appearance: none; /* Adicione esta linha */
+    appearance: none; /* Adicione esta linha */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: all 0.2s ease;
+    width: 100%; /* Garante que ocupe todo o espaço disponível */
+    box-sizing: border-box; /* Evita que o padding cause overflow */
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Inputs de data - sem ícone e alinhado à esquerda */
+input[type="date"].form-control {
+    color-scheme: dark;
+    text-align: left !important;
+    padding-left: 12px !important;
+}
+
+input[type="date"].form-control::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+input[type="date"].form-control::-webkit-datetime-edit {
+    padding: 0 !important;
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+input[type="date"].form-control::-webkit-datetime-edit-fields-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+input[type="date"].form-control::-webkit-datetime-edit-text,
+input[type="date"].form-control::-webkit-datetime-edit-month-field,
+input[type="date"].form-control::-webkit-datetime-edit-day-field,
+input[type="date"].form-control::-webkit-datetime-edit-year-field {
+    padding: 0 !important;
+}
+
+/* Busca compacta */
+.search-section {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.search-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+    background: var(--accent-orange);
+    border-color: var(--accent-orange);
+    color: #fff;
+}
+
+.tab-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-orange);
+}
+
+.search-results {
+    margin-top: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Botões de criar alimento customizado */
+.custom-food-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.custom-food-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.custom-food-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-orange);
+    transform: translateY(-2px);
+}
+
+.custom-food-btn i {
+    font-size: 24px;
+    color: var(--accent-orange);
+}
+
+.custom-food-btn span {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+.pending-section {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pending-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+.btn-save-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: none;
+    background: var(--accent-orange);
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-save-all[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-save-all:not([disabled]):hover {
+    background: #ff7a1a;
+    transform: translateY(-1px);
+}
+
+.pending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pending-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pending-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pending-item-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.pending-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.pending-item-macros {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.pending-remove-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pending-remove-btn:hover {
+    border-color: rgba(255, 107, 0, 0.6);
+    color: #fff;
+}
+
+.pending-empty {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.pending-totals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 10px;
+    margin-top: 4px;
+}
+
+.pending-feedback {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.pending-feedback.success {
+    color: #4ade80;
+}
+
+.pending-feedback.error {
+    color: #f87171;
+}
+
+.pending-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.pending-actions .btn-save-all {
+    width: 100%;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .custom-food-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .custom-food-btn {
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 12px 16px;
+        gap: 12px;
+    }
+    
+    .custom-food-btn i {
+        font-size: 20px;
+    }
+    
+    .custom-food-btn span {
+        font-size: 13px;
+        text-align: left;
+    }
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.search-result-type {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--accent-orange);
+    color: #fff;
+}
+
+.search-result-type.food {
+    background: #4CAF50;
+}
+
+.search-result-info {
+    flex: 1;
+}
+
+.search-result-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0 0 2px 0;
+}
+
+.search-result-macros {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.search-btn {
+    background: var(--accent-orange);
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 60px;
+}
+
+.search-btn:hover {
+    background: #ff7a1a;
+    transform: translateY(-1px);
+}
+
+/* Seções de receitas */
+.recipes-section {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.recipes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.recipe-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.recipe-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-orange);
+    transform: translateY(-2px);
+}
+
+.recipe-image {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.recipe-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+    line-height: 1.3;
+}
+
+.recipe-macros {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.recipe-kcal {
+    font-size: 12px;
+    color: var(--accent-orange);
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* Modal completamente redesenhado */
+.recipe-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.recipe-modal.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: calc(100% - 40px);
+    max-width: 500px;
+    max-height: calc(100vh - 40px);
+    background: #1a1a1a;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    transform: translate(-50%, -50%) scale(0.9);
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.recipe-modal.visible .modal-content {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.modal-header {
+    padding: 16px 24px 12px 24px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.modal-drag-indicator {
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    margin: 0 auto 12px auto;
+}
+
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+}
+
+.modal-body {
+    flex: 1;
+    padding: 16px 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    min-height: 0;
+    max-height: calc(100vh - 200px); /* Garante que não ultrapasse a tela */
+}
+
+.form-section {
+    margin-bottom: 8px; /* Reduz ainda mais a margem entre seções */
+}
+
+.portion-section {
+    margin-bottom: 8px; /* Reduz ainda mais a margem entre seções */
+}
+
+.portion-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.portion-input {
+    -webkit-appearance: none; /* Adicione esta linha para compatibilidade com iOS/Safari */
+    appearance: none; /* Adicione esta linha para o padrão moderno */
+    width: 100%;
+    display: block; /* Adicione esta linha */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.portion-input:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Sistema de unidades */
+.quantity-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%; /* Adicione esta linha para forçar o container a respeitar os limites */
+}
+
+.quantity-input {
+    width: 70px;      /* Largura ainda menor para o número */
+    flex-shrink: 0;   /* Impede que o campo encolha */
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 8px; /* Reduz padding lateral */
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+/* Quando o seletor de unidade estiver oculto, o campo de quantidade ocupa toda a largura */
+.quantity-input-full-width {
+    flex: 1 !important;
+    width: 100% !important;
+}
+
+.quantity-input:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.unit-select {
+    flex-grow: 1;     /* Faz o seletor crescer para ocupar o espaço restante */
+    width: auto;      /* A largura se torna automática baseada no flex-grow */
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 12px; /* Reduz padding lateral para ficar mais compacto */
+    color: var(--text-primary);
+    font-size: 0.9rem; /* Reduz ligeiramente o tamanho da fonte */
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.unit-select:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.quantity-info {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.text-muted {
+    color: var(--text-secondary);
+}
+
+.nutrition-display {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 8px; /* Reduz ainda mais o padding interno */
+    margin-bottom: 8px; /* Reduz ainda mais a margem */
+}
+
+.nutrition-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px; /* Reduz ainda mais o espaçamento interno */
+}
+
+.nutrition-item {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 8px 6px; /* Reduz o padding dos itens nutricionais */
+}
+
+.nutrition-item-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nutrition-item-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.nutrition-item-unit {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--accent-orange);
+    margin-left: 2px;
+}
+
+.modal-footer {
+    padding: 16px 24px; /* Aumentado de 12px para 16px */
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)); /* Aumentado para dar mais espaço */
+    background: #1a1a1a;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+    margin-top: auto; /* Garante que fique na parte inferior */
+}
+
+.btn-add-meal {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--accent-orange);
+    border: none;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-add-meal:hover {
+    background: #ff7a1a;
+}
+
+.btn-add-meal i {
+    font-size: 0.9rem;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+    .modal-content {
+        width: calc(100% - 20px);
+        max-height: calc(100vh - 20px);
+        border-radius: 16px;
+    }
+    
+    .modal-header {
+        padding: 16px 20px 12px 20px;
+    }
+    
+    .modal-title {
+        font-size: 1.1rem;
+    }
+    
+    .modal-body {
+        padding: 12px 20px;
+        max-height: calc(100vh - 160px);
+    }
+    
+    .modal-footer {
+        padding: 16px 20px;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    }
+    
+    .btn-add-meal {
+        height: 48px;
+        font-size: 1rem;
+    }
+}
+
+/* Ajuste para telas muito pequenas */
+@media (max-width: 480px) {
+    .modal-content {
+        width: calc(100% - 16px);
+        max-height: calc(100vh - 16px);
+    }
+    
+    .modal-body {
+        padding: 10px 16px;
+        max-height: calc(100vh - 140px);
+    }
+    
+    .modal-footer {
+        padding: 12px 16px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+}
+
+/* Estado vazio */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: var(--accent-orange);
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 16px;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.empty-state p {
+    font-size: 12px;
+    margin: 0;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .meal-setup {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px;
+    }
+    
+    .recipes-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 8px;
+    }
+    
+    .recipe-card {
+        padding: 8px;
+    }
+    
+    .recipe-image {
+        height: 60px;
+    }
+    
+    .recipe-name {
+        font-size: 12px;
+    }
+    
+    .page-title {
+        font-size: 20px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+/* Adicione este novo bloco de código ao seu CSS */
+.app-container {
+    padding-top: 24px; /* Um valor de fallback para navegadores que não suportam a próxima linha */
+    padding-top: env(safe-area-inset-top); /* Adiciona padding automático para se ajustar a notches e status bars de celulares modernos */
+}
+</style>
+
+<div class="app-container">
+    <!-- Header -->
+    <div class="page-header">
+        <a href="#" id="back-btn" class="back-btn">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <h1 class="page-title">Adicionar Refeição</h1>
+        <div></div>
+    </div>
+
+    <!-- Configuração da refeição -->
+    <div class="meal-setup">
+                        <div class="form-group">
+            <label>Data</label>
+            <input type="date" class="form-control" id="meal-date" value="">
+                        </div>
+                        <div class="form-group">
+            <label>Tipo de Refeição</label>
+            <select class="form-control" id="meal-type">
+                <option value="">Carregando...</option>
+            </select>
+                        </div>
+                    </div>
+
+    <!-- Itens pendentes para salvar -->
+    <div class="pending-section">
+        <div class="pending-header">
+            <h2 class="section-title">Itens selecionados</h2>
+        </div>
+        <div id="pending-feedback" class="pending-feedback"></div>
+        <div id="pending-list" class="pending-empty">
+            Nenhum item selecionado. Busque um alimento ou receita para começar.
+        </div>
+        <div id="pending-totals" class="pending-totals" style="display:none;"></div>
+        <div class="pending-actions">
+            <button id="save-all-btn" class="btn-save-all" disabled>
+                <i class="fas fa-save"></i>
+                Salvar no Diário
+            </button>
+        </div>
+    </div>
+
+    <!-- Busca de receitas e alimentos -->
+    <div class="search-section">
+        <div class="search-tabs">
+            <button class="tab-btn active" data-tab="recipes">Receitas</button>
+            <button class="tab-btn" data-tab="foods">Alimentos</button>
+        </div>
+        <div class="search-input-wrapper">
+            <input type="text" class="search-input" id="search-input" placeholder="Buscar receitas e alimentos...">
+            <button class="search-btn" onclick="performSearch()">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        <div class="search-results" id="search-results" style="display: none;"></div>
+        
+        <!-- Novos botões para criar alimentos -->
+        <div class="custom-food-actions">
+            <a href="/scan_barcode" id="scan-barcode-btn" class="custom-food-btn">
+                <i class="fas fa-barcode"></i>
+                <span>Escanear Código de Barras</span>
+            </a>
+            <a href="/criar-alimento" id="create-custom-food-btn" class="custom-food-btn">
+                <i class="fas fa-plus-circle"></i>
+                <span>Cadastrar Alimento Manual</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Receitas favoritas -->
+    <div class="recipes-section" id="favorite-recipes-section" style="display: none;">
+        <h2 class="section-title">Favoritas</h2>
+        <div class="recipes-grid" id="favorite-recipes"></div>
+    </div>
+
+    <!-- Receitas recentes -->
+    <div class="recipes-section" id="recent-recipes-section" style="display: none;">
+        <h2 class="section-title">Recentes</h2>
+        <div class="recipes-grid" id="recent-recipes"></div>
+    </div>
+
+    <!-- Estado vazio se não há receitas -->
+    <div class="empty-state" id="empty-recipes-state" style="display: none;">
+        <i class="fas fa-utensils"></i>
+        <h3>Nenhuma receita encontrada</h3>
+        <p>Explore receitas favoritas ou adicione novas receitas</p>
+    </div>
+    </div> 
+
+<!-- Modal de configuração -->
+<div class="recipe-modal" id="recipe-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-drag-indicator"></div>
+            <h2 class="modal-title" id="modal-recipe-name">Nome da Receita</h2>
+        </div>
+        <div class="modal-body">
+            <div class="form-section">
+                <label for="custom_meal_name" class="portion-label">Nome da Refeição</label>
+                <input type="text" id="custom_meal_name" class="portion-input" placeholder="Ex: Arroz com frango grelhado">
+            </div>
+            
+            <div class="form-section">
+                <label for="meal_time" class="portion-label">Horário da Refeição</label>
+                <input type="time" id="meal_time" class="portion-input" value="<?php echo date('H:i'); ?>">
+            </div>
+            
+            <div class="portion-section">
+                <label class="portion-label" id="quantity-label">Quantidade</label>
+                <div class="quantity-input-group">
+                    <input type="number" id="quantity" class="quantity-input" value="1" min="0.1" step="0.1" placeholder="1">
+                    <select id="unit-select" class="unit-select" style="display: none;">
+                        <option value="">Carregando...</option>
+                    </select>
+        </div>
+                <div class="quantity-info" id="quantity-info" style="display: none;">
+                    <small class="text-muted">
+                        <span id="conversion-info"></span>
+                    </small>
+    </div>
+</div>
+    
+            <div class="nutrition-display">
+                <div class="nutrition-grid">
+                    <div class="nutrition-item">
+                        <div class="nutrition-item-label">Calorias</div>
+                        <div class="nutrition-item-value" id="total-kcal">0 <span class="nutrition-item-unit">kcal</span></div>
+                    </div>
+                    <div class="nutrition-item">
+                        <div class="nutrition-item-label">Proteínas</div>
+                        <div class="nutrition-item-value" id="total-protein">0 <span class="nutrition-item-unit">g</span></div>
+                    </div>
+                    <div class="nutrition-item">
+                        <div class="nutrition-item-label">Carboidratos</div>
+                        <div class="nutrition-item-value" id="total-carbs">0 <span class="nutrition-item-unit">g</span></div>
+                    </div>
+                    <div class="nutrition-item">
+                        <div class="nutrition-item-label">Gorduras</div>
+                        <div class="nutrition-item-value" id="total-fat">0 <span class="nutrition-item-unit">g</span></div>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="selected-recipe-id">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-add-meal" onclick="confirmMeal()">
+                <i class="fas fa-plus"></i>
+                Adicionar à lista
+            </button>
+            </div>
+        </div>
+    </div>
+
+<style>
+/* Mensagem de sem unidades */
+.no-units-message {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    text-align: center;
+}
+
+.no-units-message p {
+    margin: 0 0 8px 0;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.no-units-message p:last-child {
+    margin-bottom: 0;
+    font-weight: 600;
+    color: var(--accent-orange);
+}
+</style>
+
+    <!-- Bottom Navigation (via JavaScript - funciona como include) -->
+    
+
+</div>
+
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/pages/add_food_to_diary/add_food_to_diary_inline_0.js"></script>
+<script src="/assets/js/pages/add_food_to_diary/add_food_to_diary_inline_1.js"></script>
+<script src="/assets/js/pages/add_food_to_diary/add_food_to_diary_inline_2.js"></script>

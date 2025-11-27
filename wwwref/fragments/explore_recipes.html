@@ -1,0 +1,692 @@
+<div class="page-root">
+    
+    <!-- PWA Meta Tags -->
+    
+    <!-- PWA Manifest -->
+    
+    <!-- Script Critical -->
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Ícones -->
+    
+    <!-- CSS Principal -->
+    
+    <!-- Variáveis Globais -->
+
+    <!-- Auth Script -->
+
+<style>
+        body {
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        a, button, .btn, [role="button"] {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+/* === CONTAINER PRINCIPAL === */
+.app-container {
+    padding: calc(24px + env(safe-area-inset-top)) 0 calc(60px + env(safe-area-inset-bottom)) 0;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* === HEADER === */
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 0 24px;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* === BARRA DE BUSCA === */
+.search-section {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.search-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px 0 48px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    color: var(--text-primary);
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 16px;
+    pointer-events: none;
+}
+
+.filter-btn {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.filter-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-orange);
+}
+
+.filter-btn.active::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent-orange);
+    border-radius: 50%;
+    border: 2px solid var(--bg-color);
+}
+
+/* === BOTÃO FAVORITOS === */
+.favorites-section {
+    margin-bottom: 2rem;
+    padding: 0 24px;
+}
+
+.favorites-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.favorites-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-orange);
+    color: var(--accent-orange);
+}
+
+.favorites-btn i {
+    color: var(--accent-orange);
+    font-size: 18px;
+}
+
+/* === FILTROS ATIVOS === */
+.active-filters {
+    text-align: center;
+    margin: 0 24px 1.5rem 24px;
+    padding: 12px 16px;
+    background: rgba(255, 107, 0, 0.1);
+    border: 1px solid rgba(255, 107, 0, 0.2);
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    display: inline-block;
+    width: auto;
+    max-width: calc(100% - 48px);
+}
+
+.active-filters strong {
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+
+/* === LISTA DE RECEITAS (MODO FILTRADO) === */
+.recipes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 24px;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+}
+
+.recipe-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-bottom: 20px;
+}
+
+.recipe-item:last-child {
+    margin-bottom: 0;
+}
+
+.recipe-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.05);
+}
+
+.recipe-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.recipe-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recipe-kcal {
+    font-size: 14px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.recipe-kcal i {
+    color: var(--accent-orange);
+}
+
+/* === CARROSSÉIS (MODO NORMAL) === */
+.categories-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.category-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.category-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.view-all-link {
+    font-size: 14px;
+    color: var(--accent-orange);
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+}
+
+.view-all-link:hover {
+    opacity: 0.8;
+}
+
+.recipes-carousel {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 0 24px 8px 24px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.recipes-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.recipe-card {
+    flex-shrink: 0;
+    width: 160px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.card-image {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    background: rgba(255,255,255,0.05);
+}
+
+.card-info {
+    padding: 12px;
+}
+
+.card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.card-kcal {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.card-kcal i {
+    color: var(--accent-orange);
+    font-size: 10px;
+}
+
+/* ===== MODAL SHAPEFIT (COMPACTO) ===== */
+.modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(14px);
+    z-index: 2000 !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: all .3s ease;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100% !important;
+    background: rgba(22, 22, 24, 0.95);
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    transform: translateY(100%);
+    transition: transform .35s cubic-bezier(.25,1,.5,1);
+    box-shadow: 0 -12px 52px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 8px);
+    overflow: hidden;
+    box-sizing: border-box;
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    z-index: 2001 !important;
+}
+
+.modal-overlay.visible .modal-content {
+    transform: translateY(0);
+}
+
+.modal-header {
+    padding: 16px 24px 10px;
+    text-align: center;
+    position: relative;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 4px;
+    background: rgba(255,255,255,0.28);
+    border-radius: 999px;
+}
+
+.modal-title {
+    font-size: 18px;
+    letter-spacing: 0.3px;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.modal-scrollable-content {
+    padding: 0 18px 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: calc(100vh - 260px);
+}
+
+.filter-section {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 18px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.filter-section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filter-section-header p {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.filter-section-header span {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.sort-pill-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sort-pill {
+    position: relative;
+    flex: 1 1 calc(50% - 8px);
+    min-width: 110px;
+}
+
+.sort-pill input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sort-pill span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    font-size: 13px;
+    color: var(--text-primary);
+    transition: all .2s ease;
+}
+
+.sort-pill input:checked + span {
+    background: linear-gradient(120deg, #FFAA00, #FF5E00);
+    border: none;
+    color: #fff;
+}
+
+.chips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 100px);
+    gap: 8px;
+    justify-content: center;
+}
+
+.chip-option {
+    position: relative;
+    width: 100%;
+}
+
+.chip-option input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.chip-option span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 9px;
+    border-radius: 11px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    font-size: 13px;
+    color: var(--text-primary);
+    height: 42px;
+    width: 100%;
+    text-align: center;
+    line-height: 1.3;
+    transition: all .2s ease;
+    box-sizing: border-box;
+}
+
+.chip-option input:checked + span {
+    background: linear-gradient(120deg, #FFAA00, #FF5E00);
+    border: none;
+    color: #fff;
+}
+
+.modal-actions {
+    padding: 18px calc(16px + env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(22,22,24,0.95);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-secondary,
+.btn-primary {
+    border-radius: 14px;
+    height: 46px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all .2s ease;
+    flex: 1;
+    min-width: 0;
+}
+
+.btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.12);
+}
+
+.btn-primary {
+    background: linear-gradient(120deg, #FFAA00, #FF5E00);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.05);
+}
+</style>
+
+<div class="app-container">
+    <!-- Header -->
+    <header class="page-header">
+        <h1 class="page-title">Explorar Receitas</h1>
+    </header>
+
+    <!-- Busca e Filtros -->
+    <div class="search-section">
+        <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="search" id="search-input" class="search-input" placeholder="Buscar por nome..." value="">
+        </div>
+        <button class="filter-btn" id="filter-btn" aria-label="Filtrar">
+            <i class="fas fa-sliders-h"></i>
+        </button>
+    </div>
+
+    <!-- Botão Favoritos -->
+    <div class="favorites-section">
+        <a href="./favorite_recipes.html" class="favorites-btn">
+            <i class="fas fa-heart"></i>
+            <span>Minhas Favoritas</span>
+        </a>
+    </div>
+
+    <!-- Filtros Ativos -->
+    <div id="active-filters-container" style="text-align: center; display: none;">
+        <div class="active-filters">
+            Filtrando por: <strong id="active-filters-text"></strong>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <main id="main-content">
+        <div id="loading-state" style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+            <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 16px;"></i>
+            <p>Carregando receitas...</p>
+        </div>
+        
+        <!-- Lista de Receitas (Modo Filtrado) -->
+        <div class="recipes-list" id="recipes-list" style="display: none;"></div>
+        
+        <!-- Carrosséis por Categoria (Modo Normal) -->
+        <div class="categories-grid" id="categories-grid" style="display: none;"></div>
+    </main>
+</div>
+
+<!-- Modal de Filtros -->
+<div class="modal-overlay" id="filter-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Filtros</h2>
+        </div>
+        
+        <div class="modal-scrollable-content">
+            <section class="filter-section">
+                <div class="filter-section-header">
+                    <p>Ordenar por</p>
+                    <span>Escolha apenas uma opção</span>
+                </div>
+                <div class="sort-pill-group">
+                    <label class="sort-pill">
+                        <input type="radio" id="sort_name_asc" name="sort" value="name_asc">
+                        <span>Nome (A-Z)</span>
+                    </label>
+                    <label class="sort-pill">
+                        <input type="radio" id="sort_kcal_asc" name="sort" value="kcal_asc">
+                        <span>Menos Calóricas</span>
+                    </label>
+                    <label class="sort-pill">
+                        <input type="radio" id="sort_protein_desc" name="sort" value="protein_desc">
+                        <span>Mais Proteicas</span>
+                    </label>
+                    <label class="sort-pill">
+                        <input type="radio" id="sort_time_asc" name="sort" value="time_asc">
+                        <span>Mais Rápidas</span>
+                    </label>
+                </div>
+            </section>
+            
+            <section class="filter-section">
+                <div class="filter-section-header">
+                    <p>Categorias</p>
+                    <span>Selecione quantas quiser</span>
+                </div>
+                <div class="chips-grid" id="category-options-container">
+                    <div style="grid-column: 1 / -1; text-align:center; padding: 20px; color: var(--text-secondary);">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando categorias...
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <div class="modal-actions">
+            <button class="btn-secondary" id="clear-filters">Limpar</button>
+            <button class="btn-primary" id="apply-filters">Aplicar</button>
+        </div>
+    </div>
+</div>
+
+    <!-- Bottom Navigation -->
+
+    <!-- Scripts -->
+    
+    
+</div>
+
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/bottom-nav.js"></script>
+<script src="/https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="/https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+<script src="/assets/js/pages/explore_recipes/explore_recipes_inline_0.js"></script>
+<script src="/assets/js/pages/explore_recipes/explore_recipes_inline_1.js"></script>
+<script src="/assets/js/pages/explore_recipes/explore_recipes_inline_2.js"></script>

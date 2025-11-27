@@ -1,0 +1,1016 @@
+<div class="page-root measurements-page">
+<style>
+/* ===========================================
+   MEASUREMENTS PROGRESS - PÁGINA COMPLETA
+   =========================================== */
+
+.measurements-page {
+    --input-bg: rgba(255, 255, 255, 0.06);
+    --input-border: rgba(255, 255, 255, 0.12);
+    --input-focus: rgba(255, 107, 0, 0.5);
+    --card-bg: rgba(255, 255, 255, 0.04);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --orange: #FF6B00;
+    
+    /* Garantir que o page-root não bloqueie scroll */
+    display: block;
+    width: 100%;
+    min-height: 100%;
+}
+
+/* Container Principal */
+.mp-container {
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 150px !important;
+    max-width: 100%;
+    margin: 0 auto;
+    min-height: calc(100vh + 100px); /* Forçar altura maior que a tela */
+}
+
+
+/* ===========================================
+   ALERTAS / TOASTS
+   =========================================== */
+.alert {
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-success {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
+.alert i {
+    font-size: 1rem;
+}
+
+/* Header */
+.mp-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: calc(20px + env(safe-area-inset-top)) 0 20px;
+}
+
+.mp-back {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.mp-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* Cards */
+.mp-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.mp-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 20px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.mp-card-title i {
+    color: var(--orange);
+}
+
+/* ===========================================
+   INPUTS - ESTILO LIMPO SEM ÍCONES
+   =========================================== */
+
+.mp-field {
+    margin-bottom: 16px;
+}
+
+.mp-field:last-child {
+    margin-bottom: 0;
+}
+
+.mp-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 8px;
+}
+
+.mp-label i {
+    color: var(--orange);
+    margin-right: 6px;
+    font-size: 0.85rem;
+}
+
+/* Input Base - LIMPO */
+.mp-input {
+    width: 100%;
+    height: 50px;
+    padding: 0 16px;
+    font-size: 1rem;
+    color: #fff;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    
+    /* REMOVE TODOS OS ESTILOS NATIVOS */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.mp-input:focus {
+    border-color: var(--input-focus);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.mp-input::placeholder {
+    color: rgba(255,255,255,0.4);
+}
+
+/* Input DATE - Esconde ícone nativo */
+.mp-input[type="date"] {
+    color-scheme: dark;
+    cursor: pointer;
+}
+
+.mp-input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.mp-input[type="date"]::-webkit-inner-spin-button,
+.mp-input[type="date"]::-webkit-clear-button {
+    display: none;
+}
+
+/* Input NUMBER - Esconde setas */
+.mp-input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.mp-input[type="number"]::-webkit-inner-spin-button,
+.mp-input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    display: none;
+}
+
+/* Input Readonly */
+.mp-input[readonly] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Hint text */
+.mp-hint {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Grid de 2 colunas */
+.mp-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+/* ===========================================
+   UPLOAD DE FOTOS
+   =========================================== */
+
+.mp-photos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.mp-photo-slot {
+    position: relative;
+    aspect-ratio: 1;
+    background: var(--input-bg);
+    border: 2px dashed var(--input-border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.mp-photo-slot:hover {
+    border-color: var(--orange);
+}
+
+.mp-photo-slot.has-photo {
+    border-style: solid;
+    border-color: var(--orange);
+}
+
+.mp-photo-slot input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 5;
+}
+
+.mp-photo-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+}
+
+.mp-photo-content i {
+    font-size: 1.4rem;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 6px;
+}
+
+.mp-photo-content span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+}
+
+.mp-photo-content small {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+}
+
+/* Preview da foto */
+.mp-photo-preview {
+    position: absolute;
+    inset: 0;
+}
+
+.mp-photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mp-photo-remove {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.mp-photo-slot.has-photo .mp-photo-remove {
+    display: flex;
+}
+
+.mp-photo-slot.has-photo .mp-photo-content i,
+.mp-photo-slot.has-photo .mp-photo-content span,
+.mp-photo-slot.has-photo .mp-photo-content small {
+    display: none;
+}
+
+/* ===========================================
+   BOTÃO PRINCIPAL
+   =========================================== */
+
+.mp-submit {
+    width: 100%;
+    height: 54px;
+    margin-top: 24px;
+    background: linear-gradient(135deg, #FF6B00, #FF8533);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mp-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 107, 0, 0.3);
+}
+
+.mp-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===========================================
+   GALERIA / HISTÓRICO
+   =========================================== */
+
+.mp-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.mp-session {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.mp-session-header {
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--card-border);
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mp-session-body {
+    padding: 14px 16px;
+}
+
+.mp-session-info {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.mp-session-tag {
+    background: rgba(255,255,255,0.06);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mp-session-photos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.mp-session-photo {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+.mp-session-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mp-session-photo-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    color: #fff;
+}
+
+/* Classes antigas para compatibilidade JS */
+.session-group { 
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.session-header {
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--card-border);
+}
+
+.session-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.session-card {
+    padding: 14px 16px;
+}
+
+.session-info {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.session-time,
+.session-weight {
+    background: rgba(255,255,255,0.06);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.session-photos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.photo-item-container {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.photo-item {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    padding: 6px 8px;
+}
+
+.photo-type {
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Estados */
+.mp-loading,
+.mp-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255,255,255,0.5);
+}
+
+.mp-empty {
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed var(--card-border);
+    border-radius: 12px;
+}
+
+.mp-empty i {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    display: block;
+}
+
+/* Alertas */
+.mp-alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.mp-alert-success {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    color: #4ade80;
+}
+
+.mp-alert-error {
+    background: rgba(220, 53, 69, 0.15);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: #f87171;
+}
+
+/* ===========================================
+   MODAL DE FOTO
+   =========================================== */
+
+.mp-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0,0,0,0.95);
+}
+
+.mp-modal-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    padding-top: calc(20px + env(safe-area-inset-top));
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: linear-gradient(rgba(0,0,0,0.6), transparent);
+    z-index: 10;
+}
+
+.mp-modal-title h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.mp-modal-title span {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+}
+
+.mp-modal-close {
+    width: 42px;
+    height: 42px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.mp-modal-body {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mp-modal-body img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.mp-modal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.mp-modal-prev { left: 16px; }
+.mp-modal-next { right: 16px; }
+
+.mp-modal-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(transparent, rgba(0,0,0,0.6));
+    z-index: 10;
+}
+
+.mp-modal-counter {
+    background: rgba(255,255,255,0.1);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #fff;
+}
+
+.mp-modal-delete {
+    background: rgba(220, 53, 69, 0.8);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ===========================================
+   MODAL ANTIGO (Compatibilidade JS)
+   =========================================== */
+
+.photo-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0,0,0,0.95);
+}
+
+.photo-modal-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.photo-modal-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    padding-top: calc(20px + env(safe-area-inset-top));
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: linear-gradient(rgba(0,0,0,0.6), transparent);
+    z-index: 10;
+}
+
+.photo-modal-title h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.photo-modal-date {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+}
+
+.photo-modal-close {
+    width: 42px;
+    height: 42px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.photo-modal-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-viewer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.photo-container {
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-container img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.photo-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.2s;
+}
+
+.photo-nav-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.photo-prev { left: 16px; }
+.photo-next { right: 16px; }
+
+.photo-modal-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    background: linear-gradient(transparent, rgba(0,0,0,0.6));
+    z-index: 10;
+}
+
+.photo-modal-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.photo-counter {
+    background: rgba(255,255,255,0.1);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #fff;
+}
+
+.delete-photo-btn-modal {
+    background: rgba(220, 53, 69, 0.8);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ===========================================
+   RESPONSIVO
+   =========================================== */
+
+@media (max-width: 480px) {
+    .mp-container {
+        padding: 0 12px 120px;
+    }
+    
+    .mp-header h1 {
+        font-size: 1.3rem;
+    }
+    
+    .mp-card {
+        padding: 16px;
+    }
+    
+    .mp-grid-2 {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .mp-photos-grid {
+        gap: 8px;
+    }
+}
+</style>
+
+<div id="alert-container"></div>
+
+<div class="mp-container">
+    <!-- Header -->
+    <header class="mp-header">
+        <a href="./progress.html" class="mp-back">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <h1>Fotos e Medidas</h1>
+    </header>
+    
+    <div id="alert-messages"></div>
+
+    <!-- Formulário -->
+    <form id="measurements-form">
+        <!-- Data -->
+        <div class="mp-card">
+            <div class="mp-field">
+                <label class="mp-label">
+                    <i class="fas fa-calendar-alt"></i>Data do Registro
+                </label>
+                <input type="date" id="date_recorded" name="date_recorded" class="mp-input">
+                <div class="mp-hint">
+                    <i class="fas fa-info-circle"></i>
+                    Não é possível registrar fotos com data futura.
+                </div>
+            </div>
+        </div>
+
+        <!-- Fotos -->
+        <div class="mp-card">
+            <h3 class="mp-card-title">
+                <i class="fas fa-camera"></i>Fotos de Progresso
+            </h3>
+            <div class="mp-photos-grid">
+                <!-- Frente -->
+                <div class="mp-photo-slot" id="slot-front">
+                    <input type="file" name="photo_front" id="photo_front" accept="image/*">
+                    <div class="mp-photo-content">
+                        <i class="fas fa-camera"></i>
+                        <span>Frente</span>
+                        <small>Toque para adicionar</small>
+                    </div>
+                    <div class="mp-photo-preview" id="frontPreview"></div>
+                    <button type="button" class="mp-photo-remove" onclick="removePhoto('front')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <!-- Lado -->
+                <div class="mp-photo-slot" id="slot-side">
+                    <input type="file" name="photo_side" id="photo_side" accept="image/*">
+                    <div class="mp-photo-content">
+                        <i class="fas fa-camera"></i>
+                        <span>Lado</span>
+                        <small>Toque para adicionar</small>
+                    </div>
+                    <div class="mp-photo-preview" id="sidePreview"></div>
+                    <button type="button" class="mp-photo-remove" onclick="removePhoto('side')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <!-- Costas -->
+                <div class="mp-photo-slot" id="slot-back">
+                    <input type="file" name="photo_back" id="photo_back" accept="image/*">
+                    <div class="mp-photo-content">
+                        <i class="fas fa-camera"></i>
+                        <span>Costas</span>
+                        <small>Toque para adicionar</small>
+                    </div>
+                    <div class="mp-photo-preview" id="backPreview"></div>
+                    <button type="button" class="mp-photo-remove" onclick="removePhoto('back')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medidas -->
+        <div class="mp-card">
+            <h3 class="mp-card-title">
+                <i class="fas fa-ruler"></i>Medidas Corporais
+            </h3>
+            <div class="mp-grid-2">
+                <div class="mp-field">
+                    <label class="mp-label"><i class="fas fa-weight"></i>Peso (kg)</label>
+                    <input type="number" id="weight_kg" name="weight_kg" class="mp-input" step="0.1" readonly>
+                    <div class="mp-hint">Puxado do perfil</div>
+                </div>
+                <div class="mp-field">
+                    <label class="mp-label">Pescoço (cm)</label>
+                    <input type="number" step="0.1" name="neck" id="neck" class="mp-input" placeholder="Opcional">
+                </div>
+                <div class="mp-field">
+                    <label class="mp-label">Tórax (cm)</label>
+                    <input type="number" step="0.1" name="chest" id="chest" class="mp-input" placeholder="Opcional">
+                </div>
+                <div class="mp-field">
+                    <label class="mp-label">Cintura (cm)</label>
+                    <input type="number" step="0.1" name="waist" id="waist" class="mp-input" placeholder="Opcional">
+                </div>
+                <div class="mp-field">
+                    <label class="mp-label">Abdômen (cm)</label>
+                    <input type="number" step="0.1" name="abdomen" id="abdomen" class="mp-input" placeholder="Opcional">
+                </div>
+                <div class="mp-field">
+                    <label class="mp-label">Quadril (cm)</label>
+                    <input type="number" step="0.1" name="hips" id="hips" class="mp-input" placeholder="Opcional">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="mp-submit" id="submit-btn">
+            <i class="fas fa-save"></i>
+            Salvar Medidas e Fotos
+        </button>
+    </form>
+
+    <!-- Galeria -->
+    <div class="mp-card" style="margin-top: 24px;">
+        <h3 class="mp-card-title">
+            <i class="fas fa-images"></i>Galeria de Fotos
+        </h3>
+        
+        <div id="loading-state" class="mp-loading">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px; display: block;"></i>
+            Carregando galeria...
+        </div>
+        
+        <div id="empty-state" class="mp-empty" style="display: none;">
+            <i class="fas fa-camera"></i>
+            <h4 style="margin: 0 0 8px; color: #fff;">Nenhuma foto ainda</h4>
+            <p style="margin: 0;">Adicione fotos para acompanhar seu progresso!</p>
+        </div>
+        
+        <div id="gallery-container" class="mp-gallery" style="display: none;"></div>
+    </div>
+</div>
+
+<script src="/assets/js/pages/measurements_progress/measurements_progress_inline_0.js"></script>
+<script src="/assets/js/pages/measurements_progress/measurements_progress_inline_1.js"></script>
+<script src="/assets/js/pages/measurements_progress/measurements_progress_inline_2.js"></script>
+</div>

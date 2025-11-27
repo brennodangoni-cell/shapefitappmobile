@@ -1,0 +1,510 @@
+<div class="page-root">
+    
+    <!-- PWA Meta Tags -->
+    
+    <!-- PWA Manifest -->
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/assets/images/app-icon.png">
+    
+    <!-- Script Critical - Define altura real do viewport -->
+
+    <!-- CSS Principal -->
+    
+    <style>
+/* Variáveis - herdar do global, apenas sobrescrever se necessário */
+:root {
+    --surface-color: #1E1E1E;
+    --border-color: #2E2E2E;
+}
+
+/* Usar estilos globais do SPA - não sobrescrever body */
+
+/* Layout da página */
+.ranking-page-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 20px 16px 100px 16px;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px; /* Reduzido de 24px */
+    padding: 0 12px;
+    margin-top: 0; /* Garantir que não há margem extra no topo */
+}
+.header-actions{
+    display:flex;
+    align-items:center;
+    gap:.75rem
+}
+.points-counter-badge{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    height:44px;
+    padding:0 16px;
+    border-radius:22px;
+    background-color:var(--surface-color);
+    border:1px solid var(--border-color);
+    color:var(--text-primary);
+    text-decoration:none;
+    transition:all .2s ease
+}
+.points-counter-badge:hover{
+    border-color:var(--accent-orange)
+}
+.points-counter-badge i{
+    color:var(--accent-orange);
+    font-size:1rem
+}
+.points-counter-badge span{
+    font-weight:600;
+    font-size:1rem
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-title i {
+    color: var(--accent-orange);
+    font-size: 1.8rem;
+}
+
+/* Pódio sem background geral */
+.podium-section {
+    margin-bottom: 0; /* Removido - o gap do grid já cuida */
+    margin-top: 0; /* Garantir que não há margem extra no topo */
+}
+
+.podium-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 24px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+}
+
+.podium-place {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+}
+
+.podium-place.first {
+    order: 2;
+    transform: scale(1.1);
+}
+
+.podium-place.second {
+    order: 1;
+}
+
+.podium-place.third {
+    order: 3;
+}
+
+.player-avatar-large {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid var(--accent-orange);
+    margin-bottom: 12px;
+}
+
+.player-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.player-avatar-large i {
+    color: var(--accent-orange);
+    font-size: 1.8rem;
+}
+
+.podium-place.first .player-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-width: 3px;
+}
+
+.podium-place.first .player-avatar-large i {
+    font-size: 2.2rem;
+}
+
+.rank-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: white;
+}
+
+.podium-place.first .rank-badge {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #333;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+}
+
+.podium-place.second .rank-badge {
+    background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+    color: #333;
+}
+
+.podium-place.third .rank-badge {
+    background: linear-gradient(135deg, #cd7f32, #daa520);
+    color: white;
+}
+
+.podium-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.podium-level {
+    font-size: 0.85rem;
+    color: var(--accent-orange);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.podium-points {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Lista de ranking com componentes coloridos, backgrounds sem saturação */
+.ranking-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ranking-item {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    align-items: center;
+    padding: 18px 20px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    width: 100%;
+    gap: 16px;
+}
+
+/* Números perfeitamente alinhados */
+.rank-position {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    flex-shrink: 0;
+    align-self: center;
+    margin: auto 0;
+}
+
+.ranking-item.current-user .rank-position {
+    color: var(--accent-orange);
+    background: rgba(255, 140, 0, 0.15);
+}
+
+.ranking-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.ranking-item.current-user {
+    background: rgba(255, 107, 0, 0.1);
+    border-color: var(--accent-orange);
+}
+
+.player-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.player-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid var(--accent-orange);
+    flex-shrink: 0;
+}
+
+.player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.player-avatar i {
+    color: var(--accent-orange);
+    font-size: 1.2rem;
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+    max-width: calc(100% - 44px - 12px);
+}
+
+.player-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.player-level {
+    font-size: 0.8rem;
+    color: var(--accent-orange);
+    font-weight: 500;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.player-points {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: right;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.ranking-item.current-user .player-points {
+    color: var(--accent-orange);
+}
+
+/* Botão Carregar Mais */
+.load-more-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 0 20px;
+}
+
+.load-more-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.load-more-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.load-more-btn i {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.load-more-btn:hover i {
+    transform: translateY(2px);
+}
+
+.load-more-btn .users-count {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+
+.load-more-btn.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.load-more-btn.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .ranking-page-grid {
+        padding: 20px 6px 20px 6px;
+    }
+    
+    .podium-container {
+        gap: 16px;
+    }
+    
+    .player-avatar-large {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .podium-place.first .player-avatar-large {
+        width: 72px;
+        height: 72px;
+    }
+    
+    .ranking-item {
+        padding: 16px 18px;
+        gap: 12px;
+    }
+    
+    .rank-position {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+        border-radius: 10px;
+        align-self: center;
+        margin: auto 0;
+    }
+    
+    .player-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .player-info {
+        max-width: calc(100% - 40px - 12px);
+    }
+    
+    .player-name {
+        font-size: 0.95rem;
+    }
+    
+    .player-level {
+        font-size: 0.75rem;
+    }
+    
+    .player-points {
+        font-size: 0.85rem;
+    }
+}
+    </style>
+    <div class="app-container">
+        <header class="header">
+            <h1 class="page-title">
+                <i class="fas fa-trophy"></i>
+                Ranking
+            </h1>
+            
+            <div class="header-actions">
+                <a href="./points_history.html" class="points-counter-badge" id="points-badge">
+                    <i class="fas fa-star"></i>
+                    <span id="user-points-display">0</span>
+                </a>
+            </div>
+        </header>
+
+        <section class="ranking-page-grid">
+            <!-- Pódio -->
+            <div class="podium-section">
+                <div class="podium-container" id="podium-container">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Lista de Ranking -->
+            <ul class="ranking-list" id="ranking-list">
+                <!-- Será preenchido via JavaScript -->
+            </ul>
+            
+            <!-- Botão Carregar Mais -->
+            <div class="load-more-container" id="load-more-container" style="display: none;">
+                <button id="load-more-btn" class="load-more-btn">
+                    <i class="fas fa-chevron-down"></i>
+                    Carregar Mais
+                    <span class="users-count"></span>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Auth Script -->
+
+    <!-- Font Awesome já carregado globalmente no index.html -->
+    
+    <!-- Bottom Navigation (via JavaScript - funciona como include) -->
+
+
+</div>
+
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/pages/ranking/ranking_inline_0.js"></script>
+<script src="/assets/js/pages/ranking/ranking_inline_1.js"></script>
+<script src="/assets/js/pages/ranking/ranking_inline_2.js"></script>
+<script src="/assets/js/pages/ranking/ranking_inline_3.js"></script>

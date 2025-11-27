@@ -1,0 +1,318 @@
+<div class="page-root">
+    
+    <!-- PWA Meta Tags -->
+    
+    <!-- PWA Manifest -->
+    
+    <!-- Script Critical -->
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Ícones -->
+    
+    <!-- CSS Principal -->
+    
+    <!-- Variáveis Globais -->
+
+    <!-- Auth Script -->
+
+    <style>
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: calc(env(safe-area-inset-top, 0px) + 20px) 24px calc(60px + 20px + env(safe-area-inset-bottom, 0px)) 24px;
+            height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
+        
+        /* Fix específico para iOS PWA - remove margem cinza abaixo do bottom nav */
+        @supports (-webkit-touch-callout: none) {
+            /* Garantir que body/html cubram toda altura e tenham mesma cor */
+            body {
+                height: 100vh !important;
+                min-height: 100vh !important;
+            }
+            
+            html {
+                height: 100vh !important;
+                min-height: 100vh !important;
+            }
+            
+            /* Garantir que não haja espaço visível abaixo */
+            body::after {
+                height: 100vh !important;
+                min-height: 100vh !important;
+            }
+        }
+        
+        .page-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 1rem;
+            justify-content: flex-start;
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .back-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-orange);
+            color: var(--accent-orange);
+            transform: translateX(-2px);
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .content-card {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .content-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--accent-orange);
+            transform: translateY(-2px);
+        }
+        
+        .content-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .content-thumbnail {
+            position: relative;
+        }
+        
+        .content-thumbnail::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.1) 100%);
+            pointer-events: none;
+        }
+        
+        .content-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .content-info h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.4;
+            overflow: visible;
+            text-overflow: clip;
+            white-space: normal;
+            word-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+        }
+        
+        /* Garantir que o card não saia do grid */
+        .content-card {
+            min-width: 0;
+            overflow: hidden;
+        }
+        
+        .content-card-header {
+            min-width: 0;
+        }
+        
+        .content-description {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .content-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .content-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .author-avatar,
+        .author-avatar-placeholder {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .author-avatar {
+            object-fit: cover;
+            border: 2px solid rgba(255, 107, 0, 0.3);
+        }
+        
+        .author-avatar-placeholder {
+            background: rgba(255, 107, 0, 0.2);
+            border: 2px solid rgba(255, 107, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-orange);
+        }
+        
+        .author-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .content-date {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+        }
+        
+        .content-date i {
+            font-size: 0.75rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+        }
+        
+        .empty-state-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            background: rgba(255, 107, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .empty-state-icon i {
+            font-size: 3rem;
+            color: var(--accent-orange);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            line-height: 1;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 12px 0;
+        }
+        
+        .empty-state p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
+    </style>
+    <div class="app-container">
+        <div class="page-header">
+            <a href="./main_app.html" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="page-title">
+                Conteúdos
+            </h1>
+        </div>
+        
+        <div id="content-container">
+            <!-- Conteúdos serão carregados aqui -->
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+
+
+</div>
+
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/common.js"></script>
+<script src="/assets/js/bottom-nav.js"></script>
+<script src="/assets/js/pages/content/content_inline_0.js"></script>
+<script src="/assets/js/pages/content/content_inline_1.js"></script>
+<script src="/assets/js/pages/content/content_inline_2.js"></script>

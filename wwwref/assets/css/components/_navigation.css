@@ -1,0 +1,125 @@
+/* assets/css/components/_navigation.css */
+/* BOTTOM NAV - iOS Glassmorphism Style */
+
+/* ============================================
+   CONTAINER DO BOTTOM NAV
+   ============================================ */
+#bottom-nav-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    
+    /* === GLASSMORPHISM === */
+    background: rgba(25, 25, 25, 0.75);
+    -webkit-backdrop-filter: saturate(180%) blur(25px);
+    backdrop-filter: saturate(180%) blur(25px);
+    
+    /* Borda sutil no topo */
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+    
+    /* Sombra suave */
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+    
+    /* PREENCHER ATÉ A BORDA INFERIOR (safe area) */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    
+    /* GPU acceleration */
+    will-change: transform;
+    transform: translateY(0) translateZ(0);
+    -webkit-transform: translateY(0) translateZ(0);
+    
+    /* Sem transição por padrão */
+    transition: none;
+}
+
+/* Classe para transição suave (snap) */
+#bottom-nav-container.smooth-transition {
+    transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ============================================
+   BARRA DE NAVEGAÇÃO INTERNA
+   ============================================ */
+.bottom-nav {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    
+    /* Altura fixa */
+    height: 50px;
+    padding: 6px 16px;
+    
+    /* Background transparente */
+    background: transparent;
+}
+
+/* ============================================
+   ITENS DE NAVEGAÇÃO
+   ============================================ */
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.45);
+    height: 100%;
+    min-height: 44px; /* iOS minimum touch target */
+    min-width: 44px;
+    padding: 8px 0;
+    
+    /* CRÍTICO: Garantir que receba toques */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    
+    /* Transição suave */
+    transition: color 0.15s ease;
+}
+
+/* Ícone */
+.nav-item i {
+    font-size: 1.4rem;
+    line-height: 1;
+    pointer-events: none; /* Deixa o parent receber o touch */
+}
+
+/* Estado Ativo - SEM GLOW */
+.nav-item.active {
+    color: #FF6B00;
+}
+
+/* Estado Pressionado */
+.nav-item:active {
+    opacity: 0.6;
+}
+
+/* ============================================
+   ESTADOS ESPECIAIS
+   ============================================ */
+
+/* Esconder completamente */
+#bottom-nav-container.hidden {
+    display: none !important;
+}
+
+
+/* ============================================
+   RESPONSIVO
+   ============================================ */
+@media (max-width: 360px) {
+    .nav-item i {
+        font-size: 1.25rem;
+    }
+    
+    .bottom-nav {
+        padding: 5px 12px;
+        height: 46px;
+    }
+}

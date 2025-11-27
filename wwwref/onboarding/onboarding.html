@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Questionário - ShapeFIT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Auth Script -->
+    <script src="../assets/js/auth.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #050505;
+            --primary-orange-gradient: linear-gradient(135deg, #FFAE00, #F83600);
+            --disabled-gray-gradient: linear-gradient(135deg, #333, #444);
+            --text-primary: #F5F5F5;
+            --text-secondary: #A3A3A3;
+            --text-muted: #747474;
+            --font-family: 'Montserrat', sans-serif;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --danger: #ff4b6a;
+            --focus-orange: #FF6B00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            outline: none !important;
+        }
+
+        html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden !important;
+            overscroll-behavior: none !important;
+            touch-action: none;
+            -webkit-overflow-scrolling: none;
+            position: fixed;
+            background-color: var(--bg-color);
+        }
+
+        html, body {
+            scroll-behavior: auto !important;
+        }
+
+        body {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(var(--vh, 1vh) * 100);
+            overflow: hidden !important;
+            overscroll-behavior: none;
+            touch-action: none;
+            -webkit-overflow-scrolling: none;
+            background: radial-gradient(circle at top, #1b1b1b 0, #050505 55%);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            overflow: hidden;
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+
+        #onboarding-form {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            min-height: 0;
+            overflow: hidden;
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+
+        .header-nav {
+            padding: calc(env(safe-area-inset-top, 0px) + 10px) 20px 10px;
+            flex-shrink: 0;
+            visibility: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-button {
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-button:active {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .step-indicator-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .progress-bar-wrapper {
+            width: 100%;
+            padding: 0 20px 10px;
+            flex-shrink: 0;
+        }
+
+        .progress-bar-track {
+            width: 100%;
+            height: 4px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: 999px;
+            background-image: var(--primary-orange-gradient);
+            transition: width 0.25s ease-out;
+        }
+
+        .footer-nav {
+            padding: 18px 20px calc(env(safe-area-inset-bottom, 0px) + 22px);
+            flex-shrink: 0;
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .exit-button {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 12px;
+            text-align: center;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+            display: none;
+        }
+
+        .exit-button.show {
+            display: block;
+        }
+
+        .exit-button:hover {
+            opacity: 1;
+        }
+
+        .btn-primary {
+            background-image: var(--primary-orange-gradient);
+            color: var(--text-primary);
+            border: none;
+            padding: 15px 22px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.25s ease;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 12px 30px rgba(248, 102, 0, 0.25);
+        }
+
+        .btn-primary:disabled {
+            background-image: var(--disabled-gray-gradient);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .form-step {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            flex-grow: 1;
+            min-height: 0;
+            animation: fadeIn 0.25s ease;
+            overflow: hidden;
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+
+        .form-step.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-content {
+            flex-grow: 1;
+            padding: 6px 20px 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+
+        .step-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .step-helper {
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: left;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 4px;
+            text-align: left;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            font-weight: 400;
+            text-align: left;
+        }
+
+        .selectable-options,
+        .selectable-options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .selectable-options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .option-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 54px;
+            padding: 12px 14px;
+            font-size: 0.9rem;
+            text-align: center;
+            background-color: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 14px;
+            color: var(--text-primary);
+            -webkit-background-clip: padding-box;
+            background-clip: padding-box;
+            letter-spacing: 0.01em;
+        }
+
+        .option-card span {
+            display: block;
+        }
+
+        .option-card.small {
+            font-size: 0.85rem;
+        }
+
+        .option-none {
+            padding: 12px 8px !important;
+            font-size: 0.75rem !important;
+            min-height: 48px !important;
+        }
+
+        .selectable-options input,
+        .selectable-options-grid input {
+            display: none;
+        }
+
+        .selectable-options input:checked + label,
+        .selectable-options-grid input:checked + label {
+            background-image: var(--primary-orange-gradient);
+            border: none !important;
+            border-color: transparent !important;
+            font-weight: 600;
+            box-shadow: 0 10px 26px rgba(248, 102, 0, 0.26);
+            -webkit-background-clip: border-box !important;
+            background-clip: border-box !important;
+        }
+
+        .selectable-options label,
+        .selectable-options-grid label,
+        .option-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 54px;
+            padding: 12px 14px;
+            font-size: 0.9rem;
+            text-align: center;
+            background-color: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 14px;
+            color: var(--text-primary);
+            overflow: hidden;
+            -webkit-background-clip: padding-box;
+            background-clip: padding-box;
+        }
+
+        .option-button {
+            background: transparent;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .option-button:focus,
+        .option-button:focus-visible,
+        .option-button:active {
+            outline: none !important;
+            border-color: var(--glass-border);
+        }
+
+        .option-button.active {
+            background-image: var(--primary-orange-gradient);
+            border: none !important;
+            border-color: transparent !important;
+            font-weight: 600;
+            box-shadow: 0 10px 26px rgba(248, 102, 0, 0.26);
+            outline: none !important;
+            -webkit-background-clip: border-box !important;
+            background-clip: border-box !important;
+        }
+
+        .option-button.active:focus,
+        .option-button.active:focus-visible,
+        .option-button.active:active {
+            outline: none !important;
+            border: none !important;
+            border-color: transparent !important;
+        }
+
+        /* Inputs */
+
+        input,
+        select,
+        textarea {
+            -webkit-appearance: none;
+            appearance: none;
+            box-shadow: none;
+            border-radius: 14px;
+            background: var(--card-bg);
+        }
+
+        .form-control {
+            padding: 13px 16px;
+            font-size: 0.95rem;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            outline: none;
+            width: 100%;
+            caret-color: var(--text-primary);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-control-wrapper,
+        .select-wrapper {
+            width: 100%;
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+            font-size: 0.75rem;
+        }
+
+        select:required:invalid {
+            color: var(--text-secondary);
+        }
+
+        select::-ms-expand {
+            display: none;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        label.input-label {
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            display: block;
+            font-size: 0.8rem;
+            text-align: left;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .helper-inline {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        input[type="time"]::-webkit-calendar-picker-indicator,
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(75%) grayscale(100%) brightness(150%);
+        }
+
+        /* FOCUS STATE – LARANJA QUENTE */
+
+        .form-control:focus,
+        .form-control:focus-visible {
+            border-color: var(--focus-orange) !important;
+            background-color: rgba(255, 255, 255, 0.07) !important;
+            box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.45) !important;
+        }
+
+        input:focus,
+        input:focus-visible,
+        select:focus,
+        select:focus-visible,
+        textarea:focus,
+        textarea:focus-visible {
+            outline: none !important;
+            border-color: var(--focus-orange) !important;
+            box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.45) !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px var(--card-bg) inset !important;
+            -webkit-text-fill-color: var(--text-primary) !important;
+            caret-color: var(--text-primary);
+        }
+
+        /* Exercícios desabilitados - apenas desabilitar funcionalmente, não visualmente */
+
+        #exercise-options-wrapper.disabled input:not(#ex-none) {
+            pointer-events: none;
+        }
+
+        /* Todos os labels e botões devem ser clicáveis para desmarcar "Nenhum" */
+        #exercise-options-wrapper.disabled label,
+        #exercise-options-wrapper.disabled .option-button {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+
+        #frequency-wrapper.disabled {
+            opacity: 0.4;
+        }
+
+        /* MODAL ATIVIDADES */
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            animation: fadeInOverlay 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 480px;
+            background: var(--bg-color);
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px calc(env(safe-area-inset-bottom) + 24px);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+            animation: slideUpModal 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 0;
+        }
+
+        @keyframes slideUpModal {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .modal-close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .modal-close-btn:active {
+            background: rgba(255, 255, 255, 0.08);
+            transform: scale(0.95);
+        }
+
+        .modal-tags-container {
+            min-height: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+        }
+
+        .modal-tags-container:empty {
+            padding: 16px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-tags-container:empty::before {
+            content: "Nenhuma atividade adicionada";
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .activity-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            animation: tagPopIn 0.2s ease;
+        }
+
+        @keyframes tagPopIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .activity-tag .remove-tag {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s ease;
+        }
+
+        .activity-tag .remove-tag:active {
+            color: var(--text-primary);
+        }
+
+        .modal-input-section {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .modal-input-section .form-control-wrapper {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .modal-input-section .form-control {
+            height: 100%;
+        }
+
+        .modal-add-btn {
+            min-width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background-image: var(--primary-orange-gradient);
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(248, 102, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        .modal-add-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 8px rgba(248, 102, 0, 0.3);
+        }
+
+        .modal-add-btn:disabled {
+            background-image: var(--disabled-gray-gradient);
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .modal-footer {
+            padding-top: 8px;
+        }
+
+        .modal-footer .btn-primary {
+            width: 100%;
+            padding: 15px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* Pequenos ajustes responsivos */
+
+        @media (max-height: 620px) {
+            .page-title {
+                font-size: 24px;
+            }
+            .step-main {
+                gap: 14px;
+            }
+            .option-card,
+            .selectable-options label,
+            .selectable-options-grid label,
+            .option-button {
+                min-height: 50px;
+                padding: 10px 10px;
+                font-size: 0.85rem;
+            }
+            .form-control {
+                padding: 11px 14px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+
+    <script>
+        // Definir BASE_APP_URL antes de carregar auth.js
+        window.BASE_APP_URL = window.location.origin + window.location.pathname.split('/').slice(0, -2).join('/');
+        if (window.BASE_APP_URL.endsWith('/')) {
+            window.BASE_APP_URL = window.BASE_APP_URL.slice(0, -1);
+        }
+
+        function setRealViewportHeight() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        window.addEventListener('resize', setRealViewportHeight);
+        setRealViewportHeight();
+
+        // Verificar autenticação
+        if (!getAuthToken()) {
+            window.location.href = window.BASE_APP_URL + '/auth/login.html';
+        }
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header-nav">
+            <div class="header-left">
+                <button type="button" class="back-button" id="back-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="step-indicator-text" id="step-indicator-text">Passo 1 de 16</div>
+            </div>
+            <button type="button" class="btn-secondary" style="display:none;" id="skip-btn">Pular</button>
+        </header>
+
+        <div class="progress-bar-wrapper">
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+            </div>
+        </div>
+
+        <form id="onboarding-form" novalidate>
+            <input type="hidden" name="custom_activities" id="custom-activities-hidden-input">
+
+            <!-- STEP 1: Objetivo -->
+            <div class="form-step active" data-step="1" data-step-id="objective">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Qual é o seu objetivo principal?</h1>
+                            <p class="page-subtitle">Isso vai definir a base do seu plano alimentar.</p>
+                        </div>
+                        <div class="selectable-options">
+                            <input type="radio" id="obj1" name="objective" value="lose_fat" required>
+                            <label for="obj1" class="option-card"><span>Emagrecimento</span></label>
+
+                            <input type="radio" id="obj2" name="objective" value="maintain_weight" required>
+                            <label for="obj2" class="option-card"><span>Manutenção de peso</span></label>
+
+                            <input type="radio" id="obj3" name="objective" value="gain_muscle" required>
+                            <label for="obj3" class="option-card"><span>Ganho de massa muscular</span></label>
+                        </div>
+                    </div>
+                    <div class="step-helper">Você poderá ajustar o objetivo depois com seu nutricionista.</div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Peso -->
+            <div class="form-step" data-step="2" data-step-id="weight">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Vamos começar pelo seu peso</h1>
+                            <p class="page-subtitle">Use o valor mais próximo possível da sua realidade hoje.</p>
+                        </div>
+                        <div class="form-control-wrapper">
+                            <input type="text" name="weight_kg" id="weight-input" class="form-control" placeholder="Seu peso (kg)" required pattern="[0-9]+([,\.]?[0-9]{1,2})?">
+                        </div>
+                        <div id="weight-restriction-message" style="display: none; margin-top: 12px; padding: 12px; background: rgba(255, 107, 0, 0.1); border-radius: 8px; color: var(--accent-orange); font-size: 0.9rem;">
+                            <i class="fa-solid fa-clock"></i> Você só pode ajustar o peso a cada 7 dias. Próximo ajuste em <strong id="days-remaining">0</strong> <span id="days-text">dias</span>.
+                        </div>
+                    </div>
+                    <div class="step-helper">Se não souber exato, pode arredondar.</div>
+                </div>
+            </div>
+
+            <!-- STEP 3: Altura -->
+            <div class="form-step" data-step="3" data-step-id="height">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Agora, sua altura</h1>
+                            <p class="page-subtitle">Essa informação é essencial para os cálculos.</p>
+                        </div>
+                        <div class="form-control-wrapper">
+                            <input type="number" name="height_cm" class="form-control" placeholder="Sua altura (cm)" required min="50" max="300">
+                        </div>
+                    </div>
+                    <div class="step-helper">Exemplo: 165, 172, 183…</div>
+                </div>
+            </div>
+
+            <!-- STEP 4: Tipos de exercício -->
+            <div class="form-step" data-step="4" data-step-id="exercise_types">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Quais exercícios você pratica?</h1>
+                            <p class="page-subtitle">Pode escolher mais de um.</p>
+                        </div>
+
+                        <div id="exercise-options-wrapper">
+                            <div class="selectable-options-grid">
+                                <input type="checkbox" id="ex1" name="exercise_types[]" value="Musculação">
+                                <label for="ex1" class="option-card small"><span>Musculação</span></label>
+
+                                <input type="checkbox" id="ex2" name="exercise_types[]" value="Corrida">
+                                <label for="ex2" class="option-card small"><span>Corrida</span></label>
+
+                                <input type="checkbox" id="ex3" name="exercise_types[]" value="Crossfit">
+                                <label for="ex3" class="option-card small"><span>Crossfit</span></label>
+
+                                <input type="checkbox" id="ex4" name="exercise_types[]" value="Natação">
+                                <label for="ex4" class="option-card small"><span>Natação</span></label>
+
+                                <input type="checkbox" id="ex5" name="exercise_types[]" value="Yoga">
+                                <label for="ex5" class="option-card small"><span>Yoga</span></label>
+
+                                <input type="checkbox" id="ex6" name="exercise_types[]" value="Futebol">
+                                <label for="ex6" class="option-card small"><span>Futebol</span></label>
+
+                                <button type="button" class="option-button small" id="other-activity-btn">
+                                    <span>Outro</span>
+                                </button>
+
+                                <input type="checkbox" id="ex-none" name="exercise_type_none">
+                                <label for="ex-none" class="option-card small option-none"><span>Nenhum</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-helper">Se você não pratica exercícios hoje, marque "Nenhum".</div>
+                </div>
+            </div>
+
+            <!-- STEP 5: Frequência de treino (pula se marcar Nenhuma) -->
+            <div class="form-step" data-step="5" data-step-id="exercise_frequency">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Com que frequência você treina?</h1>
+                            <p class="page-subtitle">Conte apenas os dias em que você realmente se movimenta.</p>
+                        </div>
+                        <div class="selectable-options" id="frequency-wrapper">
+                            <input type="radio" id="freq1" name="exercise_frequency" value="1_2x_week" required>
+                            <label for="freq1" class="option-card small"><span>1 a 2 vezes por semana</span></label>
+
+                            <input type="radio" id="freq2" name="exercise_frequency" value="3_4x_week" required>
+                            <label for="freq2" class="option-card small"><span>3 a 4 vezes por semana</span></label>
+
+                            <input type="radio" id="freq3" name="exercise_frequency" value="5_6x_week" required>
+                            <label for="freq3" class="option-card small"><span>5 a 6 vezes por semana</span></label>
+
+                            <input type="radio" id="freq4" name="exercise_frequency" value="6_7x_week" required>
+                            <label for="freq4" class="option-card small"><span>6 a 7 vezes por semana</span></label>
+
+                            <input type="radio" id="freq5" name="exercise_frequency" value="7plus_week" required>
+                            <label for="freq5" class="option-card small"><span>Mais de 7 vezes por semana</span></label>
+                        </div>
+                    </div>
+                    <div class="step-helper">Se você marcou "Nenhum" antes, essa etapa será pulada.</div>
+                </div>
+            </div>
+
+            <!-- STEP 6: Água -->
+            <div class="form-step" data-step="6" data-step-id="water">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Hidratação</h1>
+                            <p class="page-subtitle">Quanto de água você toma por dia, em média?</p>
+                        </div>
+                        <div class="selectable-options">
+                            <input type="radio" id="w1" name="water_intake_liters" value="_1l" required>
+                            <label for="w1" class="option-card small"><span>Até 1 litro</span></label>
+
+                            <input type="radio" id="w2" name="water_intake_liters" value="1_2l" required>
+                            <label for="w2" class="option-card small"><span>De 1 a 2 litros</span></label>
+
+                            <input type="radio" id="w3" name="water_intake_liters" value="2_3l" required>
+                            <label for="w3" class="option-card small"><span>De 2 a 3 litros</span></label>
+
+                            <input type="radio" id="w4" name="water_intake_liters" value="3plus_l" required>
+                            <label for="w4" class="option-card small"><span>Mais de 3 litros</span></label>
+                        </div>
+                    </div>
+                    <div class="step-helper">Inclua água pura, não conte refrigerantes ou sucos.</div>
+                </div>
+            </div>
+
+            <!-- STEP 7: Hora que deita -->
+            <div class="form-step" data-step="7" data-step-id="sleep_bed">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Seu horário de sono</h1>
+                            <p class="page-subtitle">Em média, que horas você costuma deitar?</p>
+                        </div>
+                        <div>
+                            <label class="input-label">Costumo deitar</label>
+                            <div class="form-control-wrapper">
+                                <input type="time" name="sleep_time_bed" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-helper">Não precisa ser exato, apenas a rotina geral.</div>
+                </div>
+            </div>
+
+            <!-- STEP 8: Hora que acorda -->
+            <div class="form-step" data-step="8" data-step-id="sleep_wake">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">E que horas você costuma acordar?</h1>
+                            <p class="page-subtitle">Vamos entender melhor seu ritmo de sono.</p>
+                        </div>
+                        <div>
+                            <label class="input-label">Costumo levantar</label>
+                            <div class="form-control-wrapper">
+                                <input type="time" name="sleep_time_wake" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-helper">Se sua rotina muda, escolha o mais frequente.</div>
+                </div>
+            </div>
+
+            <!-- STEP 9: Carne -->
+            <div class="form-step" data-step="9" data-step-id="meat">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Consumo de carnes</h1>
+                            <p class="page-subtitle">Você consome carnes (vermelha e branca)?</p>
+                        </div>
+                        <div class="selectable-options">
+                            <input type="radio" id="meat_yes" name="meat_consumption" value="1" required>
+                            <label for="meat_yes" class="option-card"><span>Sim, como carne</span></label>
+
+                            <input type="radio" id="meat_no" name="meat_consumption" value="0" required>
+                            <label for="meat_no" class="option-card"><span>Não, não consumo carnes</span></label>
+                        </div>
+                    </div>
+                    <div class="step-helper">Se você marcar “Sim”, vamos pular os tipos de vegetarianismo.</div>
+                </div>
+            </div>
+
+            <!-- STEP 10: Tipo vegetariano (pula se come carne) -->
+            <div class="form-step" data-step="10" data-step-id="vegetarian">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Entendido!</h1>
+                            <p class="page-subtitle">Qual opção melhor descreve você hoje?</p>
+                        </div>
+                        <div class="selectable-options">
+                            <input type="radio" id="veg1" name="vegetarian_type" value="strict_vegetarian" required>
+                            <label for="veg1" class="option-card small"><span>Vegetariano estrito</span></label>
+
+                            <input type="radio" id="veg2" name="vegetarian_type" value="ovolacto" required>
+                            <label for="veg2" class="option-card small"><span>Ovolactovegetariano</span></label>
+
+                            <input type="radio" id="veg3" name="vegetarian_type" value="vegan" required>
+                            <label for="veg3" class="option-card small"><span>Vegano</span></label>
+
+                            <input type="radio" id="veg4" name="vegetarian_type" value="not_like" required>
+                            <label for="veg4" class="option-card small"><span>Apenas não gosto de carnes</span></label>
+                        </div>
+                    </div>
+                    <div class="step-helper">Se você não come carne, isso ajuda a montar substituições adequadas.</div>
+                </div>
+            </div>
+
+            <!-- STEP 11: Lactose -->
+            <div class="form-step" data-step="11" data-step-id="lactose">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Intolerância à lactose</h1>
+                            <p class="page-subtitle">Você tem intolerância à lactose?</p>
+                        </div>
+                        <div class="selectable-options">
+                            <input type="radio" id="lac_yes" name="lactose_intolerance" value="1" required>
+                            <label for="lac_yes" class="option-card"><span>Sim</span></label>
+
+                            <input type="radio" id="lac_no" name="lactose_intolerance" value="0" required>
+                            <label for="lac_no" class="option-card"><span>Não</span></label>
+                        </div>
+                    </div>
+                    <div class="step-helper">Inclui desconfortos como gases, dores ou inchaço após laticínios.</div>
+                </div>
+            </div>
+
+            <!-- STEP 12: Glúten -->
+            <div class="form-step" data-step="12" data-step-id="gluten">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">E quanto ao glúten?</h1>
+                            <p class="page-subtitle">Você tem alguma restrição ao glúten?</p>
+                        </div>
+                        <div class="selectable-options">
+                            <input type="radio" id="glu_yes" name="gluten_intolerance" value="1" required>
+                            <label for="glu_yes" class="option-card"><span>Sim</span></label>
+
+                            <input type="radio" id="glu_no" name="gluten_intolerance" value="0" required>
+                            <label for="glu_no" class="option-card"><span>Não</span></label>
+                        </div>
+                    </div>
+                    <div class="step-helper">Isso inclui doença celíaca, sensibilidade ou recomendação médica.</div>
+                </div>
+            </div>
+
+            <!-- STEP 13: Localização -->
+            <div class="form-step" data-step="13" data-step-id="location">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Onde você mora?</h1>
+                            <p class="page-subtitle">Isso ajuda a adaptar sua realidade de alimentos.</p>
+                        </div>
+                        <div class="flex-row">
+                            <div class="select-wrapper" style="flex: 0 0 90px;">
+                                <select name="uf" id="uf-select" class="form-control" required>
+                                    <option value="" disabled selected>UF</option>
+                                </select>
+                            </div>
+                            <div class="form-control-wrapper" style="flex-grow: 1;">
+                                <input type="text" name="city" class="form-control" placeholder="Cidade" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-helper">Exemplo: SP - São Paulo, RJ - Rio de Janeiro.</div>
+                </div>
+            </div>
+
+            <!-- STEP 14: Telefone -->
+            <div class="form-step" data-step-id="phone">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Seu WhatsApp</h1>
+                            <p class="page-subtitle">Usaremos esse contato se o profissional precisar falar com você.</p>
+                        </div>
+                        <div class="flex-row">
+                            <div class="form-control-wrapper" style="flex: 0 0 80px;">
+                                <input type="tel" name="phone_ddd" class="form-control" placeholder="DDD" maxlength="2" required pattern="[0-9]*">
+                            </div>
+                            <div class="form-control-wrapper" style="flex-grow: 1;">
+                                <input type="tel" name="phone_number" class="form-control" placeholder="Celular" maxlength="9" required pattern="[0-9]*">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-helper">Apenas números, sem traços ou parênteses.</div>
+                </div>
+            </div>
+
+            <!-- STEP 15: Data de nascimento + Gênero -->
+            <div class="form-step" data-step-id="dob_gender">
+                <div class="step-content">
+                    <div class="step-main">
+                        <div>
+                            <h1 class="page-title">Último passo!</h1>
+                            <p class="page-subtitle">Complete seus dados para criar seu plano.</p>
+                        </div>
+
+                        <div>
+                            <label class="input-label">Data de nascimento</label>
+                            <div class="form-control-wrapper">
+                                <input type="date" name="dob" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="input-label">Com qual gênero você se identifica?</label>
+                            <div class="select-wrapper">
+                                <select name="gender" class="form-control" required>
+                                    <option value="" disabled selected>Selecione uma opção</option>
+                                    <option value="female">Mulher</option>
+                                    <option value="male">Homem</option>
+                                    <option value="other">Outro</option>
+                                    <option value="not_informed">Prefiro não informar</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-helper">Essas informações são importantes para cálculos e personalização.</div>
+                </div>
+            </div>
+
+            <footer class="footer-nav">
+                <button type="button" id="action-btn" class="btn-primary" disabled>Continuar</button>
+                <button type="button" id="exit-btn" class="exit-button">Sair do questionário</button>
+            </footer>
+        </form>
+    </div>
+
+    <!-- MODAL ATIVIDADES CUSTOMIZADAS -->
+    <div class="modal-overlay" id="custom-activity-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Adicionar atividade</h2>
+                <button type="button" class="modal-close-btn" id="close-modal-icon">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="modal-tags-container" id="custom-activities-list"></div>
+            
+            <div class="modal-input-section">
+                <div class="form-control-wrapper">
+                    <input type="text" id="custom-activity-input" class="form-control" placeholder="Ex: Tênis de mesa">
+                </div>
+                <button type="button" id="add-activity-btn" class="modal-add-btn">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" id="close-modal-btn" class="btn-primary">Concluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Prevenir scroll completamente
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevenir scroll via touch (exceto em inputs e modal)
+            document.body.addEventListener('touchmove', function(e) {
+                const target = e.target;
+                const isInput = target.matches('input, select, textarea');
+                const isModal = target.closest('.modal-content');
+                if (!isInput && !isModal) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Prevenir scroll via mouse wheel
+            document.body.addEventListener('wheel', function(e) {
+                const target = e.target;
+                const isInput = target.matches('input, select, textarea');
+                const isModal = target.closest('.modal-content');
+                if (!isInput && !isModal) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            document.body.addEventListener('mousewheel', function(e) {
+                const target = e.target;
+                const isInput = target.matches('input, select, textarea');
+                const isModal = target.closest('.modal-content');
+                if (!isInput && !isModal) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Prevenir scroll via teclado (exceto em inputs)
+            document.body.addEventListener('keydown', function(e) {
+                if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
+                    const target = e.target;
+                    if (!target.matches('input, select, textarea')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            });
+            
+            // Prevenir pull-to-refresh no mobile
+            let lastTouchY = 0;
+            document.body.addEventListener('touchstart', function(e) {
+                lastTouchY = e.touches[0].clientY;
+            }, { passive: true });
+            
+            // Forçar scroll para 0 sempre
+            function lockScroll() {
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+            }
+            
+            window.addEventListener('scroll', lockScroll);
+            window.addEventListener('resize', lockScroll);
+            lockScroll();
+        });
+
+        // Carregar estados (UF) da API do IBGE
+        async function loadStates() {
+            try {
+                const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+                const estados = await response.json();
+                const ufSelect = document.getElementById('uf-select');
+                estados.forEach(uf => {
+                    const option = document.createElement('option');
+                    option.value = uf.sigla;
+                    option.textContent = uf.sigla;
+                    ufSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar estados:', error);
+            }
+        }
+
+        // Placeholder pra futuro: carregar nome
+        async function loadUserName() {
+            // Pode ser ajustado depois com base no token/localStorage
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStates();
+            loadUserName();
+
+            // Valores padrão para inputs de horário
+            document.querySelector('input[name="sleep_time_bed"]').value = "00:00";
+            document.querySelector('input[name="sleep_time_wake"]').value = "00:00";
+
+            // Data de nascimento = hoje por padrão
+            const today = new Date().toISOString().split("T")[0];
+            document.querySelector('input[name="dob"]').value = today;
+
+            const form = document.getElementById('onboarding-form');
+            const steps = Array.from(form.querySelectorAll('.form-step'));
+            const actionBtn = document.getElementById('action-btn');
+            const backBtn = document.getElementById('back-btn');
+            const exitBtn = document.getElementById('exit-btn');
+            const headerNav = document.querySelector('.header-nav');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+            const stepIndicatorText = document.getElementById('step-indicator-text');
+
+            // Verificar se usuário já completou onboarding antes (para mostrar botão de sair)
+            async function checkIfUserCompletedOnboarding() {
+                try {
+                    const token = getAuthToken();
+                    if (!token) return false;
+
+                    const response = await fetch(`${window.BASE_APP_URL}/api/get_user_info.php`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.user && result.user.onboarding_complete) {
+                            return true;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar onboarding:', error);
+                }
+                return false;
+            }
+
+            // Verificar se é refazer (via URL ou se já completou antes)
+            const urlParams = new URLSearchParams(window.location.search);
+            const isRefazerUrl = urlParams.get('refazer') === 'true';
+            let isRefazer = false;
+            
+            // Verificar se já completou onboarding e esconder steps desnecessários
+            checkIfUserCompletedOnboarding().then(hasCompleted => {
+                isRefazer = isRefazerUrl || hasCompleted;
+                
+                if (isRefazer && exitBtn) {
+                    exitBtn.classList.add('show');
+                    console.log('Botão de sair mostrado - usuário já completou onboarding');
+                }
+                
+                // Esconder steps que não são necessários ao refazer
+                if (isRefazer) {
+                    const stepsToHide = ['location', 'phone', 'dob_gender'];
+                    stepsToHide.forEach(stepId => {
+                        const step = form.querySelector(`[data-step-id="${stepId}"]`);
+                        if (step) {
+                            step.style.display = 'none';
+                            console.log(`Step ${stepId} escondido (refazer onboarding)`);
+                        }
+                    });
+                    
+                    // Buscar e aplicar restrição de peso
+                    getWeightEditInfo().then(weightInfo => {
+                        if (weightInfo) {
+                            const weightInput = document.getElementById('weight-input');
+                            const weightMessage = document.getElementById('weight-restriction-message');
+                            const daysRemaining = document.getElementById('days-remaining');
+                            const daysText = document.getElementById('days-text');
+                            
+                            if (weightInput && weightMessage && daysRemaining && daysText) {
+                                if (!weightInfo.can_edit) {
+                                    // Buscar peso atual do usuário
+                                    fetch(`${window.BASE_APP_URL}/api/get_dashboard_data.php`, {
+                                        method: 'GET',
+                                        headers: {
+                                            'Authorization': `Bearer ${getAuthToken()}`
+                                        }
+                                    })
+                                    .then(res => res.json())
+                                    .then(result => {
+                                        if (result.success && result.data && result.data.weight_banner) {
+                                            // Extrair o peso do formato "XX.Xkg"
+                                            const currentWeight = result.data.weight_banner.current_weight;
+                                            if (currentWeight) {
+                                                const weightValue = currentWeight.replace('kg', '').trim();
+                                                weightInput.value = weightValue.replace(',', '.');
+                                            }
+                                        }
+                                    })
+                                    .catch(err => console.error('Erro ao buscar peso atual:', err));
+                                    
+                                    weightInput.readOnly = true;
+                                    weightInput.style.opacity = '0.6';
+                                    weightInput.required = false;
+                                    weightMessage.style.display = 'block';
+                                    daysRemaining.textContent = weightInfo.days_remaining;
+                                    daysText.textContent = weightInfo.days_remaining === 1 ? 'dia' : 'dias';
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Buscar informações de peso (verificação de 7 dias)
+            async function getWeightEditInfo() {
+                try {
+                    const token = getAuthToken();
+                    if (!token) return null;
+
+                    const response = await fetch(`${window.BASE_APP_URL}/api/get_dashboard_data.php`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data) {
+                            // Verificar se tem weight_banner
+                            if (result.data.weight_banner) {
+                                return {
+                                    can_edit: result.data.weight_banner.show_edit_button !== false,
+                                    days_remaining: result.data.weight_banner.days_until_update || 0
+                                };
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar info de peso:', error);
+                }
+                return null;
+            }
+
+            const otherActivityBtn = document.getElementById('other-activity-btn');
+            const modal = document.getElementById('custom-activity-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const closeModalIcon = document.getElementById('close-modal-icon');
+            const addActivityBtn = document.getElementById('add-activity-btn');
+            const activityInput = document.getElementById('custom-activity-input');
+            const activityList = document.getElementById('custom-activities-list');
+            const hiddenInput = document.getElementById('custom-activities-hidden-input');
+
+            const noneCheckbox = document.getElementById('ex-none');
+            const exerciseOptionsWrapper = document.getElementById('exercise-options-wrapper');
+            const frequencyWrapper = document.getElementById('frequency-wrapper');
+            const allExerciseCheckboxes = exerciseOptionsWrapper.querySelectorAll('input[type="checkbox"]');
+
+            let stepHistory = [0];
+            let customActivities = [];
+
+            // Filtrar steps visíveis (não escondidos)
+            function getVisibleSteps() {
+                return steps.filter(step => step.style.display !== 'none');
+            }
+
+            function getVisibleStepIndex(originalIndex) {
+                const visibleSteps = getVisibleSteps();
+                let visibleIndex = 0;
+                for (let i = 0; i <= originalIndex; i++) {
+                    if (steps[i].style.display !== 'none') {
+                        visibleIndex++;
+                    }
+                }
+                return visibleIndex;
+            }
+
+            const visibleSteps = getVisibleSteps();
+            const totalSteps = visibleSteps.length;
+
+            function updateProgress(stepIndex) {
+                // Contar apenas steps visíveis até o atual
+                const visibleCount = getVisibleStepIndex(stepIndex);
+                const percent = (visibleCount / totalSteps) * 100;
+                progressBarFill.style.width = percent + '%';
+                stepIndicatorText.textContent = `Passo ${visibleCount} de ${totalSteps}`;
+            }
+
+            function renderTags() {
+                activityList.innerHTML = '';
+                customActivities.forEach(activity => {
+                    const tag = document.createElement('div');
+                    tag.className = 'activity-tag';
+                    const tagText = document.createTextNode(activity);
+                    tag.appendChild(tagText);
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-tag';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.onclick = () => {
+                        customActivities = customActivities.filter(item => item !== activity);
+                        renderTags();
+                        updateButtonState();
+                    };
+                    tag.appendChild(removeBtn);
+                    activityList.appendChild(tag);
+                });
+                hiddenInput.value = customActivities.join(',');
+                otherActivityBtn.classList.toggle('active', customActivities.length > 0);
+
+                // Se tiver atividade customizada e não estiver marcado "Nenhuma", selecionar frequência mínima por padrão
+                if (customActivities.length > 0 && frequencyWrapper && !noneCheckbox.checked) {
+                    const freqRadios = frequencyWrapper.querySelectorAll('input[type="radio"]');
+                    const hasFrequencySelected = Array.from(freqRadios).some(radio => radio.checked);
+                    if (!hasFrequencySelected) {
+                        const minFreqRadio = document.getElementById('freq1');
+                        if (minFreqRadio) {
+                            minFreqRadio.checked = true;
+                        }
+                    }
+                }
+
+                updateButtonState();
+            }
+
+            function addActivity() {
+                const newActivity = activityInput.value.trim();
+                if (newActivity && !customActivities.includes(newActivity)) {
+                    customActivities.push(newActivity);
+                    activityInput.value = '';
+                    renderTags();
+                }
+                activityInput.focus();
+            }
+
+            // Modal de atividade
+            otherActivityBtn.addEventListener('click', () => {
+                modal.classList.add('active');
+                setTimeout(() => {
+                    activityInput.focus();
+                }, 80);
+            });
+
+            function closeModal() {
+                modal.classList.remove('active');
+            }
+
+            closeModalBtn.addEventListener('click', closeModal);
+            closeModalIcon.addEventListener('click', closeModal);
+
+            addActivityBtn.addEventListener('click', addActivity);
+            activityInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addActivity();
+                }
+            });
+
+            // Lógica "Nenhum"
+            noneCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+
+                if (isChecked) {
+                    // Desmarcar todos os outros exercícios
+                    allExerciseCheckboxes.forEach(cb => {
+                        if (cb.id !== 'ex-none') {
+                            cb.checked = false;
+                            cb.disabled = true;
+                        }
+                    });
+
+                    // Limpar atividades customizadas
+                    customActivities = [];
+                    renderTags();
+
+                    // Desabilitar frequência
+                    if (frequencyWrapper) {
+                        const freqRadios = frequencyWrapper.querySelectorAll('input[type="radio"]');
+                        freqRadios.forEach(radio => {
+                            radio.checked = false;
+                            radio.disabled = true;
+                        });
+                    }
+
+                    // Desabilitar botão "Outro"
+                    if (otherActivityBtn) {
+                        otherActivityBtn.disabled = true;
+                        otherActivityBtn.style.opacity = '0.5';
+                        otherActivityBtn.style.pointerEvents = 'none';
+                    }
+
+                    // Adicionar classe disabled (apenas para desabilitar inputs, não visual)
+                    if (exerciseOptionsWrapper) {
+                        exerciseOptionsWrapper.classList.add('disabled');
+                    }
+                    if (frequencyWrapper) {
+                        frequencyWrapper.classList.add('disabled');
+                    }
+                } else {
+                    // Reabilitar todos os exercícios
+                    allExerciseCheckboxes.forEach(cb => {
+                        if (cb.id !== 'ex-none') {
+                            cb.disabled = false;
+                            cb.checked = false;
+                        }
+                    });
+
+                    // Reabilitar frequência
+                    if (frequencyWrapper) {
+                        const freqRadios = frequencyWrapper.querySelectorAll('input[type="radio"]');
+                        freqRadios.forEach(radio => {
+                            radio.disabled = false;
+                            radio.checked = false;
+                        });
+                    }
+
+                    // Reabilitar botão "Outro"
+                    if (otherActivityBtn) {
+                        otherActivityBtn.disabled = false;
+                        otherActivityBtn.style.opacity = '1';
+                        otherActivityBtn.style.pointerEvents = 'auto';
+                    }
+
+                    // Remover classe disabled
+                    if (exerciseOptionsWrapper) {
+                        exerciseOptionsWrapper.classList.remove('disabled');
+                    }
+                    if (frequencyWrapper) {
+                        frequencyWrapper.classList.remove('disabled');
+                    }
+                }
+
+                updateButtonState();
+            });
+
+            // Reagir a cliques no wrapper para "cancelar" o Nenhum automaticamente
+            exerciseOptionsWrapper.addEventListener('click', function(e) {
+                if (noneCheckbox && noneCheckbox.checked) {
+                    const clickedElement = e.target.closest('label, .option-button, button');
+                    const noneLabel = noneCheckbox.closest('label');
+
+                    // Se clicou em qualquer exercício (exceto o próprio "Nenhum"), desmarcar "Nenhum"
+                    if (clickedElement && clickedElement !== noneLabel) {
+                        // Verificar se é um label de exercício ou o botão "Outro"
+                        const isExerciseLabel = clickedElement.tagName === 'LABEL' && clickedElement.getAttribute('for') && clickedElement.getAttribute('for') !== 'ex-none';
+                        const isOtherButton = clickedElement.id === 'other-activity-btn' || clickedElement.classList.contains('option-button');
+                        
+                        if (isExerciseLabel || isOtherButton) {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            // Desmarcar "Nenhum"
+                            noneCheckbox.checked = false;
+                            
+                            // Reabilitar todos os exercícios
+                            allExerciseCheckboxes.forEach(cb => {
+                                if (cb.id !== 'ex-none') {
+                                    cb.disabled = false;
+                                    cb.checked = false;
+                                }
+                            });
+
+                            // Limpar atividades custom
+                            customActivities = [];
+                            renderTags();
+
+                            // Reabilitar frequência
+                            if (frequencyWrapper) {
+                                const freqRadios = frequencyWrapper.querySelectorAll('input[type="radio"]');
+                                freqRadios.forEach(radio => {
+                                    radio.disabled = false;
+                                    radio.checked = false;
+                                });
+                            }
+
+                            // Reabilitar botão "Outro"
+                            if (otherActivityBtn) {
+                                otherActivityBtn.disabled = false;
+                                otherActivityBtn.style.opacity = '1';
+                                otherActivityBtn.style.pointerEvents = 'auto';
+                            }
+
+                            // Remover classe disabled
+                            if (exerciseOptionsWrapper) {
+                                exerciseOptionsWrapper.classList.remove('disabled');
+                            }
+                            if (frequencyWrapper) {
+                                frequencyWrapper.classList.remove('disabled');
+                            }
+
+                            updateButtonState();
+                        }
+                    }
+                }
+            });
+
+            allExerciseCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    if (this.id !== 'ex-none') {
+                        if (this.checked && frequencyWrapper) {
+                            const freqRadios = frequencyWrapper.querySelectorAll('input[type="radio"]');
+                            const hasFrequencySelected = Array.from(freqRadios).some(radio => radio.checked);
+
+                            if (!hasFrequencySelected) {
+                                const minFreqRadio = document.getElementById('freq1');
+                                if (minFreqRadio) {
+                                    minFreqRadio.checked = true;
+                                }
+                            }
+                        }
+
+                        if (!this.checked && frequencyWrapper) {
+                            const anyExerciseSelected = Array.from(allExerciseCheckboxes).some(cb => cb.checked && cb.id !== 'ex-none') || customActivities.length > 0;
+                            if (!anyExerciseSelected) {
+                                const freqRadios = frequencyWrapper.querySelectorAll('input[type="radio"]');
+                                freqRadios.forEach(radio => radio.checked = false);
+                            }
+                        }
+
+                        if (this.checked && noneCheckbox) {
+                            noneCheckbox.checked = false;
+                            allExerciseCheckboxes.forEach(cb => cb.disabled = false);
+                            if (frequencyWrapper) {
+                                const freqRadios = frequencyWrapper.querySelectorAll('input[type="radio"]');
+                                freqRadios.forEach(radio => radio.disabled = false);
+                            }
+                            if (otherActivityBtn) {
+                                otherActivityBtn.disabled = false;
+                                otherActivityBtn.style.opacity = '1';
+                                otherActivityBtn.style.pointerEvents = 'auto';
+                            }
+                            if (exerciseOptionsWrapper) {
+                                exerciseOptionsWrapper.classList.remove('disabled');
+                            }
+                            if (frequencyWrapper) {
+                                frequencyWrapper.classList.remove('disabled');
+                            }
+                        }
+
+                        updateButtonState();
+                    }
+                });
+            });
+
+            const updateButtonState = () => {
+                const currentStepIndex = stepHistory[stepHistory.length - 1];
+                const currentStepDiv = steps[currentStepIndex];
+                if (!currentStepDiv) return;
+
+                const stepId = currentStepDiv.dataset.stepId;
+                let isStepValid = false;
+
+                if (stepId === 'exercise_types') {
+                    if (noneCheckbox.checked) {
+                        isStepValid = true;
+                    } else {
+                        const anyExerciseSelected = currentStepDiv.querySelector('input[name="exercise_types[]"]:checked') || customActivities.length > 0;
+                        isStepValid = !!anyExerciseSelected;
+                    }
+                } else if (stepId === 'exercise_frequency') {
+                    // Se "Nenhuma / Não pratico", esse step será pulado
+                    if (noneCheckbox.checked) {
+                        isStepValid = true;
+                    } else {
+                        const freqSelected = currentStepDiv.querySelector('input[name="exercise_frequency"]:checked');
+                        isStepValid = !!freqSelected;
+                    }
+                } else if (stepId === 'meat') {
+                    const selected = form.querySelector('input[name="meat_consumption"]:checked');
+                    isStepValid = !!selected;
+                } else if (stepId === 'weight') {
+                    // Se o input de peso estiver readonly (restrição de 7 dias), sempre válido
+                    const weightInput = document.getElementById('weight-input');
+                    if (weightInput && weightInput.readOnly) {
+                        isStepValid = true;
+                    } else {
+                        const weightValue = weightInput ? weightInput.value.trim() : '';
+                        isStepValid = weightValue !== '' && weightInput.checkValidity();
+                    }
+                } else {
+                    const inputs = currentStepDiv.querySelectorAll('input[required], select[required]');
+                    isStepValid = Array.from(inputs).every(input => {
+                        if (input.type === 'radio' || input.type === 'checkbox') {
+                            const checked = form.querySelector(`input[name="${input.name}"]:checked`);
+                            return checked !== null;
+                        }
+                        if (input.tagName === 'SELECT') {
+                            return input.value !== '';
+                        }
+                        return input.value.trim() !== '' && input.checkValidity();
+                    });
+                }
+
+                actionBtn.disabled = !isStepValid;
+            };
+
+            const showStep = (stepIndex) => {
+                steps.forEach((step, index) => {
+                    step.classList.toggle('active', index === stepIndex);
+                });
+
+                headerNav.style.visibility = (stepIndex > 0) ? 'visible' : 'hidden';
+                actionBtn.textContent = (stepIndex === steps.length - 1) ? 'Finalizar e criar plano' : 'Continuar';
+                updateProgress(stepIndex);
+                updateButtonState();
+            };
+
+            actionBtn.addEventListener('click', async () => {
+                if (actionBtn.disabled) return;
+
+                let currentStepIndex = stepHistory[stepHistory.length - 1];
+                const currentStepDiv = steps[currentStepIndex];
+                const currentStepId = currentStepDiv.dataset.stepId;
+
+                // Último passo -> enviar
+                if (currentStepIndex === steps.length - 1) {
+                    actionBtn.disabled = true;
+                    actionBtn.textContent = 'Processando...';
+
+                    const formData = new FormData(form);
+                    const data = {};
+
+                    for (let [key, value] of formData.entries()) {
+                        if (key === 'exercise_types[]') {
+                            if (!data['exercise_types']) data['exercise_types'] = [];
+                            data['exercise_types'].push(value);
+                        } else {
+                            data[key] = value;
+                        }
+                    }
+
+                    // Atividades customizadas
+                    data.custom_activities = customActivities.join(',');
+                    // Checkbox "não pratico"
+                    data.exercise_type_none = noneCheckbox.checked ? '1' : '';
+
+                    try {
+                        const token = getAuthToken();
+                        const response = await fetch(`${window.BASE_APP_URL}/api/process_onboarding.php`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Se um novo token foi retornado (usuário foi criado), atualizar o token armazenado
+                            if (result.token) {
+                                setAuthToken(result.token);
+                            }
+                            window.location.href = result.redirect_url || `${window.BASE_APP_URL}/dashboard.html`;
+                        } else {
+                            alert(result.message || 'Erro ao processar onboarding. Tente novamente.');
+                            actionBtn.disabled = false;
+                            actionBtn.textContent = 'Finalizar e criar plano';
+                        }
+                    } catch (error) {
+                        console.error('Erro ao processar onboarding:', error);
+                        alert('Erro ao conectar com o servidor. Tente novamente.');
+                        actionBtn.disabled = false;
+                        actionBtn.textContent = 'Finalizar e criar plano';
+                    }
+                    return;
+                }
+
+                // Navegação normal + pulos de step
+                let nextStepIndex = currentStepIndex + 1;
+
+                // Se estiver saindo do step de exercícios e marcou "Nenhuma", pula frequência
+                if (currentStepId === 'exercise_types' && noneCheckbox.checked) {
+                    const freqIndex = steps.findIndex(step => step.dataset.stepId === 'exercise_frequency');
+                    if (freqIndex > currentStepIndex) {
+                        nextStepIndex = freqIndex + 1;
+                    }
+                }
+
+                // Se estiver saindo do step de carne e marcou "Sim", pula vegetariano
+                if (currentStepId === 'meat') {
+                    const meatSelected = form.querySelector('input[name="meat_consumption"]:checked');
+                    if (meatSelected && meatSelected.value === '1') {
+                        const vegIndex = steps.findIndex(step => step.dataset.stepId === 'vegetarian');
+                        if (vegIndex > currentStepIndex) {
+                            nextStepIndex = vegIndex + 1;
+                        }
+                    }
+                }
+
+                // Pular steps escondidos (quando refazer)
+                while (nextStepIndex < steps.length && steps[nextStepIndex].style.display === 'none') {
+                    nextStepIndex++;
+                }
+
+                // Garantir que não passa do último
+                if (nextStepIndex >= steps.length) {
+                    nextStepIndex = steps.length - 1;
+                    // Se o último também estiver escondido, encontrar o último visível
+                    while (nextStepIndex >= 0 && steps[nextStepIndex].style.display === 'none') {
+                        nextStepIndex--;
+                    }
+                }
+
+                stepHistory.push(nextStepIndex);
+                showStep(nextStepIndex);
+            });
+
+            if (backBtn) {
+                backBtn.addEventListener('click', () => {
+                    if (backBtn.disabled) return;
+                    backBtn.disabled = true;
+
+                    if (stepHistory.length > 1) {
+                        stepHistory.pop();
+                        showStep(stepHistory[stepHistory.length - 1]);
+                    }
+
+                    setTimeout(() => {
+                        backBtn.disabled = false;
+                    }, 250);
+                });
+            }
+
+            // Botão de sair (só aparece quando é refazer)
+            if (exitBtn) {
+                exitBtn.addEventListener('click', () => {
+                    // Sempre redirecionar para dashboard quando clicar em sair
+                    window.location.href = window.BASE_APP_URL + '/dashboard.html';
+                });
+            }
+
+            form.addEventListener('input', updateButtonState);
+            form.addEventListener('change', updateButtonState);
+
+            showStep(stepHistory[0]);
+        });
+    </script>
+</body>
+</html>

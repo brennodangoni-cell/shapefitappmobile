@@ -1,0 +1,354 @@
+<div class="page-root">
+    <style>
+/* === CREATE CUSTOM FOOD PAGE - PREFIXO ccf- === */
+
+/* Container principal */
+.ccf-container {
+    padding: 20px 16px 100px 16px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Header */
+.ccf-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.ccf-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.ccf-back-btn:hover,
+.ccf-back-btn:active {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #ff6b00;
+}
+
+.ccf-title {
+    flex: 1;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+}
+
+/* Cards */
+.ccf-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.ccf-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ff6b00;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 16px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Form Groups */
+.ccf-form-group {
+    margin-bottom: 16px;
+}
+
+.ccf-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.ccf-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+}
+
+/* Inputs - SEM ESPAÇO FANTASMA */
+.ccf-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: #fff;
+    font-size: 15px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    /* Remover estilos nativos */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    /* Alinhar texto à esquerda */
+    text-align: left;
+    text-indent: 0;
+    margin: 0;
+}
+
+.ccf-input:focus {
+    outline: none;
+    border-color: #ff6b00;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.ccf-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Inputs numéricos - remover setas */
+.ccf-input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.ccf-input[type="number"]::-webkit-outer-spin-button,
+.ccf-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    display: none;
+}
+
+/* Grid de nutrição */
+.ccf-nutrition-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 400px) {
+    .ccf-nutrition-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Barcode info */
+.ccf-barcode-info {
+    background: rgba(255, 107, 0, 0.1);
+    border: 1px solid rgba(255, 107, 0, 0.3);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ccf-barcode-info i {
+    font-size: 24px;
+    color: #ff6b00;
+}
+
+.ccf-barcode-text strong {
+    display: block;
+    color: #fff;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.ccf-barcode-text span {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+}
+
+/* Botão de salvar */
+.ccf-save-card {
+    margin-top: 8px;
+}
+
+.ccf-save-btn {
+    width: 100%;
+    height: 52px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.ccf-save-btn:hover,
+.ccf-save-btn:active {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 107, 0, 0.3);
+}
+
+.ccf-save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Alertas */
+.ccf-alert {
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.ccf-alert-danger {
+    background: rgba(220, 53, 69, 0.15);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: #ff6b6b;
+}
+
+.ccf-alert-success {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    color: #51cf66;
+}
+    </style>
+
+    <div class="ccf-container">
+        <!-- Header -->
+        <div class="ccf-header">
+            <a href="/adicionar-alimento" class="ccf-back-btn" id="ccf-back-btn">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <h1 class="ccf-title">Cadastrar Alimento</h1>
+        </div>
+
+        <!-- Form -->
+        <form id="custom-food-form">
+            <div id="alert-container"></div>
+            
+            <!-- Barcode Info (hidden by default) -->
+            <div id="barcode-info" class="ccf-barcode-info" style="display: none;">
+                <i class="fas fa-barcode"></i>
+                <div class="ccf-barcode-text">
+                    <strong>Código de Barras Detectado</strong>
+                    <span id="barcode-value"></span>
+                </div>
+            </div>
+            
+            <!-- Informações Básicas -->
+            <div class="ccf-card">
+                <h3 class="ccf-section-title">Informações Básicas</h3>
+                
+                <div class="ccf-form-group">
+                    <label class="ccf-label" for="food_name">Nome do Alimento *</label>
+                    <input 
+                        type="text" 
+                        id="food_name" 
+                        name="food_name" 
+                        class="ccf-input" 
+                        placeholder="Ex: Pão de Forma Integral" 
+                        required>
+                </div>
+                
+                <div class="ccf-form-group">
+                    <label class="ccf-label" for="brand_name">Marca (opcional)</label>
+                    <input 
+                        type="text" 
+                        id="brand_name" 
+                        name="brand_name" 
+                        class="ccf-input" 
+                        placeholder="Ex: Wickbold">
+                </div>
+            </div>
+            
+            <!-- Informações Nutricionais -->
+            <div class="ccf-card">
+                <h3 class="ccf-section-title">Informação Nutricional (por 100g)</h3>
+                
+                <div class="ccf-nutrition-grid">
+                    <div class="ccf-form-group">
+                        <label class="ccf-label" for="kcal_100g">Calorias (kcal) *</label>
+                        <input 
+                            type="number" 
+                            id="kcal_100g" 
+                            name="kcal_100g" 
+                            class="ccf-input" 
+                            placeholder="Ex: 250" 
+                            required 
+                            step="0.1"
+                            min="0"
+                            inputmode="decimal">
+                    </div>
+                    
+                    <div class="ccf-form-group">
+                        <label class="ccf-label" for="protein_100g">Proteínas (g) *</label>
+                        <input 
+                            type="number" 
+                            id="protein_100g" 
+                            name="protein_100g" 
+                            class="ccf-input" 
+                            placeholder="Ex: 8.5" 
+                            required 
+                            step="0.1"
+                            min="0"
+                            inputmode="decimal">
+                    </div>
+                    
+                    <div class="ccf-form-group">
+                        <label class="ccf-label" for="carbs_100g">Carboidratos (g) *</label>
+                        <input 
+                            type="number" 
+                            id="carbs_100g" 
+                            name="carbs_100g" 
+                            class="ccf-input" 
+                            placeholder="Ex: 45.2" 
+                            required 
+                            step="0.1"
+                            min="0"
+                            inputmode="decimal">
+                    </div>
+                    
+                    <div class="ccf-form-group">
+                        <label class="ccf-label" for="fat_100g">Gorduras (g) *</label>
+                        <input 
+                            type="number" 
+                            id="fat_100g" 
+                            name="fat_100g" 
+                            class="ccf-input" 
+                            placeholder="Ex: 4.1" 
+                            required 
+                            step="0.1"
+                            min="0"
+                            inputmode="decimal">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botão de Salvar -->
+            <div class="ccf-card ccf-save-card">
+                <button type="submit" class="ccf-save-btn" id="submit-btn">
+                    <i class="fas fa-check"></i>
+                    Salvar Alimento
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/www-config.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/bottom-nav.js"></script>
+<script src="/assets/js/pages/create_custom_food/create_custom_food_inline_0.js"></script>
+<script src="/assets/js/pages/create_custom_food/create_custom_food_inline_1.js"></script>

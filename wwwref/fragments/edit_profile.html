@@ -1,0 +1,878 @@
+<div class="page-root">
+<style>
+/* =============================================
+   EDIT PROFILE - CSS Refatorado
+   Prefixo: ep- (Edit Profile)
+   ============================================= */
+
+/* =============================================
+   1. RESET DE PADDINGS EXTERNOS
+   ============================================= */
+.page-root:has(.ep-container) {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* =============================================
+   2. CONTAINER PRINCIPAL
+   ============================================= */
+.ep-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 16px 0 16px;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-bottom: 0 !important;
+}
+
+/* Botão salvar - pequeno respiro antes do menu */
+.ep-save-btn {
+    margin-bottom: 16px !important;
+}
+
+/* =============================================
+   2. HEADER
+   ============================================= */
+.ep-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 4px;
+}
+
+.ep-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.ep-back-btn:hover,
+.ep-back-btn:active {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--accent-orange);
+    color: var(--accent-orange);
+}
+
+.ep-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ep-title i {
+    color: var(--accent-orange);
+    font-size: 1.25rem;
+}
+
+/* =============================================
+   3. CARDS (Glass)
+   ============================================= */
+.ep-card {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 22px 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    margin-bottom: 20px;
+}
+
+.ep-card:last-of-type {
+    margin-bottom: 0;
+}
+
+/* Form precisa de display flex para gaps funcionarem */
+#edit-profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0; /* margin-bottom dos cards cuida do espaçamento */
+}
+
+.ep-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.ep-card-icon {
+    font-size: 1.25rem;
+    color: var(--accent-orange);
+}
+
+.ep-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* =============================================
+   4. FOTO DE PERFIL
+   ============================================= */
+.ep-photo-card {
+    text-align: center;
+    padding: 24px 20px;
+}
+
+.ep-photo-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+.ep-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent-orange);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.ep-photo:hover {
+    transform: scale(1.05);
+}
+
+.ep-photo-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: 3px solid var(--accent-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.ep-photo-placeholder:hover {
+    transform: scale(1.05);
+}
+
+.ep-photo-placeholder i {
+    font-size: 2.5rem;
+    color: var(--accent-orange);
+}
+
+.ep-photo-hint {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin: 0 0 12px 0;
+}
+
+.ep-remove-photo-btn {
+    background: rgba(255,59,48,0.1);
+    border: none;
+    color: #ff3b30;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s ease;
+}
+
+.ep-remove-photo-btn:hover {
+    background: rgba(255,59,48,0.2);
+}
+
+/* =============================================
+   5. FORMULÁRIO
+   ============================================= */
+.ep-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.ep-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.ep-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.ep-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.ep-input,
+.ep-select {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.ep-input:focus,
+.ep-select:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    background: rgba(255,255,255,0.08);
+    box-shadow: 0 0 0 3px rgba(255,140,0,0.1);
+}
+
+.ep-input-readonly {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.5);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    cursor: not-allowed;
+}
+
+/* Inputs date/number - remover ícones nativos */
+.ep-input[type="date"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    color-scheme: dark;
+}
+
+.ep-input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+.ep-input[type="number"] {
+    -webkit-appearance: textfield;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.ep-input[type="number"]::-webkit-outer-spin-button,
+.ep-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    display: none !important;
+    margin: 0;
+}
+
+/* Select wrapper com seta customizada */
+.ep-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.ep-select-wrapper .ep-select {
+    padding-right: 36px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.ep-select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    transition: color 0.2s ease;
+}
+
+.ep-select-wrapper:hover .ep-select-arrow,
+.ep-select:focus + .ep-select-arrow {
+    color: var(--accent-orange);
+}
+
+/* =============================================
+   6. BOTÃO DE LINK (Exercícios, Restrições)
+   ============================================= */
+.ep-link-btn {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    text-decoration: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ep-link-btn:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--accent-orange);
+}
+
+.ep-link-btn i {
+    color: var(--accent-orange);
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+}
+
+.ep-link-btn:hover i {
+    transform: translateX(3px);
+}
+
+/* =============================================
+   7. WEIGHT LOCK INFO
+   ============================================= */
+.ep-weight-lock {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--accent-orange);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* =============================================
+   8. STATUS / ALERTAS
+   ============================================= */
+.ep-status {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.ep-status-success {
+    background: rgba(52,211,153,0.1);
+    color: #34d399;
+    border: 1px solid rgba(52,211,153,0.2);
+}
+
+.ep-status-error {
+    background: rgba(239,68,68,0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.2);
+}
+
+/* =============================================
+   9. BOTÃO SALVAR
+   ============================================= */
+.ep-save-btn {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--accent-orange), #ff8c00);
+    border: none;
+    border-radius: 14px;
+    color: white;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+    transition: all 0.2s ease;
+}
+
+.ep-save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255,140,0,0.3);
+}
+
+.ep-save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* =============================================
+   10. MODAIS
+   ============================================= */
+.ep-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.25s ease;
+}
+
+.ep-modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ep-modal {
+    background: rgba(28,28,30,0.98);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 340px;
+    width: 90%;
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ep-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.ep-modal-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.ep-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.ep-modal-close:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+
+.ep-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.ep-modal-body::-webkit-scrollbar {
+    display: none;
+}
+
+.ep-modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.ep-modal-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.ep-modal-btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+
+.ep-modal-btn-secondary:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.ep-modal-btn-primary {
+    background: linear-gradient(135deg, var(--accent-orange), #ff8c00);
+    color: white;
+}
+
+.ep-modal-btn-primary:hover {
+    transform: translateY(-1px);
+}
+
+/* =============================================
+   11. RESTRIÇÕES GRID
+   ============================================= */
+.ep-restrictions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ep-restriction-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.ep-restriction-item:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+.ep-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.ep-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent-orange);
+}
+
+/* =============================================
+   12. CROP MODAL
+   ============================================= */
+.ep-crop-container {
+    width: 100%;
+    height: 260px;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    margin-bottom: 16px;
+}
+
+.ep-crop-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(20px) brightness(0.6);
+    -webkit-filter: blur(20px) brightness(0.6);
+    transform: scale(1.2);
+    z-index: 1;
+}
+
+.ep-crop-img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: none;
+    max-height: none;
+    cursor: move;
+    z-index: 10;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.ep-crop-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.ep-crop-circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border: 2px solid var(--accent-orange);
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);
+}
+
+/* =============================================
+   13. RESPONSIVO
+   ============================================= */
+@media (max-width: 400px) {
+    .ep-form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .ep-container {
+        padding: 12px 10px 120px 10px;
+    }
+    
+    .ep-card {
+        padding: 16px;
+    }
+}
+</style>
+
+<section class="ep-container">
+    <!-- Header -->
+    <div class="ep-header">
+        <a href="./more_options.html" class="ep-back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="ep-title">
+            <i class="fas fa-user-edit"></i>
+            Editar Perfil
+        </h1>
+    </div>
+
+    <form id="edit-profile-form">
+        <!-- Card Foto de Perfil -->
+        <div class="ep-card ep-photo-card">
+            <div class="ep-photo-wrapper">
+                <div id="profile-photo-display" class="ep-photo-placeholder profile-photo profile-icon-placeholder">
+                    <i class="fas fa-user"></i>
+                </div>
+                <input type="file" id="profile-photo-input" accept="image/*" style="display:none;">
+                <input type="hidden" id="remove-photo-flag" value="0">
+            </div>
+            <p class="ep-photo-hint">Toque para alterar</p>
+            <button type="button" id="remove-photo-btn" class="ep-remove-photo-btn" style="display:none;">
+                <i class="fas fa-trash"></i>
+                Remover
+            </button>
+        </div>
+
+        <!-- Card Informações Pessoais -->
+        <div class="ep-card">
+            <div class="ep-card-header">
+                <i class="fas fa-user ep-card-icon"></i>
+                <h3 class="ep-card-title">Informações Pessoais</h3>
+            </div>
+            <div class="ep-form-grid">
+                <div class="ep-form-group">
+                    <label for="full_name" class="ep-label">Nome Completo</label>
+                    <input type="text" id="full_name" name="full_name" class="ep-input form-input" required placeholder="Carregando...">
+                </div>
+                <div class="ep-form-group">
+                    <label class="ep-label">E-mail</label>
+                    <div class="ep-input-readonly" id="email-display">Carregando...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Informações Físicas -->
+        <div class="ep-card">
+            <div class="ep-card-header">
+                <i class="fas fa-weight ep-card-icon"></i>
+                <h3 class="ep-card-title">Informações Físicas</h3>
+            </div>
+            <div class="ep-form-grid">
+                <div class="ep-form-row">
+                    <div class="ep-form-group">
+                        <label for="dob" class="ep-label">Data de Nascimento</label>
+                        <input type="date" id="dob" name="dob" class="ep-input form-input" required>
+                    </div>
+                    <div class="ep-form-group">
+                        <label for="gender" class="ep-label">Gênero</label>
+                        <div class="ep-select-wrapper">
+                            <select id="gender" name="gender" class="ep-select form-select" required>
+                                <option value="male">Masculino</option>
+                                <option value="female">Feminino</option>
+                                <option value="other">Outro</option>
+                            </select>
+                            <i class="fas fa-chevron-down ep-select-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="ep-form-row">
+                    <div class="ep-form-group">
+                        <label for="height_cm" class="ep-label">Altura (cm)</label>
+                        <input type="number" id="height_cm" name="height_cm" class="ep-input form-input" min="100" max="250" step="0.1" required>
+                    </div>
+                    <div class="ep-form-group">
+                        <label for="weight_kg" class="ep-label">Peso Atual (kg)</label>
+                        <input type="number" id="weight_kg" name="weight_kg" class="ep-input form-input" min="30" max="300" step="0.1" required>
+                        <div id="weight-lock-info" class="ep-weight-lock" style="display:none;">
+                            <i class="fas fa-clock"></i>
+                            <span id="weight-lock-text"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ep-form-group">
+                    <label for="objective" class="ep-label">Objetivo Principal</label>
+                    <div class="ep-select-wrapper">
+                        <select id="objective" name="objective" class="ep-select form-select" required>
+                            <option value="lose_fat">Emagrecimento</option>
+                            <option value="maintain_weight">Manter Peso</option>
+                            <option value="gain_muscle">Hipertrofia</option>
+                        </select>
+                        <i class="fas fa-chevron-down ep-select-arrow"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Estilo de Vida -->
+        <div class="ep-card">
+            <div class="ep-card-header">
+                <i class="fas fa-running ep-card-icon"></i>
+                <h3 class="ep-card-title">Estilo de Vida</h3>
+            </div>
+            <div class="ep-form-grid">
+                <div class="ep-form-group">
+                    <label class="ep-label">Exercícios Praticados</label>
+                    <a href="./edit_exercises.html" class="ep-link-btn">
+                        <span id="exercises-display">Nenhum selecionado</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <input type="hidden" id="exercise_type" name="exercise_type" value="">
+                </div>
+                <div class="ep-form-group">
+                    <label for="exercise_frequency" class="ep-label">Frequência</label>
+                    <div class="ep-select-wrapper">
+                        <select id="exercise_frequency" name="exercise_frequency" class="ep-select form-select">
+                            <option value="sedentary">Sedentário</option>
+                            <option value="1_2x_week">1-2x/semana</option>
+                            <option value="3_4x_week">3-4x/semana</option>
+                            <option value="5_6x_week">5-6x/semana</option>
+                            <option value="6_7x_week">6-7x/semana</option>
+                            <option value="7plus_week">+7x/semana</option>
+                        </select>
+                        <i class="fas fa-chevron-down ep-select-arrow"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Restrições Alimentares -->
+        <div class="ep-card">
+            <div class="ep-card-header">
+                <i class="fas fa-ban ep-card-icon"></i>
+                <h3 class="ep-card-title">Restrições Alimentares</h3>
+            </div>
+            <div class="ep-form-group">
+                <label class="ep-label">Selecione suas restrições (opcional)</label>
+                <button type="button" id="open-restrictions-modal" class="ep-link-btn">
+                    <span id="restrictions-selected-count">Nenhuma</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <input type="hidden" id="restrictions-hidden" name="restrictions" value="[]">
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div id="upload-status" class="ep-status" style="display:none;"></div>
+
+        <!-- Botão Salvar -->
+        <button type="submit" class="ep-save-btn" id="save-btn">
+            <i class="fas fa-save"></i>
+            Salvar Alterações
+        </button>
+    </form>
+</section>
+
+<!-- Modal Restrições -->
+<div id="restrictions-modal" class="ep-modal-overlay modal-overlay">
+    <div class="ep-modal restrictions-modal">
+        <div class="ep-modal-header modal-header">
+            <h3 class="ep-modal-title modal-title">Restrições Alimentares</h3>
+            <button type="button" class="ep-modal-close modal-close" id="close-restrictions-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="ep-modal-body">
+            <div class="ep-restrictions-grid restrictions-grid" id="modal-restrictions-grid">
+                <!-- Carregado via JS -->
+            </div>
+        </div>
+        <div class="ep-modal-actions modal-actions">
+            <button type="button" class="ep-modal-btn ep-modal-btn-secondary modal-btn modal-btn-secondary" id="cancel-restrictions">
+                Cancelar
+            </button>
+            <button type="button" class="ep-modal-btn ep-modal-btn-primary modal-btn modal-btn-primary" id="save-restrictions">
+                Salvar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crop Foto -->
+<div id="crop-modal" class="ep-modal-overlay modal-overlay">
+    <div class="ep-modal crop-modal">
+        <div class="ep-modal-header modal-header">
+            <h3 class="ep-modal-title modal-title">Ajustar Foto</h3>
+            <button type="button" class="ep-modal-close modal-close" id="close-crop-modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="ep-crop-container crop-container">
+            <img id="crop-background" class="ep-crop-bg crop-background" src="" alt="">
+            <img id="crop-image" class="ep-crop-img crop-image" src="" alt="">
+            <div class="ep-crop-overlay crop-overlay">
+                <div class="ep-crop-circle crop-circle"></div>
+            </div>
+        </div>
+        <div class="ep-modal-actions modal-actions">
+            <button type="button" class="ep-modal-btn ep-modal-btn-secondary modal-btn modal-btn-secondary" id="cancel-crop">
+                Cancelar
+            </button>
+            <button type="button" class="ep-modal-btn ep-modal-btn-primary modal-btn modal-btn-primary" id="save-crop">
+                Salvar
+            </button>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/pages/edit_profile/edit_profile_inline_0.js"></script>
+<script src="/assets/js/pages/edit_profile/edit_profile_inline_1.js"></script>
+<script src="/assets/js/pages/edit_profile/edit_profile_inline_2.js"></script>
