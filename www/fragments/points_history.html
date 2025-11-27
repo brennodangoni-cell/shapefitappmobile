@@ -12,12 +12,12 @@
         body { background-color: var(--bg-color); color: var(--text-primary); }
         .app-container { max-width: 600px; margin: 0 auto; }
 
-        .page-header { display: flex; align-items: center; gap: 16px; padding: calc(env(safe-area-inset-top, 0px) + 8px) 24px 16px; }
+        .page-header { display: flex; align-items: center; gap: 16px; padding: calc(env(safe-area-inset-top, 0px) + 4px) 24px 12px; }
         
         /* ✅ REDUZIR AINDA MAIS NO MOBILE/ANDROID */
         @media (max-width: 768px) {
             .page-header {
-                padding: calc(env(safe-area-inset-top, 0px) + 4px) 24px 12px !important;
+                padding: calc(env(safe-area-inset-top, 0px) + 2px) 24px 8px !important;
             }
         }
         .back-button { font-size: 1.5rem; color: var(--text-primary); text-decoration: none; }

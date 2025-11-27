@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             camera = Camera.default;
             if (camera) {
-                // ✅ SOLICITAR PERMISSÃO DE CÂMERA EXPLICITAMENTE NO iOS/Capacitor
+                // ✅ SOLICITAR PERMISSÃO DE CÂMERA EXPLICITAMENTE NO iOS/Android/Capacitor
                 try {
                     // Verificar se é app nativo (Capacitor)
                     if (typeof window.Capacitor !== 'undefined') {
@@ -76,11 +76,36 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const { Camera } = window.Capacitor.Plugins;
                                 const permissionResult = await Camera.requestPermissions({ permissions: ['camera'] });
                                 if (permissionResult.camera !== 'granted' && permissionResult.camera !== 'yes') {
+                                    scannerStatus.textContent = 'Permissão de câmera negada. Por favor, permita o acesso à câmera nas configurações.';
                                     throw new Error('Permissão de câmera negada pelo usuário');
                                 }
                             } catch (capError) {
-                                console.warn('Erro ao solicitar permissão via Capacitor:', capError);
-                                // Continuar mesmo se falhar - Scandit pode solicitar automaticamente
+                                console.warn('Erro ao solicitar permissão via Capacitor Camera:', capError);
+                                // Tentar via Permissions API como fallback
+                                if (window.Capacitor.Plugins?.Permissions) {
+                                    try {
+                                        const { Permissions } = window.Capacitor.Plugins;
+                                        const permResult = await Permissions.request({ name: 'camera' });
+                                        if (permResult.state !== 'granted') {
+                                            scannerStatus.textContent = 'Permissão de câmera negada. Por favor, permita o acesso à câmera nas configurações.';
+                                            throw new Error('Permissão de câmera negada');
+                                        }
+                                    } catch (permError) {
+                                        console.warn('Erro ao solicitar permissão via Permissions API:', permError);
+                                    }
+                                }
+                            }
+                        } else if (window.Capacitor.Plugins?.Permissions) {
+                            // Tentar via Permissions API diretamente
+                            try {
+                                const { Permissions } = window.Capacitor.Plugins;
+                                const permResult = await Permissions.request({ name: 'camera' });
+                                if (permResult.state !== 'granted') {
+                                    scannerStatus.textContent = 'Permissão de câmera negada. Por favor, permita o acesso à câmera nas configurações.';
+                                    throw new Error('Permissão de câmera negada');
+                                }
+                            } catch (permError) {
+                                console.warn('Erro ao solicitar permissão via Permissions API:', permError);
                             }
                         }
                     }
@@ -92,12 +117,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             stream.getTracks().forEach(track => track.stop()); // Parar stream imediatamente
                         } catch (permError) {
                             console.warn('Erro ao solicitar permissão via getUserMedia:', permError);
-                            // Continuar - Scandit pode solicitar automaticamente
+                            if (permError.name === 'NotAllowedError' || permError.name === 'PermissionDeniedError') {
+                                scannerStatus.textContent = 'Permissão de câmera negada. Por favor, permita o acesso à câmera nas configurações do navegador.';
+                            }
                         }
                     }
                 } catch (permError) {
                     console.warn('Aviso de permissão (continuando):', permError);
-                    // Não bloquear - deixar Scandit tentar
+                    // Não bloquear completamente - deixar Scandit tentar
                 }
                 
                 // Tentar configurar a câmera (Scandit pode solicitar permissão automaticamente aqui)
