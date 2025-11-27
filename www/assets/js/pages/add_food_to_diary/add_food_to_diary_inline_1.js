@@ -752,20 +752,36 @@ async function searchFoods(query) {
     try {
         // ✅ Usar URL completa diretamente para evitar problemas de CORS no Capacitor
         const apiBase = window.API_BASE_URL || 'https://appshapefit.com/api';
-        const url = `${apiBase}/ajax_search_food.php?term=${encodeURIComponent(query)}`;
-        const response = await authenticatedFetch(url);
+        const token = window.getAuthToken ? window.getAuthToken() : null;
         
-        if (!response) {
-            clearSearchResults();
-            return;
-        }
-        
-        const data = await response.json();
-        
-        if (data.success && data.data.length > 0) {
-            displaySearchResults(data.data, 'food');
+        // ✅ Para evitar preflight CORS, passar token como query parameter se estiver no Capacitor
+        let url = `${apiBase}/ajax_search_food.php?term=${encodeURIComponent(query)}`;
+        if (typeof window.Capacitor !== 'undefined' && token) {
+            url += `&token=${encodeURIComponent(token)}`;
+            // Fazer requisição GET simples sem headers customizados para evitar preflight
+            const response = await fetch(url, { method: 'GET' });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.success && data.data.length > 0) {
+                displaySearchResults(data.data, 'food');
+            } else {
+                clearSearchResults();
+            }
         } else {
-            clearSearchResults();
+            // Usar authenticatedFetch normalmente para web
+            const response = await authenticatedFetch(url);
+            if (!response) {
+                clearSearchResults();
+                return;
+            }
+            const data = await response.json();
+            if (data.success && data.data.length > 0) {
+                displaySearchResults(data.data, 'food');
+            } else {
+                clearSearchResults();
+            }
         }
     } catch (error) {
         console.error('Erro ao buscar alimentos:', error);
