@@ -165,13 +165,20 @@
             // Armazenar barcode para usar no cadastro manual
             modal.dataset.barcode = barcode;
             
-            // Mostrar modal
-            modal.style.display = 'flex';
+            // Mostrar modal usando classe (padrão do main_app)
+            modal.classList.add('visible');
+            // ✅ Bloquear scroll do body quando modal está aberto
+            document.body.classList.add('scan-modal-open');
+            document.body.style.overflow = 'hidden';
         }
 
         // Função para fechar modal
         function closeProductNotFoundModal() {
-            document.getElementById('product-not-found-modal').style.display = 'none';
+            const modal = document.getElementById('product-not-found-modal');
+            modal.classList.remove('visible');
+            // ✅ Restaurar scroll do body quando modal fecha
+            document.body.classList.remove('scan-modal-open');
+            document.body.style.overflow = '';
         }
 
         // Função para cadastrar manualmente
