@@ -23,12 +23,18 @@
         // Se navigator.onLine diz que está online, tenta fazer um fetch pequeno
         if (navigator.onLine) {
             try {
+                // Criar AbortController para timeout manual (compatibilidade)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                
                 // Tenta buscar um arquivo pequeno do servidor
                 const response = await fetch(`${window.BASE_APP_URL || ''}/favicon.ico?t=${Date.now()}`, {
                     method: 'HEAD',
                     cache: 'no-cache',
-                    signal: AbortSignal.timeout(3000) // Timeout de 3 segundos
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
                 return response.ok;
             } catch (error) {
                 return false;
