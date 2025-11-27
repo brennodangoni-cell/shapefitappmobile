@@ -18,12 +18,18 @@ if (in_array($origin, $allowed_origins)) {
 }
 
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Headers: *");
+// ✅ IMPORTANTE: Não usar * para headers, especificar explicitamente
+header("Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 
 // ✅ Responder imediatamente para requisições OPTIONS (preflight)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
+    // Retornar os mesmos headers na resposta OPTIONS
+    header("Access-Control-Allow-Origin: " . ($origin ?: 'https://localhost'));
+    header("Access-Control-Allow-Credentials: true");
+    header("Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With");
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
     exit;
 }
 
