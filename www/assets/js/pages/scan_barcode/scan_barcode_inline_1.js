@@ -98,16 +98,11 @@
         try {
             codeReader = new ZXing.BrowserMultiFormatReader();
             
-            // Mostrar vídeo imediatamente (antes de solicitar permissão)
-            const videoElement = document.getElementById('camera-video');
-            if (videoElement) {
-                videoElement.style.display = 'block';
-            }
-            
-            // Solicitar permissão e obter câmera traseira (em paralelo quando possível)
+            // Solicitar permissão e obter câmera traseira
             const videoInputDevices = await codeReader.listVideoInputDevices();
             
             if (videoInputDevices.length === 0) {
+                hideLoading();
                 showCameraError('Nenhuma câmera encontrada no dispositivo.');
                 return;
             }
@@ -122,9 +117,10 @@
                 }
             }
 
-            // Iniciar scanning imediatamente
+            // Iniciar scanning (vai mostrar vídeo quando estiver pronto)
             startScanning();
         } catch (err) {
+            hideLoading();
             showCameraError('Não foi possível acessar a câmera. Verifique as permissões.');
         }
     }
@@ -135,13 +131,18 @@
 
         const videoElement = document.getElementById('camera-video');
         if (!videoElement) {
+            hideLoading();
             showCameraError('Elemento de vídeo não encontrado.');
             scanning = false;
             return;
         }
         
-        // Garantir que vídeo está visível
-        videoElement.style.display = 'block';
+        // Aguardar vídeo estar pronto antes de mostrar
+        videoElement.addEventListener('playing', () => {
+            // Vídeo está transmitindo - mostrar e esconder loading
+            hideLoading();
+            showCamera();
+        }, { once: true });
         
         // Iniciar scanning (decodeFromVideoDevice já solicita permissão automaticamente)
         codeReader.decodeFromVideoDevice(selectedDeviceId, videoElement, (result, err) => {
@@ -164,12 +165,33 @@
             }
         });
     }
+    
+    function hideLoading() {
+        const loading = document.getElementById('camera-loading');
+        if (loading) {
+            loading.classList.add('hidden');
+        }
+    }
+    
+    function showCamera() {
+        const videoElement = document.getElementById('camera-video');
+        const overlay = document.querySelector('.scanning-overlay');
+        
+        if (videoElement) {
+            videoElement.style.display = 'block';
+        }
+        
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+    }
 
     function showCameraError(message) {
+        hideLoading();
         const container = document.getElementById('camera-container');
         if (container) {
             container.innerHTML = `
-                <div class="camera-error" style="text-align: center; padding: 40px 20px;">
+                <div class="camera-error" style="text-align: center; padding: 40px 20px; position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                     <i class="fas fa-camera-slash" style="font-size: 48px; color: var(--accent-orange); margin-bottom: 20px;"></i>
                     <h3 style="margin: 0 0 12px 0;">Câmera Indisponível</h3>
                     <p style="margin: 0 0 24px 0; color: var(--text-secondary);">${message}</p>
