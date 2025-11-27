@@ -2,7 +2,8 @@
 /**
  * Script Inline Protegido - inline_1
  * Envolvido em IIFE para evitar conflitos de variáveis globais.
- * USA APENAS MLKit Barcode Scanner (sem fallback)
+ * Scanner de código de barras usando @capacitor-mlkit/barcode-scanning
+ * Baseado no padrão do add_food_logic.js que funciona corretamente
  */
 (function() {
 
@@ -102,7 +103,8 @@
         }
 
         /**
-         * Inicializar scanner usando APENAS MLKit Barcode Scanner
+         * Inicializar scanner usando MLKit Barcode Scanner
+         * Baseado no padrão do add_food_logic.js que funciona corretamente
          */
         async function initializeMLKitScanner() {
             try {
@@ -110,7 +112,6 @@
                 const isNative = typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform();
                 
                 if (!isNative) {
-                    // ✅ MOSTRAR CONTEÚDO MESMO EM WEB (para debug/teste)
                     const scannerContainer = document.querySelector('.scanner-container');
                     if (scannerContainer) {
                         scannerContainer.style.display = '';
@@ -118,46 +119,17 @@
                         scannerContainer.style.visibility = 'visible';
                     }
                     showCameraError('Scanner de código de barras disponível apenas no app mobile (iOS/Android).');
-                    // ✅ PÁGINA PRONTA - Remover skeleton mesmo em web
                     if (window.PageLoader) {
                         window.PageLoader.ready();
                     }
                     return;
                 }
                 
-                console.log('[Scanner] Inicializando MLKit Barcode Scanner...');
-                
-                // Verificar se o plugin MLKit está disponível
-                // Pode estar em window.Capacitor.Plugins com diferentes nomes
-                let MLKitBarcodeScanner = null;
-                
-                // Tentar diferentes formas de acessar o plugin
-                const plugins = window.Capacitor?.Plugins || {};
-                console.log('[Scanner] Plugins disponíveis:', Object.keys(plugins));
-                
-                // Tentar nomes comuns
-                MLKitBarcodeScanner = plugins.MLKitBarcodeScanner || 
-                                     plugins.MlkitBarcodeScanner || 
-                                     plugins['@capacitor-mlkit/barcode-scanning'] ||
-                                     plugins.BarcodeScanner;
-                
-                // Se não encontrou, tentar importar dinamicamente
-                if (!MLKitBarcodeScanner) {
-                    try {
-                        const mlkitModule = await import('@capacitor-mlkit/barcode-scanning');
-                        MLKitBarcodeScanner = mlkitModule.MLKitBarcodeScanner || mlkitModule.default;
-                        console.log('[Scanner] MLKit importado dinamicamente');
-                    } catch (importError) {
-                        console.error('[Scanner] Erro ao importar MLKit:', importError);
-                    }
-                }
-                
-                if (!MLKitBarcodeScanner) {
-                    console.error('[Scanner] MLKit Barcode Scanner plugin não encontrado!');
-                    console.error('[Scanner] Todos os plugins:', plugins);
-                    showCameraError('Scanner não disponível. Verifique se o plugin @capacitor-mlkit/barcode-scanning está instalado e sincronizado no Appflow.');
+                // ✅ USAR EXATAMENTE O MESMO PADRÃO DO add_food_logic.js
+                if (!window.Capacitor || !window.Capacitor.isNativePlatform() || !window.Capacitor.Plugins.BarcodeScanner) {
+                    console.error('[Scanner] BarcodeScanner plugin não encontrado!');
+                    showCameraError('Scanner não disponível. Verifique se o plugin @capacitor-mlkit/barcode-scanning está instalado e sincronizado.');
                     
-                    // ✅ MOSTRAR CONTEÚDO MESMO SEM PLUGIN
                     const scannerContainer = document.querySelector('.scanner-container');
                     if (scannerContainer) {
                         scannerContainer.style.display = '';
@@ -165,71 +137,16 @@
                         scannerContainer.style.visibility = 'visible';
                     }
                     
-                    // ✅ PÁGINA PRONTA - Remover skeleton
                     if (window.PageLoader) {
                         window.PageLoader.ready();
                     }
                     return;
                 }
                 
-                console.log('[Scanner] Plugin MLKit encontrado:', MLKitBarcodeScanner);
+                const { BarcodeScanner } = window.Capacitor.Plugins;
+                const { Camera } = window.Capacitor.Plugins;
                 
-                console.log('[Scanner] Plugin MLKit encontrado');
-                
-                // Verificar e solicitar permissões usando Camera plugin (MLKit usa as mesmas permissões)
-                try {
-                    const Camera = window.Capacitor?.Plugins?.Camera;
-                    if (Camera) {
-                        const permissionResult = await Camera.requestPermissions({ permissions: ['camera'] });
-                        console.log('[Scanner] Resultado da permissão:', permissionResult);
-                        
-                        if (permissionResult.camera !== 'granted' && permissionResult.camera !== 'yes') {
-                            const platformName = window.Capacitor.getPlatform() === 'ios' ? 'iOS' : 'Android';
-                            showCameraError(`Permissão de câmera negada. Por favor, permita o acesso à câmera nas Configurações > ShapeFit > Câmera.`);
-                            
-                            // ✅ MOSTRAR CONTEÚDO MESMO SEM PERMISSÃO
-                            const scannerContainer = document.querySelector('.scanner-container');
-                            if (scannerContainer) {
-                                scannerContainer.style.display = '';
-                                scannerContainer.style.opacity = '1';
-                                scannerContainer.style.visibility = 'visible';
-                            }
-                            
-                            // ✅ PÁGINA PRONTA - Remover skeleton
-                            if (window.PageLoader) {
-                                window.PageLoader.ready();
-                            }
-                            return;
-                        }
-                        console.log('[Scanner] Permissão de câmera concedida');
-                    } else {
-                        console.warn('[Scanner] Plugin Camera não encontrado, tentando scan sem verificar permissão...');
-                    }
-                    
-                } catch (permError) {
-                    console.error('[Scanner] Erro ao verificar/solicitar permissão:', permError);
-                    // Continuar mesmo assim - o MLKit pode solicitar permissão automaticamente
-                }
-                
-                // Configurar botão para iniciar scan
-                setupScanButton(MLKitBarcodeScanner);
-                
-                // Mostrar instruções
-                const container = document.getElementById('camera-container');
-                if (container) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 40px 20px; color: var(--text-primary);">
-                            <i class="fas fa-qrcode" style="font-size: 64px; color: var(--accent-orange); margin-bottom: 20px;"></i>
-                            <h3 style="margin: 0 0 12px 0; font-size: 18px;">Pronto para escanear</h3>
-                            <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">Toque no botão abaixo para abrir a câmera e escanear o código de barras</p>
-                            <button id="start-scan-btn" style="margin-top: 24px; padding: 14px 28px; background: var(--accent-orange); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
-                                <i class="fas fa-camera"></i> Abrir Scanner
-                            </button>
-                        </div>
-                    `;
-                }
-                
-                // ✅ MOSTRAR CONTEÚDO APÓS INICIALIZAR
+                // Mostrar conteúdo
                 const scannerContainer = document.querySelector('.scanner-container');
                 if (scannerContainer) {
                     scannerContainer.style.display = '';
@@ -237,7 +154,36 @@
                     scannerContainer.style.visibility = 'visible';
                 }
                 
-                // ✅ PÁGINA PRONTA - Remover skeleton
+                // Mostrar estado inicial
+                const container = document.getElementById('camera-container');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; color: var(--text-primary);">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: var(--accent-orange); margin-bottom: 20px;"></i>
+                            <p style="margin: 0; color: var(--text-secondary);">Preparando câmera...</p>
+                        </div>
+                    `;
+                }
+                
+                // ✅ ABRIR SCANNER DIRETAMENTE (MLKit solicita permissão automaticamente)
+                // O MLKit Barcode Scanner solicita permissão de câmera automaticamente
+                // quando startScan() é chamado, então não precisamos solicitar antes
+                try {
+                    // Aguardar um pouco para garantir que tudo está pronto
+                    setTimeout(async () => {
+                        await startBarcodeScan(BarcodeScanner);
+                    }, 100);
+                    
+                } catch (error) {
+                    console.error('[Scanner] Erro ao iniciar scanner:', error);
+                    showCameraError('Erro ao abrir câmera. Tente novamente.');
+                    
+                    if (container) {
+                        container.style.display = '';
+                    }
+                }
+                
+                // Página pronta
                 if (window.PageLoader) {
                     window.PageLoader.ready();
                 }
@@ -246,7 +192,6 @@
                 console.error('[Scanner] Erro ao inicializar:', error);
                 showCameraError('Erro ao inicializar scanner. Tente novamente.');
                 
-                // ✅ MOSTRAR CONTEÚDO MESMO COM ERRO
                 const scannerContainer = document.querySelector('.scanner-container');
                 if (scannerContainer) {
                     scannerContainer.style.display = '';
@@ -254,7 +199,6 @@
                     scannerContainer.style.visibility = 'visible';
                 }
                 
-                // ✅ Mesmo com erro, remover skeleton
                 if (window.PageLoader) {
                     window.PageLoader.ready();
                 }
@@ -262,85 +206,111 @@
         }
         
         /**
-         * Configurar botão para iniciar scan
+         * Iniciar scan de código de barras
+         * Baseado no padrão do add_food_logic.js
          */
-        function setupScanButton(MLKitBarcodeScanner) {
-            // Remover listener anterior se existir
-            const existingBtn = document.getElementById('start-scan-btn');
-            if (existingBtn) {
-                existingBtn.replaceWith(existingBtn.cloneNode(true));
-            }
-            
-            // Adicionar listener ao botão
-            setTimeout(() => {
-                const scanBtn = document.getElementById('start-scan-btn');
-                if (scanBtn) {
-                    scanBtn.addEventListener('click', async () => {
-                        await startMLKitScan(MLKitBarcodeScanner);
-                    });
-                }
-            }, 100);
-        }
-        
-        /**
-         * Iniciar scan com MLKit
-         */
-        async function startMLKitScan(MLKitBarcodeScanner) {
+        async function startBarcodeScan(BarcodeScanner) {
             try {
                 console.log('[Scanner] Iniciando scan...');
                 
-                // Atualizar UI
-                const container = document.getElementById('camera-container');
-                if (container) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 40px 20px; color: var(--text-primary);">
-                            <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: var(--accent-orange); margin-bottom: 20px;"></i>
-                            <p style="margin: 0; color: var(--text-secondary);">Abrindo câmera...</p>
-                        </div>
-                    `;
-                }
-                
-                // Iniciar scan
-                // MLKit retorna { barcodes: [{ rawValue, displayValue, format }] }
-                const result = await MLKitBarcodeScanner.startScan();
+                // ✅ USAR EXATAMENTE O MESMO PADRÃO DO add_food_logic.js
+                const result = await BarcodeScanner.startScan();
                 
                 console.log('[Scanner] Resultado do scan:', result);
+                console.log('[Scanner] Tipo do resultado:', typeof result);
                 
-                if (result && result.barcodes && result.barcodes.length > 0) {
-                    // Código escaneado com sucesso!
-                    const barcode = result.barcodes[0].rawValue || result.barcodes[0].displayValue;
-                    console.log('[Scanner] Código detectado:', barcode);
-                    
-                    // Buscar produto
-                    await searchBarcode(barcode);
+                // ✅ VERIFICAR RESULTADO (mesmo padrão do add_food_logic.js)
+                let barcode = null;
+                
+                if (!result) {
+                    console.log('[Scanner] Resultado vazio ou undefined');
+                } else if (result && result.hasContent && result.content) {
+                    barcode = String(result.content).trim();
+                    console.log('[Scanner] Código detectado (hasContent):', barcode);
+                } else if (result && result.content) {
+                    barcode = String(result.content).trim();
+                    console.log('[Scanner] Código detectado (content):', barcode);
+                } else if (result && result.barcodes && Array.isArray(result.barcodes) && result.barcodes.length > 0) {
+                    barcode = String(result.barcodes[0].rawValue || result.barcodes[0].displayValue || '').trim();
+                    console.log('[Scanner] Código detectado (barcodes):', barcode);
                 } else if (result && result.barcode) {
-                    // Formato alternativo de retorno
-                    const barcode = result.barcode;
-                    console.log('[Scanner] Código detectado (formato alternativo):', barcode);
+                    barcode = String(result.barcode).trim();
+                    console.log('[Scanner] Código detectado (barcode):', barcode);
+                } else {
+                    console.log('[Scanner] Resultado não contém código de barras válido');
+                }
+                
+                if (barcode) {
+                    // Código escaneado com sucesso!
+                    console.log('[Scanner] Processando código:', barcode);
                     await searchBarcode(barcode);
                 } else {
-                    // Scan cancelado ou sem resultado
-                    console.log('[Scanner] Scan cancelado ou sem resultado');
-                    // Restaurar UI
-                    initializeMLKitScanner();
+                    // Scan cancelado ou sem resultado - reabrir câmera automaticamente
+                    console.log('[Scanner] Scan cancelado ou sem resultado - reabrindo câmera...');
+                    // Reabrir câmera automaticamente após um breve delay
+                    setTimeout(async () => {
+                        await startBarcodeScan(BarcodeScanner);
+                    }, 500);
                 }
                 
             } catch (error) {
                 console.error('[Scanner] Erro ao fazer scan:', error);
                 
-                // Se for erro de permissão
-                if (error.message && error.message.includes('permission')) {
+                const errorMessage = error.message || error.toString() || '';
+                const errorLower = errorMessage.toLowerCase();
+                
+                if (errorLower.includes('permission') || errorLower.includes('denied')) {
                     showCameraError('Permissão de câmera negada. Por favor, permita o acesso à câmera nas configurações do app.');
-                } else if (error.message && error.message.includes('cancel')) {
-                    // Usuário cancelou - restaurar UI
-                    initializeMLKitScanner();
+                } else if (errorLower.includes('cancel') || errorLower.includes('cancelled')) {
+                    // Usuário cancelou - reabrir câmera automaticamente
+                    console.log('[Scanner] Scan cancelado - reabrindo câmera...');
+                    setTimeout(async () => {
+                        if (window.Capacitor?.Plugins?.BarcodeScanner) {
+                            const { BarcodeScanner: Scanner } = window.Capacitor.Plugins;
+                            await startBarcodeScan(Scanner);
+                        }
+                    }, 500);
                 } else {
-                    showCameraError('Erro ao escanear código. Tente novamente.');
-                    // Restaurar UI após 2 segundos
-                    setTimeout(() => {
-                        initializeMLKitScanner();
+                    // Outro erro - tentar reabrir após mostrar erro brevemente
+                    showCameraError(`Erro ao escanear. Tentando novamente...`);
+                    setTimeout(async () => {
+                        if (window.Capacitor?.Plugins?.BarcodeScanner) {
+                            const { BarcodeScanner: Scanner } = window.Capacitor.Plugins;
+                            await startBarcodeScan(Scanner);
+                        }
                     }, 2000);
                 }
+            }
+        }
+        
+        /**
+         * Reabrir scanner automaticamente (sem mostrar botão)
+         * A câmera fica sempre aberta esperando código
+         */
+        async function reopenScanner() {
+            if (!window.Capacitor?.Plugins?.BarcodeScanner) {
+                showCameraError('Scanner não disponível.');
+                return;
+            }
+            
+            const container = document.getElementById('camera-container');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-primary);">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: var(--accent-orange); margin-bottom: 20px;"></i>
+                        <p style="margin: 0; color: var(--text-secondary);">Abrindo câmera...</p>
+                    </div>
+                `;
+            }
+            
+            const { BarcodeScanner } = window.Capacitor.Plugins;
+            
+            try {
+                await startBarcodeScan(BarcodeScanner);
+            } catch (error) {
+                console.error('[Scanner] Erro ao reabrir scanner:', error);
+                // Tentar novamente após delay
+                setTimeout(() => reopenScanner(), 1000);
             }
         }
 
@@ -358,6 +328,11 @@
         }
 
         async function searchBarcode(barcode) {
+            if (!barcode || typeof barcode !== 'string') {
+                console.error('[Scanner] Código de barras inválido:', barcode);
+                return;
+            }
+            
             // Mostrar loading
             const loadingOverlay = document.getElementById('loading-overlay');
             if (loadingOverlay) {
@@ -365,7 +340,16 @@
             }
             
             try {
-                const response = await authenticatedFetch(`${window.BASE_APP_URL}/api/lookup_barcode.php?barcode=${encodeURIComponent(barcode)}`);
+                const baseUrl = window.BASE_APP_URL || '';
+                if (!baseUrl) {
+                    throw new Error('BASE_APP_URL não está definido');
+                }
+                
+                const response = await authenticatedFetch(`${baseUrl}/api/lookup_barcode.php?barcode=${encodeURIComponent(barcode)}`);
+                if (!response || !response.ok) {
+                    throw new Error(`Erro na resposta: ${response?.status || 'desconhecido'}`);
+                }
+                
                 const data = await response.json();
                 
                 // Esconder loading
@@ -396,10 +380,11 @@
                     showProductNotFoundModal(barcode);
                 }
             } catch (error) {
-                console.error('Erro ao buscar produto:', error);
+                console.error('[Scanner] Erro ao buscar produto:', error);
                 if (loadingOverlay) {
                     loadingOverlay.classList.remove('active');
                 }
+                // Mostrar modal mesmo em caso de erro para permitir cadastro manual
                 showProductNotFoundModal(barcode);
             }
         }
