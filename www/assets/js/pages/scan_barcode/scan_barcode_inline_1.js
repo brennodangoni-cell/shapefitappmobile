@@ -2,6 +2,7 @@
 /**
  * Scanner de código de barras - VERSÃO CLEAN
  * Câmera abre automaticamente ao carregar página
+ * Usando plugin oficial @capacitor/barcode-scanner
  */
 (function() {
 
@@ -62,7 +63,7 @@
     }
 
     /**
-     * Iniciar scanner automaticamente
+     * Iniciar scanner automaticamente - Plugin Oficial @capacitor/barcode-scanner
      */
     async function startScanner() {
         if (isScanning || scannerActive) return;
@@ -74,17 +75,33 @@
             return;
         }
 
-        if (!window.Capacitor.Plugins.BarcodeScanner) {
+        // Verificar se o plugin está disponível
+        const BarcodeScanner = window.Capacitor?.Plugins?.BarcodeScanner;
+        if (!BarcodeScanner) {
             isScanning = false;
             showCameraError('Scanner não disponível. Verifique se o plugin está instalado.');
             return;
         }
 
-        const { BarcodeScanner } = window.Capacitor.Plugins;
-
         try {
+            // Verificar e solicitar permissão
+            const status = await BarcodeScanner.checkPermission({ force: true });
+            if (!status.granted) {
+                isScanning = false;
+                showCameraError('Permissão de câmera negada. Permita o acesso nas configurações do app.');
+                return;
+            }
+
+            // Ocultar background da WebView para mostrar a câmera
+            await BarcodeScanner.hideBackground();
+            
             scannerActive = true;
+            
+            // Iniciar scanner
             const result = await BarcodeScanner.startScan();
+            
+            // Mostrar background novamente
+            await BarcodeScanner.showBackground();
             
             scannerActive = false;
             isScanning = false;
@@ -97,6 +114,14 @@
             }
 
         } catch (error) {
+            // Sempre restaurar background em caso de erro
+            try {
+                const BarcodeScanner = window.Capacitor?.Plugins?.BarcodeScanner;
+                if (BarcodeScanner && BarcodeScanner.showBackground) {
+                    await BarcodeScanner.showBackground();
+                }
+            } catch (e) {}
+            
             scannerActive = false;
             isScanning = false;
             const errorMsg = error.message || error.toString() || '';

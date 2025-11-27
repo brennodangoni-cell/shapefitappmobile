@@ -13,8 +13,8 @@
     "generate:assets": "npx capacitor-assets generate"
   },
   "dependencies": {
-    "@capacitor-mlkit/barcode-scanning": "^7.3.0",
     "@capacitor/app": "^7.0.2",
+    "@capacitor/barcode-scanner": "^2.2.0",
     "@capacitor/camera": "^7.0.1",
     "@capacitor/core": "^7.4.2",
     "@capacitor/filesystem": "^7.0.1",
