@@ -93,17 +93,18 @@ async function isAuthenticated() {
 
 async function requireAuth() {
     const currentPath = window.location.pathname;
-    if (currentPath.includes('auth_login')) return false;
+    if (currentPath.includes('auth_login') || currentPath.includes('auth_register')) return false;
     
     // ✅ Verificar se está offline ANTES de verificar token
-    // Se estiver offline e não tiver token, redirecionar para login
+    // Se estiver offline e não tiver token, redirecionar para login IMEDIATAMENTE
     const token = getAuthToken();
     if (!token) {
         // Sem token, verificar se está offline
         if (!navigator.onLine) {
             // Se estiver offline e sem token, mostrar login (usuário não está logado)
             console.log('[Auth] Offline e sem token - redirecionando para login');
-            if (window.SPARouter) {
+            // ✅ Redirecionar IMEDIATAMENTE sem tentar fazer requisições
+            if (window.SPARouter && window.SPARouter.navigate) {
                 window.SPARouter.navigate('/fragments/auth_login.html', true);
             } else {
                 window.location.href = '/auth/login.html';
@@ -111,7 +112,7 @@ async function requireAuth() {
             return false;
         }
         // Se estiver online e sem token, redirecionar para login
-        if (window.SPARouter) {
+        if (window.SPARouter && window.SPARouter.navigate) {
             window.SPARouter.navigate('/fragments/auth_login.html', true);
         } else {
             window.location.href = '/auth/login.html';
