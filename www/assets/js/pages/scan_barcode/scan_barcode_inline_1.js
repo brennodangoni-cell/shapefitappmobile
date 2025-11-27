@@ -1,13 +1,13 @@
 
 /**
- * Scanner de código de barras - VERSÃO CLEAN
- * Câmera abre automaticamente ao carregar página
- * Usando plugin oficial @capacitor/barcode-scanner
+ * Scanner de código de barras - VERSÃO ZXing (biblioteca web pura)
+ * Funciona sem plugins nativos - igual ao projeto antigo
  */
 (function() {
 
-    let isScanning = false;
-    let scannerActive = false;
+    let codeReader = null;
+    let selectedDeviceId = null;
+    let scanning = false;
 
     function moveModalToBody() {
         const modal = document.getElementById('product-not-found-modal');
@@ -43,9 +43,9 @@
                 window.PageLoader.ready();
             }
             
-            // Aguardar um pouco e abrir scanner automaticamente
+            // Aguardar um pouco e inicializar scanner
             setTimeout(() => {
-                startScanner();
+                initializeScanner();
             }, 300);
             
         } catch (error) {
@@ -63,80 +63,87 @@
     }
 
     /**
-     * Iniciar scanner automaticamente - Plugin Oficial @capacitor/barcode-scanner
+     * Inicializar scanner ZXing (biblioteca web pura)
      */
-    async function startScanner() {
-        if (isScanning || scannerActive) return;
-        isScanning = true;
-
-        if (!window.Capacitor || !window.Capacitor.isNativePlatform()) {
-            isScanning = false;
-            showCameraError('Scanner disponível apenas no app mobile (iOS/Android).');
-            return;
-        }
-
-        // Verificar se o plugin está disponível
-        const BarcodeScanner = window.Capacitor?.Plugins?.BarcodeScanner;
-        if (!BarcodeScanner) {
-            isScanning = false;
-            showCameraError('Scanner não disponível. Verifique se o plugin está instalado.');
-            return;
-        }
-
+    async function initializeScanner() {
         try {
-            // Verificar e solicitar permissão
-            const status = await BarcodeScanner.checkPermission({ force: true });
-            if (!status.granted) {
-                isScanning = false;
-                showCameraError('Permissão de câmera negada. Permita o acesso nas configurações do app.');
+            // Carregar ZXing se ainda não estiver carregado
+            if (typeof ZXing === 'undefined') {
+                // Criar script dinamicamente
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/@zxing/library@latest';
+                script.onload = () => {
+                    initZXing();
+                };
+                script.onerror = () => {
+                    showCameraError('Erro ao carregar biblioteca de scanner.');
+                };
+                document.head.appendChild(script);
+            } else {
+                initZXing();
+            }
+        } catch (err) {
+            showCameraError('Erro ao inicializar scanner: ' + err.message);
+        }
+    }
+
+    async function initZXing() {
+        try {
+            codeReader = new ZXing.BrowserMultiFormatReader();
+            
+            // Solicitar permissão e obter câmera traseira
+            const videoInputDevices = await codeReader.listVideoInputDevices();
+            
+            if (videoInputDevices.length === 0) {
+                showCameraError('Nenhuma câmera encontrada no dispositivo.');
                 return;
             }
 
-            // Ocultar background da WebView para mostrar a câmera
-            await BarcodeScanner.hideBackground();
-            
-            scannerActive = true;
-            
-            // Iniciar scanner
-            const result = await BarcodeScanner.startScan();
-            
-            // Mostrar background novamente
-            await BarcodeScanner.showBackground();
-            
-            scannerActive = false;
-            isScanning = false;
-            
-            if (result && result.hasContent && result.content) {
-                await searchBarcode(result.content);
-            } else {
-                // Cancelado - reabrir automaticamente
-                setTimeout(() => startScanner(), 300);
+            // Tentar usar câmera traseira (environment) se disponível
+            selectedDeviceId = videoInputDevices[0].deviceId;
+            for (const device of videoInputDevices) {
+                const label = device.label.toLowerCase();
+                if (label.includes('back') || label.includes('traseira') || label.includes('environment')) {
+                    selectedDeviceId = device.deviceId;
+                    break;
+                }
             }
 
-        } catch (error) {
-            // Sempre restaurar background em caso de erro
-            try {
-                const BarcodeScanner = window.Capacitor?.Plugins?.BarcodeScanner;
-                if (BarcodeScanner && BarcodeScanner.showBackground) {
-                    await BarcodeScanner.showBackground();
-                }
-            } catch (e) {}
-            
-            scannerActive = false;
-            isScanning = false;
-            const errorMsg = error.message || error.toString() || '';
-            const errorLower = errorMsg.toLowerCase();
-            
-            if (errorLower.includes('cancelled') || errorLower.includes('cancel')) {
-                // Usuário cancelou - reabrir automaticamente
-                setTimeout(() => startScanner(), 300);
-            } else if (errorLower.includes('permission') || errorLower.includes('denied')) {
-                showCameraError('Permissão de câmera negada. Permita o acesso nas configurações do app.');
-            } else {
-                showCameraError('Erro ao abrir câmera. Tente novamente.');
-                setTimeout(() => startScanner(), 1000);
-            }
+            startScanning();
+        } catch (err) {
+            showCameraError('Não foi possível acessar a câmera. Verifique as permissões.');
         }
+    }
+
+    function startScanning() {
+        if (scanning) return;
+        scanning = true;
+
+        const videoElement = document.getElementById('camera-video');
+        if (!videoElement) {
+            showCameraError('Elemento de vídeo não encontrado.');
+            return;
+        }
+        
+        codeReader.decodeFromVideoDevice(selectedDeviceId, videoElement, (result, err) => {
+            if (result) {
+                // Código de barras detectado!
+                const barcode = result.text;
+                
+                // Parar scanning temporariamente
+                scanning = false;
+                if (codeReader) {
+                    codeReader.reset();
+                }
+                
+                // Buscar produto
+                searchBarcode(barcode);
+            }
+            
+            if (err && !(err instanceof ZXing.NotFoundException)) {
+                // Erro não crítico - apenas log
+            }
+        });
     }
 
     function showCameraError(message) {
@@ -157,7 +164,7 @@
      */
     async function searchBarcode(barcode) {
         if (!barcode || typeof barcode !== 'string') {
-            setTimeout(() => startScanner(), 300);
+            setTimeout(() => startScanning(), 1000);
             return;
         }
         
@@ -190,6 +197,13 @@
                     fat_100g: product.nutriments?.fat_100g || product.nutriments?.fat || '',
                     barcode: barcode
                 });
+                
+                // Preservar query params da URL original
+                const urlParams = new URLSearchParams(window.location.search);
+                const date = urlParams.get('date');
+                const mealType = urlParams.get('meal_type');
+                if (date) params.set('date', date);
+                if (mealType) params.set('meal_type', mealType);
                 
                 if (window.SPARouter && window.SPARouter.navigate) {
                     window.SPARouter.navigate(`/criar-alimento?${params.toString()}`);
@@ -229,7 +243,7 @@
         const barcodeInput = document.getElementById('manual-barcode-input');
         
         if (!modal) {
-            setTimeout(() => startScanner(), 300);
+            setTimeout(() => startScanning(), 1000);
             return;
         }
         
@@ -251,7 +265,7 @@
             document.body.style.overflow = '';
         }
         // Reabrir scanner após fechar modal
-        setTimeout(() => startScanner(), 300);
+        setTimeout(() => startScanning(), 500);
     }
 
     function registerManually() {
@@ -274,6 +288,22 @@
         } else {
             window.location.href = 'create_custom_food.html' + queryString;
         }
+    }
+    
+    // Limpar recursos ao sair da página
+    window.addEventListener('beforeunload', function() {
+        if (codeReader) {
+            codeReader.reset();
+        }
+    });
+
+    // Limpar quando a página for desmontada
+    if (window.addEventListener) {
+        window.addEventListener('pagehide', function() {
+            if (codeReader) {
+                codeReader.reset();
+            }
+        });
     }
     
     window.searchManualBarcode = searchManualBarcode;

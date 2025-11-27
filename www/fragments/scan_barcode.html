@@ -402,7 +402,15 @@ body.scan-modal-open {
 
         <!-- Camera Container -->
         <div class="camera-container" id="camera-container">
-            <!-- Câmera será aberta automaticamente -->
+            <video id="camera-video" autoplay playsinline></video>
+            <div class="scanning-overlay">
+                <div class="scan-frame">
+                    <div class="scan-line"></div>
+                </div>
+                <div class="scan-instruction">
+                    Aponte a câmera para o código de barras
+                </div>
+            </div>
         </div>
 
         <!-- Controls -->
@@ -449,6 +457,7 @@ body.scan-modal-open {
 </div>
 
 
+<script src="https://unpkg.com/@zxing/library@latest"></script>
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/pages/scan_barcode/scan_barcode_inline_0.js"></script>
 <script src="/assets/js/pages/scan_barcode/scan_barcode_inline_1.js"></script>
