@@ -750,34 +750,52 @@ async function searchRecipes(query) {
 // Função para buscar alimentos
 async function searchFoods(query) {
     try {
-        // ✅ TENTAR USAR O MESMO ENDPOINT QUE RECEITAS (que funciona!)
-        // O endpoint ajax_search_foods_recipes.php pode aceitar type=food também
         const apiBase = window.API_BASE_URL || 'https://appshapefit.com/api';
         
-        // Primeiro tentar usar o endpoint de receitas com type=food (que já funciona para receitas)
-        let url = `${apiBase}/ajax_search_foods_recipes.php?term=${encodeURIComponent(query)}&type=food`;
-        let response = await authenticatedFetch(url);
+        // ✅ TENTAR PRIMEIRO O ENDPOINT ESPECÍFICO DE ALIMENTOS (ajax_search_food.php)
+        // Se der erro de CORS, tentar o endpoint de receitas com type=food
+        let url = `${apiBase}/ajax_search_food.php?term=${encodeURIComponent(query)}`;
+        let response = null;
+        let data = null;
         
-        // Se não funcionar ou retornar erro, tentar o endpoint específico de alimentos
-        if (!response || response.status !== 200) {
-            url = `${apiBase}/ajax_search_food.php?term=${encodeURIComponent(query)}`;
+        try {
             response = await authenticatedFetch(url);
+            if (response && response.ok) {
+                data = await response.json();
+                console.log('[SearchFoods] Resposta do ajax_search_food.php:', data);
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    displaySearchResults(data.data, 'food');
+                    return;
+                }
+            }
+        } catch (error) {
+            console.warn('[SearchFoods] Erro ao usar ajax_search_food.php, tentando endpoint de receitas:', error);
         }
         
-        if (!response) {
-            clearSearchResults();
-            return;
+        // ✅ FALLBACK: Tentar usar o endpoint de receitas com type=food
+        url = `${apiBase}/ajax_search_foods_recipes.php?term=${encodeURIComponent(query)}&type=food`;
+        try {
+            response = await authenticatedFetch(url);
+            if (response && response.ok) {
+                data = await response.json();
+                console.log('[SearchFoods] Resposta do ajax_search_foods_recipes.php (type=food):', data);
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    displaySearchResults(data.data, 'food');
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error('[SearchFoods] Erro ao usar ajax_search_foods_recipes.php:', error);
         }
         
-        const data = await response.json();
+        // Se chegou aqui, não encontrou resultados ou deu erro
+        console.log('[SearchFoods] Nenhum resultado encontrado ou erro na busca');
+        clearSearchResults();
         
-        if (data.success && data.data.length > 0) {
-            displaySearchResults(data.data, 'food');
-        } else {
-            clearSearchResults();
-        }
     } catch (error) {
-        console.error('Erro ao buscar alimentos:', error);
+        console.error('[SearchFoods] Erro geral ao buscar alimentos:', error);
         clearSearchResults();
     }
 }
