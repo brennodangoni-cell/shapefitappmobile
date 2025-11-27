@@ -97,6 +97,35 @@
     }
 
     /**
+     * Esconde mensagens de erro quando está offline
+     */
+    function hideErrorMessages() {
+        // Esconder mensagens de erro comuns
+        const errorSelectors = [
+            '.error-message',
+            '.alert-danger',
+            '[class*="error"]',
+            '[id*="error"]',
+            'p:contains("Erro ao carregar")',
+            'div:contains("Failed to fetch")'
+        ];
+        
+        errorSelectors.forEach(selector => {
+            try {
+                document.querySelectorAll(selector).forEach(el => {
+                    const text = el.textContent || '';
+                    if (text.includes('Erro') || text.includes('Failed to fetch') || text.includes('Error')) {
+                        el.style.display = 'none';
+                        el.classList.add('hidden-by-offline');
+                    }
+                });
+            } catch (e) {
+                // Ignorar erros de seletor inválido
+            }
+        });
+    }
+
+    /**
      * Mostra o modal offline
      */
     function showOfflineModal() {
@@ -106,6 +135,9 @@
         updateModalState(false);
         offlineModal.classList.add('visible');
         console.log('[OfflineModal] Modal offline exibido');
+        
+        // ✅ Esconder mensagens de erro quando modal aparece
+        hideErrorMessages();
         
         // Iniciar verificação periódica de reconexão (mais frequente)
         if (!reconnectCheckInterval) {
@@ -121,7 +153,7 @@
     }
 
     /**
-     * Esconde o modal offline
+     * Esconde o modal offline e recarrega a página atual
      */
     function hideOfflineModal() {
         if (!isOffline) return; // Já está escondido
@@ -135,6 +167,36 @@
             clearInterval(reconnectCheckInterval);
             reconnectCheckInterval = null;
         }
+        
+        // ✅ RECARREGAR PÁGINA ATUAL AUTOMATICAMENTE quando internet volta
+        // Isso garante que os dados sejam carregados novamente
+        setTimeout(() => {
+            const currentPath = window.location.pathname;
+            const currentSearch = window.location.search;
+            
+            // Se estiver usando SPA router, recarregar via router
+            if (window.SPARouter && window.SPARouter.currentPath) {
+                const currentRoute = window.SPARouter.currentPath;
+                console.log('[OfflineModal] Recarregando página via SPA:', currentRoute);
+                
+                // Disparar evento para recarregar dados da página atual
+                window.dispatchEvent(new CustomEvent('pageReload', { 
+                    detail: { reason: 'connection-restored' } 
+                }));
+                
+                // Se router tem método de reload, usar
+                if (window.SPARouter.reload) {
+                    window.SPARouter.reload();
+                } else {
+                    // Navegar para a mesma página para forçar recarregamento
+                    window.SPARouter.navigate(currentRoute + currentSearch, { forceReload: true });
+                }
+            } else {
+                // Fallback: recarregar página completa
+                console.log('[OfflineModal] Recarregando página completa');
+                window.location.reload();
+            }
+        }, 500); // Pequeno delay para garantir que conexão está estável
     }
 
     /**

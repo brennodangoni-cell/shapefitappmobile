@@ -45,25 +45,25 @@
             try {
                 return await originalFetch(url, init);
             } catch (error) {
-                console.error(`❌ [Fetch] Erro: ${url}`, error);
+                // ✅ Verificar se está offline antes de logar erro
+                const isOfflineState = !navigator.onLine || 
+                    (error.message && (
+                        error.message.includes('Failed to fetch') ||
+                        error.message.includes('NetworkError') ||
+                        error.message.includes('network')
+                    ));
                 
-                // ✅ Se for erro de rede (Failed to fetch), mostrar modal offline
-                if (error.message && (
-                    error.message.includes('Failed to fetch') ||
-                    error.message.includes('NetworkError') ||
-                    error.message.includes('network') ||
-                    error.name === 'TypeError'
-                )) {
-                    // Verificar se realmente está offline
-                    if (!navigator.onLine) {
-                        // Mostrar modal offline se existir
-                        const offlineModal = document.getElementById('offline-modal');
-                        if (offlineModal && typeof window.offlineModal !== 'undefined') {
-                            window.offlineModal.show();
-                        }
+                if (isOfflineState) {
+                    // Se estiver offline, mostrar modal e NÃO propagar erro
+                    const offlineModal = document.getElementById('offline-modal');
+                    if (offlineModal && typeof window.offlineModal !== 'undefined') {
+                        window.offlineModal.show();
                     }
+                    // ✅ Não logar erro quando estiver offline
+                    return Promise.reject(new Error('OFFLINE_SILENT'));
                 }
                 
+                console.error(`❌ [Fetch] Erro: ${url}`, error);
                 throw error;
             }
         }
@@ -89,25 +89,27 @@
         try {
             return await originalFetch(url, init);
         } catch (error) {
-            console.error(`❌ [Fetch] Erro: ${url}`, error);
+            // ✅ Verificar se está offline antes de logar erro
+            const isOfflineState = !navigator.onLine || 
+                (error.message && (
+                    error.message.includes('Failed to fetch') ||
+                    error.message.includes('NetworkError') ||
+                    error.message.includes('network')
+                ));
             
-            // ✅ Se for erro de rede (Failed to fetch), mostrar modal offline
-            if (error.message && (
-                error.message.includes('Failed to fetch') ||
-                error.message.includes('NetworkError') ||
-                error.message.includes('network') ||
-                error.name === 'TypeError'
-            )) {
-                // Verificar se realmente está offline
-                if (!navigator.onLine) {
-                    // Mostrar modal offline se existir
-                    const offlineModal = document.getElementById('offline-modal');
-                    if (offlineModal && typeof window.offlineModal !== 'undefined') {
-                        window.offlineModal.show();
-                    }
+            if (isOfflineState) {
+                // Se estiver offline, mostrar modal e NÃO propagar erro
+                const offlineModal = document.getElementById('offline-modal');
+                if (offlineModal && typeof window.offlineModal !== 'undefined') {
+                    window.offlineModal.show();
                 }
+                // ✅ Não logar erro quando estiver offline (evita poluir console)
+                // throw error; // Comentado para não propagar erro quando offline
+                // Retornar uma resposta vazia ou rejeitar silenciosamente
+                return Promise.reject(new Error('OFFLINE_SILENT')); // Erro especial que não será logado
             }
             
+            console.error(`❌ [Fetch] Erro: ${url}`, error);
             throw error;
         }
     };

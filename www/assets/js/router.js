@@ -264,9 +264,9 @@
     }
     
     function navigateTo(fragmentPath, options = {}) {
-        if (router.loading) return;
+        if (router.loading && !options.forceReload) return;
         
-        const { isBack = false } = options;
+        const { isBack = false, forceReload = false } = options;
         router.isGoingBack = isBack;
         
         // Separar path da query string
