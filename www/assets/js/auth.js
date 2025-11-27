@@ -27,15 +27,28 @@ async function isAuthenticated() {
         const verifyUrl = `${apiBase}/verify_token.php`;
         console.log('[Auth] Verificando token em:', verifyUrl);
         
+        // Criar AbortController para timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
         const response = await fetch(verifyUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
+            body: JSON.stringify({ token }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
             console.log('[Auth] Resposta não OK:', response.status);
-            return false;
+            // Se for 401, realmente não está autenticado
+            if (response.status === 401) {
+                return false;
+            }
+            // Para outros erros, assumir que ainda está autenticado (pode ser erro temporário)
+            console.log('[Auth] Erro temporário, mantendo autenticação');
+            return true;
         }
         
         // Verificar Content-Type antes de fazer parse
@@ -43,7 +56,8 @@ async function isAuthenticated() {
         if (!contentType || !contentType.includes('application/json')) {
             const text = await response.text();
             console.error('[Auth] Resposta não é JSON:', contentType, text.substring(0, 200));
-            return false;
+            // Se não for JSON mas tiver token, assumir que ainda está autenticado
+            return true;
         }
         
         const result = await response.json();
@@ -52,11 +66,28 @@ async function isAuthenticated() {
         return isAuth;
     } catch (error) {
         console.error('[Auth] Erro verificação:', error);
+        
+        // ✅ NÃO DESLOGAR EM CASO DE ERRO DE REDE/CONEXÃO
+        // Se for erro de rede (abort, timeout, network error), manter autenticação
+        if (error.name === 'AbortError' || 
+            error.name === 'TimeoutError' || 
+            error.message.includes('Failed to fetch') ||
+            error.message.includes('NetworkError') ||
+            error.message.includes('network')) {
+            console.log('[Auth] Erro de rede detectado, mantendo autenticação');
+            return true; // Manter autenticado se for erro de rede
+        }
+        
         // Se for erro de JSON parsing, logar mais detalhes
         if (error instanceof SyntaxError && error.message.includes('JSON')) {
             console.error('[Auth] Erro de parsing JSON - possível resposta HTML ou texto');
+            // Manter autenticado se tiver token (pode ser problema temporário do servidor)
+            return true;
         }
-        return false;
+        
+        // Para outros erros desconhecidos, também manter autenticado (melhor que deslogar)
+        console.log('[Auth] Erro desconhecido, mantendo autenticação por segurança');
+        return true;
     }
 }
 
