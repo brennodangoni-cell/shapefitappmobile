@@ -582,6 +582,21 @@
                     oldContent.remove();
                 }
                 
+                // ✅ Limpar modais que foram movidos para o body (evitar que fiquem presos na tela)
+                const modalsToRemove = [
+                    document.getElementById('recipe-modal'),
+                    document.getElementById('crop-modal'),
+                    document.getElementById('restrictions-modal'),
+                    document.getElementById('confirm-delete-account-modal'),
+                    document.getElementById('product-not-found-modal')
+                ];
+                modalsToRemove.forEach(modal => {
+                    if (modal && modal.parentElement === document.body) {
+                        modal.remove();
+                        console.log('✅ Modal removido do body:', modal.id);
+                    }
+                });
+                
                 const scripts = extractScriptsFromHTML(html);
                 let htmlWithoutScripts = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
                 
