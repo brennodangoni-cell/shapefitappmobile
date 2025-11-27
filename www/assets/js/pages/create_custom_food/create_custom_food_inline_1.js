@@ -8,6 +8,8 @@
     async function initCreateCustomFood() {
         // Verificar se estamos na página correta
         const form = document.getElementById('custom-food-form');
+        const container = document.querySelector('.ccf-container');
+        
         if (!form) {
             console.log('[CreateCustomFood] Formulário não encontrado.');
             return;
@@ -18,12 +20,27 @@
             console.log('[CreateCustomFood] Já inicializado.');
             return;
         }
+        
+        // ✅ ESCONDER CONTEÚDO ATÉ PROCESSAR PARÂMETROS
+        if (container) {
+            container.style.display = 'none';
+            container.style.opacity = '0';
+            container.style.visibility = 'hidden';
+        }
+        
         form.dataset.initialized = 'true';
 
         // Verificar autenticação
         if (typeof requireAuth === 'function') {
             const authenticated = await requireAuth();
-            if (!authenticated) return;
+            if (!authenticated) {
+                if (container) {
+                    container.style.display = '';
+                    container.style.opacity = '';
+                    container.style.visibility = '';
+                }
+                return;
+            }
         }
         
         // Pegar parâmetros da URL
@@ -99,6 +116,18 @@
         if (fat) {
             const el = document.getElementById('fat_100g');
             if (el) el.value = fat;
+        }
+        
+        // ✅ MOSTRAR CONTEÚDO APÓS PROCESSAR PARÂMETROS
+        if (container) {
+            container.style.display = '';
+            container.style.opacity = '1';
+            container.style.visibility = 'visible';
+        }
+        
+        // ✅ PÁGINA PRONTA - Remover skeleton
+        if (window.PageLoader) {
+            window.PageLoader.ready();
         }
         
         // Event listener do formulário

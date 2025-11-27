@@ -63,17 +63,25 @@
         if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
             // ✅ Log removido para performance
             try {
-                return await originalFetch(url, init);
+                const response = await originalFetch(url, init);
+                // Se conseguiu fazer a requisição (mesmo com erro HTTP), não é problema de rede
+                return response;
             } catch (error) {
                 // ✅ Verificar se está offline antes de logar erro
+                // IMPORTANTE: Só considerar offline se realmente não conseguir fazer a requisição
                 const isOfflineState = !navigator.onLine || 
                     (error.message && (
                         error.message.includes('Failed to fetch') ||
                         error.message.includes('NetworkError') ||
-                        error.message.includes('network')
-                    ));
+                        error.message.includes('network') ||
+                        error.message.includes('ERR_INTERNET_DISCONNECTED') ||
+                        error.message.includes('ERR_NETWORK_CHANGED')
+                    )) ||
+                    (error.name === 'TypeError' && error.message.includes('fetch'));
                 
-                if (isOfflineState) {
+                // ✅ NÃO mostrar modal offline se navigator.onLine diz que está online
+                // Pode ser CORS, API não existe, etc - não é problema de rede
+                if (isOfflineState && !navigator.onLine) {
                     // ✅ Se estiver offline e sem token, redirecionar para login IMEDIATAMENTE
                     const hasToken = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
                                     (localStorage.getItem('shapefit_auth_token') || null);
@@ -104,6 +112,8 @@
                     return Promise.reject(silentError);
                 }
                 
+                // Se está online mas deu erro, pode ser problema da API, CORS, etc
+                // NÃO mostrar modal offline
                 console.error(`❌ [Fetch] Erro: ${url}`, error);
                 throw error;
             }
@@ -128,17 +138,30 @@
         }
 
         try {
-            return await originalFetch(url, init);
+            const response = await originalFetch(url, init);
+            
+            // ✅ Se a resposta tem status HTTP (mesmo que seja erro 404, 500, etc), 
+            // significa que há conexão - NÃO mostrar modal offline
+            // Apenas mostrar modal se realmente não conseguir fazer a requisição (erro de rede)
+            return response;
         } catch (error) {
             // ✅ Verificar se está offline antes de logar erro
+            // IMPORTANTE: Só considerar offline se realmente não conseguir fazer a requisição
+            // Erros HTTP (404, 500, etc) NÃO são erros de rede - há conexão, só que a API retornou erro
             const isOfflineState = !navigator.onLine || 
                 (error.message && (
                     error.message.includes('Failed to fetch') ||
                     error.message.includes('NetworkError') ||
-                    error.message.includes('network')
-                ));
+                    error.message.includes('network') ||
+                    error.message.includes('ERR_INTERNET_DISCONNECTED') ||
+                    error.message.includes('ERR_NETWORK_CHANGED')
+                )) ||
+                (error.name === 'TypeError' && error.message.includes('fetch'));
             
-            if (isOfflineState) {
+            // ✅ NÃO mostrar modal offline se o erro não for claramente de rede
+            // Se navigator.onLine diz que está online, mas deu erro, pode ser CORS, API não existe, etc
+            // Nesses casos, NÃO mostrar modal offline
+            if (isOfflineState && !navigator.onLine) {
                 // ✅ Só mostrar modal se usuário estiver logado (tem token)
                 const hasToken = typeof window.getAuthToken === 'function' ? window.getAuthToken() : 
                                 (localStorage.getItem('shapefit_auth_token') || null);
@@ -158,6 +181,8 @@
                 return Promise.reject(silentError);
             }
             
+            // Se está online mas deu erro, pode ser problema da API, CORS, etc
+            // NÃO mostrar modal offline, apenas logar o erro
             console.error(`❌ [Fetch] Erro: ${url}`, error);
             throw error;
         }

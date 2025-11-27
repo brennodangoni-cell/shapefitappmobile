@@ -170,6 +170,20 @@
                 </div>
             </div>`,
 
+        // Scanner de código de barras
+        scanner: `
+            <div class="page-skeleton" data-type="scanner">
+                <div class="skel-page-header" style="display: flex; align-items: center; gap: 12px; padding: 16px 0; margin-bottom: 16px;">
+                    <div class="skel-back skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+                    <div class="skel-title skeleton" style="height: 24px; flex: 1; border-radius: 8px;"></div>
+                </div>
+                <div class="skel-scanner-camera skeleton" style="height: 300px; border-radius: 16px; margin-bottom: 16px;"></div>
+                <div class="skel-scanner-controls" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="skel-input-group skeleton" style="height: 60px; border-radius: 16px;"></div>
+                    <div class="skel-buttons skeleton" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 50px;"></div>
+                </div>
+            </div>`,
+
         // Auth (login/register) - sem skeleton, transição direta
         auth: `<div class="page-skeleton" data-type="auth"></div>`
     };
@@ -198,7 +212,7 @@
         'auth_login': 'auth',
         'auth_register': 'auth',
         'onboarding_onboarding': 'auth',
-        'scan_barcode': 'auth'
+        'scan_barcode': 'scanner'
     };
 
     // === FUNÇÕES PRINCIPAIS ===
@@ -327,11 +341,15 @@
         }
 
         // ✅ MOSTRAR CONTEÚDO COM ANIMAÇÃO
-        const pageContent = container.querySelector('.page-root, .app-container');
+        const pageContent = container.querySelector('.page-root, .app-container, .page-content-hidden');
         if (pageContent) {
+            // Remover classe de escondido
+            pageContent.classList.remove('page-content-hidden');
             pageContent.style.cssText = `
                 display: block !important;
                 visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
                 transform: translateZ(0) !important;
                 -webkit-transform: translateZ(0) !important;
             `;

@@ -5,18 +5,13 @@
  */
 (function() {
 
-        // Verificar autenticação
-        if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
-            if (window.SPARouter) {
-                window.SPARouter.navigate('/auth/login');
-            } else {
-                window.location.href = './auth/login.html';
-            }
-            return;
-        }
-        
         const contentContainer = document.getElementById('content-container');
         const contentTitle = document.getElementById('content-title');
+        
+        if (!contentContainer || !contentTitle) {
+            console.warn('[ViewContent] Elementos do DOM não encontrados');
+            return;
+        }
         
         // Obter ID do conteúdo da URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -31,8 +26,18 @@
             return;
         }
         
+        // Flag para evitar múltiplas execuções
+        let isLoading = false;
+        let isInitialized = false;
+        
         // Carregar conteúdo
         async function loadContent() {
+            // Evitar múltiplas execuções simultâneas
+            if (isLoading) {
+                return;
+            }
+            isLoading = true;
+            
             try {
                 const apiUrl = `/api/get_view_content_data.php?id=${contentId}`;
                 
@@ -75,11 +80,17 @@
                 
                 renderContent(result.data.content, result.data.files);
                 
-                // Registrar visualização
-                registerContentView(contentId);
+                // Registrar visualização de forma não-bloqueante (não aguardar)
+                registerContentView(contentId).catch(err => {
+                    // Ignorar erros de registro de visualização
+                    console.warn('[ViewContent] Erro ao registrar visualização:', err);
+                });
                 
             } catch (error) {
+                console.error('[ViewContent] Erro ao carregar conteúdo:', error);
                 renderError();
+            } finally {
+                isLoading = false;
             }
         }
         
@@ -179,33 +190,107 @@
             // Verificar se está rodando em Capacitor (app mobile)
             const isCapacitor = window.Capacitor !== undefined || window.CapacitorWeb !== undefined;
             const isIOS = isCapacitor && (window.Capacitor?.getPlatform() === 'ios' || /iPad|iPhone|iPod/.test(navigator.userAgent));
+            const isAndroid = isCapacitor && (window.Capacitor?.getPlatform() === 'android');
             
-            // ✅ NO iOS: ABRIR PDF NO NAVEGADOR EXTERNO (Safari)
-            if (isIOS) {
-                // Abrir diretamente no navegador externo
-                // No iOS WebView, window.location.href abre no Safari
-                window.location.href = fileUrl;
+            // ✅ NO iOS E ANDROID: GERAR LINK TEMPORÁRIO E ABRIR NO NAVEGADOR EXTERNO
+            if (isIOS || isAndroid) {
+                // Extrair file_id ou content_id dos data attributes ou da URL
+                const fileId = cardElement.dataset.fileId || new URLSearchParams(fileUrl.split('?')[1] || '').get('id') || '0';
+                const contentId = cardElement.dataset.contentId || new URLSearchParams(fileUrl.split('?')[1] || '').get('content_id') || '0';
                 
-                // Atualizar status
+                // Mostrar status
                 if (statusEl) {
-                    statusEl.innerHTML = '<i class="fas fa-external-link-alt"></i> <span>Abrindo no navegador...</span>';
-                    statusEl.style.color = '#4CAF50';
+                    statusEl.style.display = 'flex';
+                    statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Gerando link temporário...</span>';
+                    statusEl.style.color = 'var(--accent-orange)';
                 }
                 if (labelEl) {
-                    labelEl.textContent = 'Abrindo...';
+                    labelEl.textContent = 'Gerando link...';
                 }
+                cardElement.style.pointerEvents = 'none';
+                cardElement.style.opacity = '0.7';
                 
-                // Resetar após 2 segundos
-                setTimeout(() => {
+                try {
+                    // Chamar endpoint para gerar link temporário
+                    const apiBase = window.API_BASE_URL || window.BASE_APP_URL + '/api';
+                    let tempUrlEndpoint = `${apiBase}/serve_pdf.php?`;
+                    if (fileId !== '0') {
+                        tempUrlEndpoint += `id=${fileId}`;
+                    } else if (contentId !== '0') {
+                        tempUrlEndpoint += `content_id=${contentId}`;
+                    } else {
+                        // Se não tem ID, tentar extrair da URL do arquivo
+                        throw new Error('Não foi possível identificar o arquivo PDF');
+                    }
+                    
+                    const response = await authenticatedFetch(tempUrlEndpoint);
+                    if (!response.ok) {
+                        throw new Error('Erro ao gerar link temporário');
+                    }
+                    
+                    const result = await response.json();
+                    if (!result.success || !result.temp_url) {
+                        throw new Error('Erro ao gerar link temporário');
+                    }
+                    
+                    // Abrir link temporário no navegador externo
+                    // No iOS/Android WebView, window.location.href abre no navegador padrão
+                    // Ou usar window.open se disponível
+                    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+                        // Se tiver plugin Browser, usar ele
+                        const { Browser } = window.Capacitor.Plugins;
+                        await Browser.open({ url: result.temp_url });
+                    } else {
+                        // Fallback: usar window.location.href (abre no navegador externo)
+                        window.location.href = result.temp_url;
+                    }
+                    
+                    // Atualizar status
                     if (statusEl) {
-                        statusEl.style.display = 'none';
+                        statusEl.innerHTML = '<i class="fas fa-external-link-alt"></i> <span>Abrindo no navegador...</span>';
+                        statusEl.style.color = '#4CAF50';
                     }
                     if (labelEl) {
-                        labelEl.textContent = 'Abrir PDF';
+                        labelEl.textContent = 'Abrindo...';
                     }
-                    cardElement.style.pointerEvents = '';
-                    cardElement.style.opacity = '1';
-                }, 2000);
+                    
+                    // Resetar após 2 segundos
+                    setTimeout(() => {
+                        if (statusEl) {
+                            statusEl.style.display = 'none';
+                        }
+                        if (labelEl) {
+                            labelEl.textContent = 'Abrir PDF';
+                        }
+                        cardElement.style.pointerEvents = '';
+                        cardElement.style.opacity = '1';
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Erro ao gerar link temporário:', error);
+                    
+                    // Fallback: tentar abrir URL original (pode pedir login)
+                    window.open(fileUrl, '_system');
+                    
+                    if (statusEl) {
+                        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>Erro ao gerar link</span>';
+                        statusEl.style.color = '#ef5350';
+                    }
+                    if (labelEl) {
+                        labelEl.textContent = 'Erro';
+                    }
+                    
+                    setTimeout(() => {
+                        if (statusEl) {
+                            statusEl.style.display = 'none';
+                        }
+                        if (labelEl) {
+                            labelEl.textContent = 'Abrir PDF';
+                        }
+                        cardElement.style.pointerEvents = '';
+                        cardElement.style.opacity = '1';
+                    }, 3000);
+                }
                 
                 return; // Sair da função
             }
@@ -493,28 +578,34 @@
         }
         
         function renderPdfFile(file) {
-            // Usar file_url se disponível (da API), senão construir a partir de file_path
-            let fileUrl = file.file_url || file.file_path || '';
+            // ✅ USAR API PARA SERVIR PDF (similar ao vídeo)
+            let fileUrl = '';
+            let fileId = null;
+            let contentId = null;
             
-            // Construir URL completa
-            if (!fileUrl) {
-                return '';
-            }
-            
-            // Se já é URL completa, usar como está
-            if (fileUrl.match(/^https?:\/\//)) {
-                // URL completa já
-            } else {
-                // Construir URL completa
-                if (!fileUrl.startsWith('/')) {
-                    fileUrl = '/' + fileUrl;
+            // Priorizar ID do arquivo, senão usar path
+            if (file.id) {
+                fileId = file.id;
+                fileUrl = `${window.BASE_APP_URL}/api/serve_pdf.php?id=${file.id}`;
+            } else if (file.content_id) {
+                contentId = file.content_id;
+                fileUrl = `${window.BASE_APP_URL}/api/serve_pdf.php?content_id=${file.content_id}`;
+            } else if (file.file_url || file.file_path) {
+                // Fallback: usar URL/path direto
+                fileUrl = file.file_url || file.file_path;
+                if (!fileUrl.match(/^https?:\/\//)) {
+                    if (!fileUrl.startsWith('/')) {
+                        fileUrl = '/' + fileUrl;
+                    }
+                    fileUrl = window.BASE_APP_URL + fileUrl;
                 }
-                fileUrl = window.BASE_APP_URL + fileUrl;
+            } else {
+                return '';
             }
             
             const title = file.video_title || 'Sem título';
             const fileName = file.file_name || title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
-            const fileId = `pdf-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const cardId = `pdf-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             
             // ✅ DETECTAR SE É iOS PARA MUDAR O TEXTO DO BOTÃO
             const isCapacitor = window.Capacitor !== undefined || window.CapacitorWeb !== undefined;
@@ -522,10 +613,19 @@
             const buttonText = isIOS ? 'Abrir PDF' : 'Baixar PDF';
             const buttonIcon = isIOS ? 'fa-external-link-alt' : 'fa-download';
             
+            // Adicionar data attributes para IDs (para gerar link temporário)
+            let dataAttrs = `data-file-url="${escapeHtml(fileUrl)}" data-file-name="${escapeHtml(fileName)}"`;
+            if (fileId) {
+                dataAttrs += ` data-file-id="${fileId}"`;
+            }
+            if (contentId) {
+                dataAttrs += ` data-content-id="${contentId}"`;
+            }
+            
             return `
                 <div class="file-container">
                     <h3 class="file-title">${escapeHtml(title)}</h3>
-                    <div class="content-pdf-card" id="${fileId}" data-file-url="${escapeHtml(fileUrl)}" data-file-name="${escapeHtml(fileName)}" style="cursor: pointer;">
+                    <div class="content-pdf-card" id="${cardId}" ${dataAttrs} style="cursor: pointer;">
                         <i class="fas fa-file-pdf content-pdf-icon"></i>
                         <div class="content-pdf-label">
                             <span>${escapeHtml(buttonText)}</span>
@@ -572,18 +672,34 @@
         
         // Carregar dados ao iniciar
         function init() {
-            loadContent();
+            // Evitar múltiplas inicializações
+            if (isInitialized) {
+                return;
+            }
+            isInitialized = true;
+            
+            // Usar requestAnimationFrame para não bloquear o thread principal
+            requestAnimationFrame(() => {
+                loadContent();
+            });
         }
         
         // SPA: executar imediatamente se DOM já carregou
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            setTimeout(init, 0);
+            // Pequeno delay para garantir que outros scripts carregaram
+            setTimeout(init, 50);
         } else {
-            document.addEventListener('DOMContentLoaded', init);
+            document.addEventListener('DOMContentLoaded', init, { once: true });
         }
         
-        // Também ouvir eventos do SPA
-        window.addEventListener('fragmentReady', init);
-        window.addEventListener('pageLoaded', init);
+        // Também ouvir eventos do SPA (com debounce)
+        let initTimeout = null;
+        const debouncedInit = () => {
+            if (initTimeout) clearTimeout(initTimeout);
+            initTimeout = setTimeout(init, 100);
+        };
+        
+        window.addEventListener('fragmentReady', debouncedInit, { once: true });
+        window.addEventListener('pageLoaded', debouncedInit, { once: true });
     
 })();

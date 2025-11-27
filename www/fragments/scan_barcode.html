@@ -432,11 +432,11 @@ body.scan-modal-open {
             </div>
 
             <div class="action-buttons">
-                <a href="create_custom_food.html" class="action-btn">
+                <a href="/criar-alimento" class="action-btn" onclick="event.preventDefault(); if(window.SPARouter) window.SPARouter.navigate('/criar-alimento'); else window.location.href='/criar-alimento'; return false;">
                     <i class="fas fa-plus"></i>
                     Cadastrar Manual
                 </a>
-                <a href="add_food_to_diary.html" class="action-btn">
+                <a href="/adicionar-refeicao" class="action-btn" onclick="event.preventDefault(); if(window.SPARouter) window.SPARouter.navigate('/adicionar-refeicao'); else window.location.href='/adicionar-refeicao'; return false;">
                     <i class="fas fa-arrow-left"></i>
                     Voltar
                 </a>
@@ -469,6 +469,5 @@ body.scan-modal-open {
 
 
 <script src="/assets/js/auth.js"></script>
-<script src="https://unpkg.com/@zxing/library@latest"></script>
 <script src="/assets/js/pages/scan_barcode/scan_barcode_inline_0.js"></script>
 <script src="/assets/js/pages/scan_barcode/scan_barcode_inline_1.js"></script>

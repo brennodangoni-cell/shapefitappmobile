@@ -150,6 +150,18 @@
         if (!href || href === '#') return;
         
         event.preventDefault();
+        event.stopPropagation();
+        
+        // ✅ REMOVER CONTEÚDO ANTIGO IMEDIATAMENTE (antes de navegar)
+        if (router.container) {
+            const oldContent = router.container.querySelector('.page-root, .app-container, [class*="page-"]');
+            if (oldContent) {
+                oldContent.style.display = 'none';
+                oldContent.style.opacity = '0';
+                oldContent.style.visibility = 'hidden';
+            }
+        }
+        
         navigateTo(convertToFragmentPath(href));
     }
     
@@ -189,9 +201,24 @@
             '/cadastro': '/fragments/auth_register.html'
         };
         
+        // ✅ Mapear também nomes de arquivos diretos (sem barra)
+        const fileMap = {
+            'create_custom_food.html': '/fragments/create_custom_food.html',
+            'add_food_to_diary.html': '/fragments/add_food_to_diary.html',
+            'scan_barcode.html': '/fragments/scan_barcode.html',
+            'diary.html': '/fragments/diary.html',
+            'main_app.html': '/fragments/main_app.html'
+        };
+        
         // Verificar se é uma URL amigável conhecida
         if (prettyUrlMap[path]) {
             return prettyUrlMap[path] + queryString;
+        }
+        
+        // ✅ Verificar se é um nome de arquivo conhecido
+        const fileName = path.split('/').pop();
+        if (fileMap[fileName]) {
+            return fileMap[fileName] + queryString;
         }
         
         try { path = new URL(path, window.location.origin).pathname; } catch (e) {}
@@ -233,14 +260,37 @@
             visibility: visible !important;
         `;
         
-        // ✅ SEMPRE mostrar skeleton primeiro - SEM DELAY
-        router.container.classList.add('page-loading');
-        router.container.classList.remove('page-ready', 'page-loaded');
+        // ✅ REMOVER MODAIS E CLASSES DO BODY PRIMEIRO (ANTES DE QUALQUER COISA)
+        const modalsToRemove = [
+            document.getElementById('recipe-modal'),
+            document.getElementById('crop-modal'),
+            document.getElementById('restrictions-modal'),
+            document.getElementById('confirm-delete-account-modal'),
+            document.getElementById('product-not-found-modal'),
+            document.querySelector('.recipe-modal'),
+            document.querySelector('.modal-overlay.visible'),
+            document.querySelector('.ep-modal-overlay.visible')
+        ];
+        modalsToRemove.forEach(modal => {
+            if (modal) {
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                modal.classList.remove('visible');
+            }
+        });
+        document.body.classList.remove('recipe-modal-open', 'modal-open', 'ep-modal-open', 'scan-modal-open', 'checkin-modal-open');
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
         
-        // ✅ REMOVER CONTEÚDO ANTIGO IMEDIATAMENTE
-        const oldContent = router.container.querySelector('.page-root, .app-container');
+        // ✅ REMOVER CONTEÚDO ANTIGO IMEDIATAMENTE (PRIMEIRO, ANTES DE QUALQUER COISA)
+        const oldContent = router.container.querySelector('.page-root, .app-container, [class*="page-"]');
         if (oldContent) {
+            // Remover imediatamente sem animação
             oldContent.style.display = 'none';
+            oldContent.style.opacity = '0';
+            oldContent.style.visibility = 'hidden';
             oldContent.remove();
         }
         
@@ -249,6 +299,10 @@
         if (oldSkeleton) {
             oldSkeleton.remove();
         }
+        
+        // ✅ SEMPRE mostrar skeleton primeiro - SEM DELAY
+        router.container.classList.add('page-loading');
+        router.container.classList.remove('page-ready', 'page-loaded');
         
         // Usar o PageLoader se estiver disponível
         if (window.PageLoader) {
@@ -284,6 +338,47 @@
         
         const { isBack = false, forceReload = false } = options;
         router.isGoingBack = isBack;
+        
+        // ✅ REMOVER MODAIS E CLASSES DO BODY PRIMEIRO (ANTES DE QUALQUER COISA)
+        // Isso evita que modais apareçam durante a transição
+        const modalsToRemove = [
+            document.getElementById('recipe-modal'),
+            document.getElementById('crop-modal'),
+            document.getElementById('restrictions-modal'),
+            document.getElementById('confirm-delete-account-modal'),
+            document.getElementById('product-not-found-modal'),
+            document.querySelector('.recipe-modal'),
+            document.querySelector('.modal-overlay.visible'),
+            document.querySelector('.ep-modal-overlay.visible')
+        ];
+        modalsToRemove.forEach(modal => {
+            if (modal) {
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                modal.classList.remove('visible');
+                if (modal.parentElement) {
+                    modal.remove();
+                }
+            }
+        });
+        
+        // Remover classes do body que podem estar bloqueando
+        document.body.classList.remove('recipe-modal-open', 'modal-open', 'ep-modal-open', 'scan-modal-open', 'checkin-modal-open');
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        
+        // ✅ REMOVER CONTEÚDO ANTIGO IMEDIATAMENTE (ANTES DE QUALQUER PROCESSAMENTO)
+        if (router.container) {
+            const oldContent = router.container.querySelector('.page-root, .app-container, [class*="page-"]');
+            if (oldContent) {
+                oldContent.style.display = 'none';
+                oldContent.style.opacity = '0';
+                oldContent.style.visibility = 'hidden';
+                oldContent.style.pointerEvents = 'none';
+            }
+        }
         
         // Separar path da query string
         const [basePath, queryString] = fragmentPath.split('?');
@@ -643,12 +738,15 @@
                 let content = tempDiv.querySelector('.page-root') || tempDiv;
                 
                 // ✅ Inserir conteúdo mas mantê-lo COMPLETAMENTE ESCONDIDO
+                // O conteúdo só aparecerá quando PageLoader.ready() for chamado
                 const clonedContent = content.cloneNode(true);
                 clonedContent.style.cssText = `
                     display: none !important;
                     opacity: 0 !important;
                     visibility: hidden !important;
+                    pointer-events: none !important;
                 `;
+                clonedContent.classList.add('page-content-hidden');
                 router.container.appendChild(clonedContent);
                 
                 // Primeira entrada: animar tudo
