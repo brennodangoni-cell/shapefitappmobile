@@ -291,13 +291,145 @@
                 currentActivityInput.focus();
             }
 
-            // Modal de atividade - garantir que sempre seja clicável
+            // ========== MODAL DE ATIVIDADES CUSTOMIZADAS ==========
+            
+            // Variáveis do modal
+            let modalInitialized = false;
+            
+            // Função para abrir modal
+            function openModal() {
+                const modal = document.getElementById('custom-activity-modal');
+                if (!modal) {
+                    console.error('[Onboarding] Modal não encontrado!');
+                    return;
+                }
+                
+                // Garantir que modal está no body
+                if (modal.parentElement !== document.body) {
+                    document.body.appendChild(modal);
+                }
+                
+                // Inicializar listeners apenas uma vez
+                if (!modalInitialized) {
+                    initModalListeners();
+                    modalInitialized = true;
+                }
+                
+                // Remover estilo inline que pode estar bloqueando
+                modal.removeAttribute('style');
+                
+                // Mostrar modal - FORÇAR COM !important via inline
+                modal.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    background: rgba(0, 0, 0, 0.6) !important;
+                    backdrop-filter: blur(8px) !important;
+                    -webkit-backdrop-filter: blur(8px) !important;
+                    z-index: 999999 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    padding: 20px !important;
+                    box-sizing: border-box !important;
+                    pointer-events: auto !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                `;
+                modal.classList.add('active');
+                document.body.classList.add('modal-open');
+                
+                // Focar no input
+                setTimeout(() => {
+                    const input = document.getElementById('custom-activity-input');
+                    if (input) input.focus();
+                }, 100);
+            }
+            
+            // Função para fechar modal
+            function closeModal() {
+                const modal = document.getElementById('custom-activity-modal');
+                if (modal) {
+                    modal.classList.remove('active');
+                    modal.style.cssText = 'display: none !important;';
+                    document.body.classList.remove('modal-open');
+                }
+            }
+            
+            // Inicializar listeners do modal (apenas uma vez)
+            function initModalListeners() {
+                const modal = document.getElementById('custom-activity-modal');
+                const closeBtn = document.getElementById('close-modal-btn');
+                const closeIcon = document.getElementById('close-modal-icon');
+                const addBtn = document.getElementById('add-activity-btn');
+                const input = document.getElementById('custom-activity-input');
+                
+                // Botão Concluir
+                if (closeBtn) {
+                    closeBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeModal();
+                        return false;
+                    };
+                }
+                
+                // Botão X
+                if (closeIcon) {
+                    closeIcon.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeModal();
+                        return false;
+                    };
+                }
+                
+                // Clicar no overlay (fora do conteúdo) fecha o modal
+                if (modal) {
+                    modal.onclick = function(e) {
+                        if (e.target === modal) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            closeModal();
+                        }
+                    };
+                }
+                
+                // Botão adicionar atividade
+                if (addBtn) {
+                    addBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addActivity();
+                        return false;
+                    };
+                }
+                
+                // Enter no input adiciona atividade
+                if (input) {
+                    input.onkeypress = function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addActivity();
+                            return false;
+                        }
+                    };
+                }
+            }
+            
+            // Expor função globalmente
+            window.closeOnboardingModal = closeModal;
+            
+            // Botão "Outro" - abrir modal
             if (otherActivityBtn) {
-                // Garantir que o botão sempre seja clicável
                 otherActivityBtn.style.pointerEvents = 'auto';
                 otherActivityBtn.disabled = false;
                 
-                otherActivityBtn.addEventListener('click', (e) => {
+                otherActivityBtn.onclick = function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     
@@ -340,90 +472,14 @@
                         }
                     }
                     
-                    // Abrir o modal - buscar dinamicamente para garantir que está no DOM
-                    let currentModal = document.getElementById('custom-activity-modal');
-                    if (!currentModal) {
-                        // Tentar buscar de outras formas
-                        currentModal = document.querySelector('.modal-overlay#custom-activity-modal');
-                    }
-                    if (!currentModal) {
-                        // Tentar buscar em todo o documento
-                        currentModal = document.querySelector('#custom-activity-modal');
-                    }
-                    
-                    if (currentModal) {
-                        // Garantir que o modal está no body (para evitar problemas de z-index/overflow)
-                        if (currentModal.parentElement !== document.body) {
-                            document.body.appendChild(currentModal);
-                        }
-                        
-                        // Configurar listeners do modal antes de abrir
-                        setupModalListeners();
-                        
-                        // Forçar reflow antes de adicionar a classe active
-                        currentModal.offsetHeight;
-                        
-                        currentModal.classList.add('active');
-                        console.log('[Onboarding] Modal display:', window.getComputedStyle(currentModal).display);
-                        console.log('[Onboarding] Modal visibility:', window.getComputedStyle(currentModal).visibility);
-                        console.log('[Onboarding] Modal opacity:', window.getComputedStyle(currentModal).opacity);
-                        console.log('[Onboarding] Modal z-index:', window.getComputedStyle(currentModal).zIndex);
-                        
-                        // Buscar elementos do modal dinamicamente também
-                        const currentActivityInput = document.getElementById('custom-activity-input');
-                        setTimeout(() => {
-                            if (currentActivityInput) {
-                                currentActivityInput.focus();
-                            }
-                        }, 80);
-                    } else {
-                        console.error('[Onboarding] Modal não encontrado no DOM!');
-                        console.error('[Onboarding] Tentando buscar todos os modais:', document.querySelectorAll('.modal-overlay'));
-                    }
-                });
-            } else {
-                console.error('[Onboarding] Botão Outro não encontrado!');
+                    // Abrir modal
+                    openModal();
+                    return false;
+                };
             }
-
-            function closeModal() {
-                const currentModal = document.getElementById('custom-activity-modal');
-                if (currentModal) {
-                    currentModal.classList.remove('active');
-                }
-            }
-
-            // Função para configurar event listeners do modal (chamada quando necessário)
-            function setupModalListeners() {
-                const currentCloseModalBtn = document.getElementById('close-modal-btn');
-                const currentCloseModalIcon = document.getElementById('close-modal-icon');
-                const currentAddActivityBtn = document.getElementById('add-activity-btn');
-                const currentActivityInput = document.getElementById('custom-activity-input');
-                
-                if (currentCloseModalBtn && !currentCloseModalBtn.dataset.listenerAdded) {
-                    currentCloseModalBtn.addEventListener('click', closeModal);
-                    currentCloseModalBtn.dataset.listenerAdded = 'true';
-                }
-                if (currentCloseModalIcon && !currentCloseModalIcon.dataset.listenerAdded) {
-                    currentCloseModalIcon.addEventListener('click', closeModal);
-                    currentCloseModalIcon.dataset.listenerAdded = 'true';
-                }
-                if (currentAddActivityBtn && !currentAddActivityBtn.dataset.listenerAdded) {
-                    currentAddActivityBtn.addEventListener('click', addActivity);
-                    currentAddActivityBtn.dataset.listenerAdded = 'true';
-                }
-                if (currentActivityInput && !currentActivityInput.dataset.listenerAdded) {
-                    currentActivityInput.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addActivity();
-                        }
-                    });
-                    currentActivityInput.dataset.listenerAdded = 'true';
-                }
-            }
-
-            // Tentar configurar listeners imediatamente
-            setupModalListeners();
+            
+            // Inicializar listeners do modal imediatamente
+            initModalListeners();
 
             // Lógica "Nenhum"
             if (noneCheckbox) {

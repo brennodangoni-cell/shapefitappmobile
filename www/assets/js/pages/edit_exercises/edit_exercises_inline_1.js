@@ -76,8 +76,151 @@
             }, 5000);
         }
 
+        // ========== MODAL DE ATIVIDADES CUSTOMIZADAS ==========
+        
+        let modalInitialized = false;
+        
+        // Função para abrir modal
+        function openModal() {
+            if (!modal) {
+                console.error('[EditExercises] Modal não encontrado!');
+                return;
+            }
+            
+            // Garantir que modal está no body
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+            
+            // Inicializar listeners apenas uma vez
+            if (!modalInitialized) {
+                initModalListeners();
+                modalInitialized = true;
+            }
+            
+            // Remover estilo inline que pode estar bloqueando
+            modal.removeAttribute('style');
+            
+            // Mostrar modal - FORÇAR COM !important via inline
+            modal.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(0, 0, 0, 0.6) !important;
+                backdrop-filter: blur(8px) !important;
+                -webkit-backdrop-filter: blur(8px) !important;
+                z-index: 999999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 20px !important;
+                box-sizing: border-box !important;
+                pointer-events: auto !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            `;
+            modal.classList.add('active');
+            document.body.classList.add('modal-open');
+            
+            // Focar no input
+            setTimeout(() => {
+                if (activityInput) activityInput.focus();
+            }, 100);
+        }
+
+        // Função para fechar modal
         function closeModal() {
-            modal.classList.remove('active');
+            if (modal) {
+                modal.classList.remove('active');
+                modal.style.cssText = 'display: none !important;';
+                document.body.classList.remove('modal-open');
+            }
+        }
+        
+        // EXPOR FUNÇÃO GLOBALMENTE
+        window.closeEditExercisesModal = closeModal;
+
+        // Função para configurar event listeners do modal
+        function initModalListeners() {
+            const closeBtn = document.getElementById('close-modal-btn');
+            const closeIcon = document.getElementById('close-modal-icon');
+            const footerBtn = document.getElementById('close-modal-footer-btn');
+            const addBtn = document.getElementById('add-activity-btn');
+            const input = document.getElementById('custom-activity-input');
+            
+            // Remover listeners antigos para evitar duplicação
+            if (closeBtn) {
+                const newCloseBtn = closeBtn.cloneNode(true);
+                closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+                newCloseBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeModal();
+                    return false;
+                };
+            }
+            
+            if (closeIcon) {
+                const newCloseIcon = closeIcon.cloneNode(true);
+                closeIcon.parentNode.replaceChild(newCloseIcon, closeIcon);
+                newCloseIcon.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeModal();
+                    return false;
+                };
+            }
+            
+            if (footerBtn) {
+                const newFooterBtn = footerBtn.cloneNode(true);
+                footerBtn.parentNode.replaceChild(newFooterBtn, footerBtn);
+                newFooterBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeModal();
+                    return false;
+                };
+            }
+            
+            // Clicar no overlay (fora do conteúdo) fecha o modal
+            if (modal) {
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeModal();
+                    }
+                };
+            }
+            
+            // Botão adicionar atividade
+            const currentAddBtn = document.getElementById('add-activity-btn');
+            if (currentAddBtn && !currentAddBtn.dataset.listenerAdded) {
+                currentAddBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addActivity();
+                    return false;
+                };
+                currentAddBtn.dataset.listenerAdded = 'true';
+            }
+            
+            // Enter no input adiciona atividade
+            const currentInput = document.getElementById('custom-activity-input');
+            if (currentInput && !currentInput.dataset.listenerAdded) {
+                currentInput.onkeypress = function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addActivity();
+                        return false;
+                    }
+                };
+                currentInput.dataset.listenerAdded = 'true';
+            }
         }
 
         // Carregar dados atuais
@@ -138,17 +281,18 @@
             }
         });
 
-        otherActivityBtn.addEventListener('click', () => {
-            modal.classList.add('active');
-            setTimeout(() => {
-                activityInput.focus();
-            }, 80);
-        });
-
-        closeModalBtn.addEventListener('click', closeModal);
-        closeModalFooterBtn.addEventListener('click', closeModal);
-
-        addActivityBtn.addEventListener('click', addActivity);
+        // Botão "Outro" - abrir modal
+        if (otherActivityBtn) {
+            otherActivityBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openModal();
+                return false;
+            };
+        }
+        
+        // Inicializar listeners do modal imediatamente
+        initModalListeners();
         activityInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();

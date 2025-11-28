@@ -657,28 +657,154 @@
                 }
             });
             
-            // Remover foto
-            document.getElementById('remove-photo-btn').addEventListener('click', function() {
-                if (confirm('Tem certeza que deseja remover sua foto de perfil?')) {
+            // Remover foto - FUNÇÃO SIMPLIFICADA E ROBUSTA
+            const removePhotoBtn = document.getElementById('remove-photo-btn');
+            if (removePhotoBtn) {
+                // Remover qualquer listener anterior para evitar duplicação
+                const newRemoveBtn = removePhotoBtn.cloneNode(true);
+                removePhotoBtn.parentNode.replaceChild(newRemoveBtn, removePhotoBtn);
+                
+                newRemoveBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[EditProfile] Botão remover foto clicado');
+                    
+                    if (!confirm('Tem certeza que deseja remover sua foto de perfil?')) {
+                        console.log('[EditProfile] Usuário cancelou remoção');
+                        return;
+                    }
+                    
+                    console.log('[EditProfile] Usuário confirmou remoção');
+                    const removeBtn = this;
+                    const originalText = removeBtn.innerHTML;
+                    removeBtn.disabled = true;
+                    removeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removendo...';
+                    
+                    // Buscar elementos
+                    const photoWrapper = document.querySelector('.ep-photo-wrapper');
+                    const photoInput = document.getElementById('profile-photo-input');
+                    const currentPhoto = document.getElementById('profile-photo-display');
+                    
+                    console.log('[EditProfile] Elementos encontrados:', {
+                        photoWrapper: !!photoWrapper,
+                        photoInput: !!photoInput,
+                        currentPhoto: !!currentPhoto
+                    });
+                    
+                    // PRIMEIRO: Atualizar visualmente (sempre funciona)
                     const placeholder = document.createElement('div');
                     placeholder.id = 'profile-photo-display';
                     placeholder.className = 'ep-photo-placeholder profile-photo profile-icon-placeholder';
                     placeholder.innerHTML = '<i class="fas fa-user"></i>';
                     placeholder.style.cursor = 'pointer';
-                    // Não precisa adicionar evento de click - o wrapper já cuida disso (delegação de eventos)
                     
-                    const currentPhoto = document.getElementById('profile-photo-display');
                     if (currentPhoto) {
-                        photoWrapper.replaceChild(placeholder, currentPhoto);
-                    } else {
+                        if (currentPhoto.parentNode) {
+                            currentPhoto.parentNode.replaceChild(placeholder, currentPhoto);
+                            console.log('[EditProfile] Foto substituída visualmente');
+                        } else if (photoWrapper) {
+                            photoWrapper.appendChild(placeholder);
+                            console.log('[EditProfile] Foto adicionada ao wrapper');
+                        }
+                    } else if (photoWrapper) {
                         photoWrapper.appendChild(placeholder);
+                        console.log('[EditProfile] Placeholder adicionado ao wrapper');
                     }
-                    document.getElementById('remove-photo-btn').style.display = 'none';
-                    photoInput.value = '';
-                    // Marcar para remover no servidor
-                    document.getElementById('remove-photo-flag').value = '1';
-                }
-            });
+                    
+                    // Limpar input e esconder botão
+                    if (photoInput) {
+                        photoInput.value = '';
+                    }
+                    removeBtn.style.display = 'none';
+                    
+                    const removeFlag = document.getElementById('remove-photo-flag');
+                    if (removeFlag) {
+                        removeFlag.value = '0';
+                    }
+                    
+                    // SEGUNDO: Tentar remover no servidor
+                    try {
+                        const token = getAuthToken();
+                        if (!token) {
+                            console.warn('[EditProfile] Token não encontrado');
+                            showStatus('Foto removida visualmente. Faça login novamente para persistir.', true);
+                            return;
+                        }
+                        
+                        console.log('[EditProfile] Tentando remover foto no servidor...');
+                        
+                        // Tentar múltiplas APIs
+                        let success = false;
+                        let errorMessage = '';
+                        
+                        // Tentativa 1: update_profile.php
+                        try {
+                            const response = await authenticatedFetch('/api/update_profile.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ remove_photo: true })
+                            });
+                            
+                            if (response && response.ok) {
+                                const result = await response.json();
+                                if (result && result.success) {
+                                    success = true;
+                                    console.log('[EditProfile] Foto removida via update_profile.php');
+                                }
+                            } else if (response) {
+                                errorMessage = `HTTP ${response.status}`;
+                            }
+                        } catch (err) {
+                            console.error('[EditProfile] Erro em update_profile.php:', err);
+                            errorMessage = err.message;
+                        }
+                        
+                        // Se não funcionou, tentar remove_profile_photo.php
+                        if (!success) {
+                            try {
+                                const response = await authenticatedFetch('/api/remove_profile_photo.php', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ remove: true })
+                                });
+                                
+                                if (response && response.ok) {
+                                    const result = await response.json();
+                                    if (result && result.success) {
+                                        success = true;
+                                        console.log('[EditProfile] Foto removida via remove_profile_photo.php');
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('[EditProfile] Erro em remove_profile_photo.php:', err);
+                            }
+                        }
+                        
+                        // Mostrar resultado
+                        if (success) {
+                            showStatus('Foto removida com sucesso!', true);
+                        } else {
+                            console.warn('[EditProfile] Foto removida visualmente, mas não no servidor');
+                            showStatus('Foto removida visualmente. Recarregue a página para verificar se persistiu.', true);
+                        }
+                        
+                    } catch (error) {
+                        console.error('[EditProfile] Erro geral ao remover foto:', error);
+                        showStatus('Foto removida visualmente. Recarregue a página para verificar.', true);
+                    } finally {
+                        removeBtn.disabled = false;
+                        removeBtn.innerHTML = originalText;
+                    }
+                });
+                
+                console.log('[EditProfile] Listener de remover foto configurado');
+            } else {
+                console.error('[EditProfile] Botão remover foto não encontrado!');
+            }
             
             // Modal de restrições
             const restrictionsModal = document.getElementById('restrictions-modal');
@@ -735,47 +861,7 @@
                 saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
                 
                 try {
-                    // Primeiro, verificar se deve remover a foto
-                    const removePhotoFlag = document.getElementById('remove-photo-flag');
-                    if (removePhotoFlag && removePhotoFlag.value === '1') {
-                        // Chamar API para remover foto
-                        const token = getAuthToken();
-                        if (!token) {
-                            window.location.href = './auth/login.html';
-                            return;
-                        }
-                        
-                        const removeResponse = await fetch('/api/remove_profile_photo.php', {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ remove: true })
-                        });
-                        
-                        if (removeResponse.status === 401) {
-                            clearAuthToken();
-                            window.location.href = './auth/login.html';
-                            return;
-                        }
-                        
-                        if (!removeResponse.ok) {
-                            const removeText = await removeResponse.text();
-                            console.error('Erro ao remover foto:', removeResponse.status, removeText);
-                            throw new Error('Erro ao remover foto');
-                        }
-                        
-                        const removeResult = await removeResponse.json();
-                        if (!removeResult.success) {
-                            throw new Error(removeResult.message || 'Erro ao remover foto');
-                        }
-                        
-                        // Resetar flag
-                        removePhotoFlag.value = '0';
-                    }
-                    
-                    // Depois, fazer upload da foto se houver uma nova
+                    // Fazer upload da foto se houver uma nova
                     const photoInput = document.getElementById('profile-photo-input');
                     if (photoInput.files && photoInput.files.length > 0) {
                         const photoFormData = new FormData();
