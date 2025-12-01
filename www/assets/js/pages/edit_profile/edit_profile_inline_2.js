@@ -997,8 +997,280 @@
             });
         }
         
+        // ============================================
+        // FUNCIONALIDADE DE DELETAR CONTA
+        // ============================================
+        function initDeleteAccount() {
+            const deleteAccountBtn = document.getElementById('delete-account-btn');
+            const deleteModal = document.getElementById('confirm-delete-account-modal');
+            const confirmDeleteBtn = document.getElementById('confirm-delete-account-btn');
+            const cancelDeleteBtn = document.getElementById('cancel-delete-account-btn');
+            
+            if (!deleteAccountBtn || !deleteModal) return;
+            
+            // Abrir modal ao clicar em deletar conta
+            deleteAccountBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Bloquear scroll do body
+                document.body.classList.add('ep-modal-open');
+                deleteModal.classList.add('visible');
+            });
+            
+            // Fechar modal ao clicar em cancelar ou fora
+            function closeDeleteModal() {
+                document.body.classList.remove('ep-modal-open');
+                deleteModal.classList.remove('visible');
+            }
+            
+            if (cancelDeleteBtn) {
+                cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+            }
+            
+            // Fechar ao clicar no overlay (fora do modal)
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === deleteModal) {
+                    closeDeleteModal();
+                }
+            });
+            
+            // Confirmar deleção
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const btn = this;
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deletando...';
+                    
+                    try {
+                        console.log('[DeleteAccount] ========== INICIANDO DELEÇÃO ==========');
+                        console.log('[DeleteAccount] Iniciando deleção de conta...');
+                        
+                        // Usar URL relativa para que o interceptador do config.js faça o trabalho
+                        const deleteUrl = '/api/delete_account.php';
+                        const apiUrl = window.API_BASE_URL || 'https://appshapefit.com/api';
+                        const fullUrl = `${apiUrl}/delete_account.php`;
+                        
+                        console.log('[DeleteAccount] URL relativa:', deleteUrl);
+                        console.log('[DeleteAccount] URL completa esperada:', fullUrl);
+                        console.log('[DeleteAccount] API_BASE_URL configurado:', window.API_BASE_URL);
+                        console.log('[DeleteAccount] Token disponível:', !!getAuthToken());
+                        
+                        if (!getAuthToken()) {
+                            throw new Error('Token de autenticação não encontrado. Faça login novamente.');
+                        }
+                        
+                        const requestBody = { confirm: true };
+                        console.log('[DeleteAccount] Body da requisição:', requestBody);
+                        
+                        // Usar authenticatedFetch que já cuida de tudo
+                        console.log('[DeleteAccount] Usando authenticatedFetch...');
+                        
+                        let response;
+                        try {
+                            // Primeiro, testar se o arquivo existe fazendo uma requisição simples
+                            console.log('[DeleteAccount] Testando conectividade...');
+                            console.log('[DeleteAccount] Navegador online:', navigator.onLine);
+                            
+                            response = await authenticatedFetch(deleteUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(requestBody)
+                            });
+                            
+                            console.log('[DeleteAccount] Resposta recebida:', {
+                                status: response ? response.status : 'null',
+                                statusText: response ? response.statusText : 'null',
+                                ok: response ? response.ok : 'null',
+                                type: response ? response.type : 'null'
+                            });
+                            
+                            if (!response) {
+                                console.error('[DeleteAccount] Resposta é null - pode ser problema de autenticação ou rede');
+                                throw new Error('Não foi possível conectar com o servidor. Verifique sua conexão.');
+                            }
+                            
+                        } catch (fetchError) {
+                            console.error('[DeleteAccount] ========== ERRO NA REQUISIÇÃO ==========');
+                            console.error('[DeleteAccount] Tipo do erro:', fetchError.constructor.name);
+                            console.error('[DeleteAccount] Nome do erro:', fetchError.name);
+                            console.error('[DeleteAccount] Mensagem:', fetchError.message);
+                            console.error('[DeleteAccount] Stack completo:', fetchError.stack);
+                            console.error('[DeleteAccount] Navegador online:', navigator.onLine);
+                            console.error('[DeleteAccount] URL tentada:', deleteUrl);
+                            
+                            // Verificar tipo de erro específico
+                            let errorMessage = 'Erro ao conectar com o servidor. ';
+                            let errorDetails = '';
+                            
+                            if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+                                errorMessage += '\n\nPossíveis causas:\n';
+                                errorMessage += '1. Servidor não está acessível\n';
+                                errorMessage += '2. Problema de CORS\n';
+                                errorMessage += '3. Arquivo não existe no servidor\n';
+                                errorMessage += '4. Erro fatal no PHP antes de retornar resposta\n\n';
+                                errorMessage += 'Verifique:\n';
+                                errorMessage += '- Se o arquivo existe em: ' + fullUrl + '\n';
+                                errorMessage += '- Console do navegador para mais detalhes';
+                                errorDetails = 'Failed to fetch - verifique servidor e CORS';
+                            } else if (fetchError.message.includes('NetworkError')) {
+                                errorMessage += 'Erro de rede. Verifique sua conexão com a internet.';
+                                errorDetails = 'NetworkError';
+                            } else if (fetchError.message.includes('CORS')) {
+                                errorMessage += 'Erro de CORS. O servidor precisa permitir requisições do app.';
+                                errorDetails = 'CORS Error';
+                            } else {
+                                errorMessage += fetchError.message;
+                                errorDetails = fetchError.message;
+                            }
+                            
+                            console.error('[DeleteAccount] Detalhes do erro:', errorDetails);
+                            console.error('[DeleteAccount] ==========================================');
+                            
+                            throw new Error(errorMessage);
+                        }
+                        
+                        if (!response) {
+                            console.warn('[DeleteAccount] Resposta é null - token pode ser inválido');
+                            return;
+                        }
+                        
+                        // Ler o texto da resposta
+                        console.log('[DeleteAccount] Lendo resposta do servidor...');
+                        let text;
+                        try {
+                            text = await response.text();
+                            console.log('[DeleteAccount] Texto da resposta recebido');
+                            console.log('[DeleteAccount] Tamanho da resposta:', text ? text.length : 0);
+                            console.log('[DeleteAccount] Primeiros 500 caracteres:', text ? text.substring(0, 500) : 'vazio');
+                        } catch (textError) {
+                            console.error('[DeleteAccount] Erro ao ler texto da resposta:', textError);
+                            throw new Error('Erro ao ler resposta do servidor: ' + textError.message);
+                        }
+                        
+                        if (!text || text.trim() === '') {
+                            console.error('[DeleteAccount] Resposta vazia do servidor');
+                            throw new Error('Resposta vazia do servidor. Status: ' + response.status);
+                        }
+                        
+                        // Verificar Content-Type
+                        const contentType = response.headers.get('content-type');
+                        console.log('[DeleteAccount] Content-Type:', contentType);
+                        
+                        if (!contentType || !contentType.includes('application/json')) {
+                            console.error('[DeleteAccount] Resposta não é JSON:', contentType);
+                            console.error('[DeleteAccount] Primeiros 500 caracteres:', text.substring(0, 500));
+                            
+                            // Pode ser um erro PHP não capturado
+                            if (text.includes('<') && text.includes('>')) {
+                                throw new Error('Erro no servidor (resposta HTML). Verifique os logs do servidor.');
+                            }
+                            
+                            throw new Error('Resposta inválida do servidor. Tipo: ' + contentType);
+                        }
+                        
+                        // Parsear JSON
+                        let result;
+                        try {
+                            result = JSON.parse(text);
+                            console.log('[DeleteAccount] JSON parseado com sucesso:', result);
+                        } catch (parseError) {
+                            console.error('[DeleteAccount] Erro ao parsear JSON:', parseError);
+                            console.error('[DeleteAccount] Texto que falhou:', text);
+                            throw new Error('Resposta inválida do servidor (JSON inválido). Verifique os logs.');
+                        }
+                        
+                        // Verificar status HTTP
+                        if (!response.ok) {
+                            console.error('[DeleteAccount] Resposta não OK:', {
+                                status: response.status,
+                                result: result
+                            });
+                            
+                            const errorMessage = result.message || 
+                                result.debug?.error || 
+                                'Erro ao deletar conta. Status: ' + response.status;
+                            
+                            if (result.debug) {
+                                console.error('[DeleteAccount] Debug info:', result.debug);
+                            }
+                            
+                            throw new Error(errorMessage);
+                        }
+                        
+                        // Verificar sucesso no resultado
+                        if (result.success) {
+                            console.log('[DeleteAccount] Conta deletada com sucesso!');
+                            
+                            // Limpar localStorage
+                            localStorage.removeItem('shapefit_auth_token');
+                            localStorage.removeItem('shapefitUserToken');
+                            localStorage.removeItem('shapefitUserData');
+                            
+                            // Limpar cache de auth
+                            if (window.clearAuthToken) {
+                                window.clearAuthToken();
+                            }
+                            window._authResult = undefined;
+                            window._authChecking = false;
+                            
+                            console.log('[DeleteAccount] Dados locais limpos, mostrando página de sucesso...');
+                            
+                            // Fechar modal de confirmação primeiro
+                            const deleteModal = document.getElementById('confirm-delete-account-modal');
+                            if (deleteModal) {
+                                document.body.classList.remove('ep-modal-open');
+                                deleteModal.classList.remove('visible');
+                            }
+                            
+                            // Navegar para página de sucesso usando router SPA
+                            if (window.SPARouter && typeof window.SPARouter.navigate === 'function') {
+                                // Navegar para página de sucesso
+                                window.SPARouter.navigate('/fragments/account_deleted.html', true);
+                            } else {
+                                // Fallback: redirecionar direto para sucesso
+                                window.location.href = '/fragments/account_deleted.html';
+                            }
+                        } else {
+                            console.error('[DeleteAccount] Resultado indica falha:', result);
+                            throw new Error(result.message || 'Erro ao deletar conta.');
+                        }
+                        
+                    } catch (error) {
+                        console.error('[DeleteAccount] ERRO GERAL:', error);
+                        console.error('[DeleteAccount] Tipo:', error.constructor.name);
+                        console.error('[DeleteAccount] Mensagem:', error.message);
+                        console.error('[DeleteAccount] Stack:', error.stack);
+                        
+                        // Mostrar erro mais detalhado
+                        let errorMessage = error.message || 'Erro ao deletar conta. Tente novamente.';
+                        
+                        // Adicionar instruções se for erro de rede
+                        if (error.message && error.message.includes('Failed to fetch')) {
+                            errorMessage += '\n\nVerifique:\n- Conexão com internet\n- Se o servidor está acessível\n- Logs do console para mais detalhes';
+                        }
+                        
+                        alert(errorMessage);
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                });
+            }
+        }
+        
         // Executar imediatamente (script carregado dinamicamente no SPA)
         initEditProfile();
+        
+        // Inicializar funcionalidade de deletar conta
+        setTimeout(() => {
+            initDeleteAccount();
+        }, 100);
         
         // ✅ Recarregar dados quando internet volta
         window.addEventListener('reloadPageData', function(e) {

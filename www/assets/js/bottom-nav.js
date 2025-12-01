@@ -18,7 +18,7 @@
         followFactor: 0.8,          // Suavidade do acompanhamento (0-1)
         velocityThreshold: 0.15,    // Threshold menor = mais responsivo
         scrollThreshold: 5,         // Pixels mínimos para detectar scroll
-        hiddenPages: ['auth_login', 'auth_register', 'login', 'register', 'onboarding', 'bem-vindo']
+        hiddenPages: ['auth_login', 'auth_register', 'login', 'register', 'onboarding', 'bem-vindo', 'account_deleted']
     };
 
     // ============================================

@@ -673,7 +673,178 @@ body.ep-modal-open {
 }
 
 /* =============================================
-   13. RESPONSIVO
+   13. SEÇÃO DELETAR CONTA (ZONA DE PERIGO)
+   ============================================= */
+.ep-delete-account-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.ep-delete-account-card {
+    background: rgba(239,68,68,0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 24px rgba(239,68,68,0.1);
+}
+
+.ep-delete-account-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ef4444;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ep-delete-account-title i {
+    font-size: 1rem;
+}
+
+.ep-delete-account-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
+
+.ep-delete-account-btn {
+    width: 100%;
+    padding: 14px 20px;
+    background: rgba(239,68,68,0.2);
+    border: 1px solid #ef4444;
+    border-radius: 12px;
+    color: #ef4444;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.ep-delete-account-btn:hover {
+    background: rgba(239,68,68,0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239,68,68,0.2);
+}
+
+.ep-delete-account-btn:active {
+    transform: translateY(0);
+}
+
+.ep-delete-account-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Modal de confirmação de deletar conta */
+.ep-delete-modal .ep-modal {
+    max-width: 380px;
+}
+
+.ep-delete-modal-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(239,68,68,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.ep-delete-modal-icon i {
+    font-size: 2rem;
+    color: #ef4444;
+}
+
+.ep-delete-modal-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    margin: 0 0 12px 0;
+}
+
+.ep-delete-modal-text {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.6;
+    margin: 0 0 24px 0;
+}
+
+.ep-delete-modal-warning {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    color: #ef4444;
+    text-align: center;
+}
+
+.ep-delete-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ep-delete-modal-btn-danger {
+    width: 100%;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ep-delete-modal-btn-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239,68,68,0.4);
+}
+
+.ep-delete-modal-btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ep-delete-modal-btn-cancel {
+    width: 100%;
+    padding: 12px 20px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ep-delete-modal-btn-cancel:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+/* =============================================
+   14. RESPONSIVO
    ============================================= */
 @media (max-width: 400px) {
     .ep-form-row {
@@ -685,6 +856,10 @@ body.ep-modal-open {
     }
     
     .ep-card {
+        padding: 16px;
+    }
+    
+    .ep-delete-account-card {
         padding: 16px;
     }
 }
@@ -846,6 +1021,23 @@ body.ep-modal-open {
             Salvar Alterações
         </button>
     </form>
+    
+    <!-- Seção Deletar Conta -->
+    <div class="ep-delete-account-section">
+        <div class="ep-delete-account-card">
+            <h3 class="ep-delete-account-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                Zona de Perigo
+            </h3>
+            <p class="ep-delete-account-description">
+                Ao deletar sua conta, todos os seus dados serão permanentemente removidos. Esta ação não pode ser desfeita.
+            </p>
+            <button type="button" class="ep-delete-account-btn" id="delete-account-btn">
+                <i class="fas fa-trash-alt"></i>
+                Deletar Minha Conta
+            </button>
+        </div>
+    </div>
 </section>
 
 <!-- Modal Restrições -->
@@ -895,6 +1087,33 @@ body.ep-modal-open {
             </button>
             <button type="button" class="ep-modal-btn ep-modal-btn-primary modal-btn modal-btn-primary" id="save-crop">
                 Salvar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Deletar Conta -->
+<div id="confirm-delete-account-modal" class="ep-modal-overlay ep-delete-modal modal-overlay">
+    <div class="ep-modal">
+        <div class="ep-modal-body">
+            <div class="ep-delete-modal-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="ep-delete-modal-title">Deletar Conta Permanentemente</h3>
+            <p class="ep-delete-modal-text">
+                Tem certeza que deseja deletar sua conta? Todos os seus dados, incluindo progresso, receitas favoritas e histórico, serão permanentemente removidos.
+            </p>
+            <div class="ep-delete-modal-warning">
+                <i class="fas fa-exclamation-circle"></i> Esta ação não pode ser desfeita.
+            </div>
+        </div>
+        <div class="ep-delete-modal-actions">
+            <button type="button" class="ep-delete-modal-btn-danger" id="confirm-delete-account-btn">
+                <i class="fas fa-trash-alt"></i>
+                Sim, Deletar Conta
+            </button>
+            <button type="button" class="ep-delete-modal-btn-cancel" id="cancel-delete-account-btn">
+                Cancelar
             </button>
         </div>
     </div>

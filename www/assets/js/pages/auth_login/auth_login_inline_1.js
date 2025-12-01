@@ -121,7 +121,7 @@
                         if (result.user && result.user.onboarding_complete) {
                             window.location.href = `${window.BASE_APP_URL || window.location.origin}/main_app.html`;
                         } else {
-                            window.location.href = `${window.BASE_APP_URL || window.location.origin}/onboarding/onboarding.html`;
+                            window.location.href = `${window.BASE_APP_URL || window.location.origin}/bem-vindo`;
                         }
                     }
                 } else {
@@ -158,6 +158,24 @@
                 } else {
                     // Fallback para web
                     window.location.href = '/cadastro';
+                }
+            });
+        }
+        
+        // ✅ Interceptar link "Esqueci minha senha" para usar router SPA com transição suave
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Usar router SPA se disponível (View Transition cuida da transição)
+                if (window.SPARouter && window.SPARouter.navigate) {
+                    // Não passar forceReload para manter transição suave
+                    window.SPARouter.navigate('/fragments/auth_forgot_password.html', false);
+                } else {
+                    // Fallback para web
+                    window.location.href = '/fragments/auth_forgot_password.html';
                 }
             });
         }

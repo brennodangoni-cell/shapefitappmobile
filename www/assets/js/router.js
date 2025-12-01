@@ -30,7 +30,7 @@
     const supportsViewTransitions = 'startViewTransition' in document;
     
     const PAGES_WITHOUT_MENU = [
-        'auth_login', 'auth_register', 'onboarding_onboarding', 'scan_barcode', 'offline'
+        'auth_login', 'auth_register', 'auth_forgot_password', 'auth_reset_password', 'onboarding_onboarding', 'scan_barcode', 'offline', 'account_deleted'
     ];
 
     const URL_MAP = {
@@ -46,7 +46,10 @@
         'profile_overview': '/perfil',
         'edit_profile': '/editar-perfil',
         'ranking': '/ranking',
-        'onboarding_onboarding': '/bem-vindo'
+        'onboarding_onboarding': '/bem-vindo',
+        'account_deleted': '/conta-excluida',
+        'auth_forgot_password': '/recuperar-senha',
+        'auth_reset_password': '/redefinir-senha'
     };
 
     async function init() {
@@ -225,7 +228,7 @@
     }
     
     // Páginas de autenticação para View Transitions especiais
-    const AUTH_PAGES = ['auth_login', 'auth_register'];
+    const AUTH_PAGES = ['auth_login', 'auth_register', 'auth_forgot_password', 'auth_reset_password'];
     
     function isAuthPage(pageName) {
         return AUTH_PAGES.includes(pageName);
@@ -486,8 +489,13 @@
             return;
         }
         
-        // ✅ REMOVER CONTEÚDO ANTIGO APENAS SE FOR PÁGINA DIFERENTE OU FORCE RELOAD
-        if (router.container) {
+        // Detectar se é transição entre páginas de auth (login <-> register <-> forgot_password)
+        const currentPageName = router.currentPath.split('/').pop().replace('.html', '');
+        const targetPageName = actualFragmentPath.split('/').pop().replace('.html', '');
+        const isAuthTransition = isAuthPage(currentPageName) && isAuthPage(targetPageName);
+        
+        // ✅ REMOVER CONTEÚDO ANTIGO apenas se NÃO for transição auth (View Transition cuida)
+        if (!isAuthTransition && router.container) {
             const oldContent = router.container.querySelector('.page-root, .app-container, [class*="page-"]');
             if (oldContent) {
                 oldContent.style.display = 'none';
@@ -496,11 +504,6 @@
                 oldContent.style.pointerEvents = 'none';
             }
         }
-
-        // Detectar se é transição entre páginas de auth (login <-> register)
-        const currentPageName = router.currentPath.split('/').pop().replace('.html', '');
-        const targetPageName = actualFragmentPath.split('/').pop().replace('.html', '');
-        const isAuthTransition = isAuthPage(currentPageName) && isAuthPage(targetPageName);
 
         router.history.push(router.currentPath);
         window.history.pushState({ path: actualFragmentPath + qs, prettyUrl: prettyUrl }, '', prettyUrl);
@@ -745,9 +748,6 @@
                     onboardingLoading.remove();
                 }
                 
-                // Limpar container completamente
-                router.container.innerHTML = '';
-                
                 // ✅ Limpar modais que foram movidos para o body
                 const modalsToRemove = [
                     document.getElementById('recipe-modal'),
@@ -772,14 +772,19 @@
                 tempDiv.innerHTML = htmlWithoutScripts;
                 let content = tempDiv.querySelector('.page-root') || tempDiv;
                 
-                // Inserir conteúdo diretamente (sem esconder)
+                // ✅ Limpar container (View Transition cuida da animação)
+                router.container.innerHTML = '';
+                
+                // Inserir novo conteúdo
                 router.container.appendChild(content.cloneNode(true));
                 
                 // View Transition: não animar (a API cuida)
                 const logo = router.container.querySelector('.login-logo');
                 const loginContainer = router.container.querySelector('.login-container');
                 const registerContainer = router.container.querySelector('.register-container');
-                const authContainer = loginContainer || registerContainer;
+                const forgotContainer = router.container.querySelector('.forgot-container');
+                const resetContainer = router.container.querySelector('.reset-container');
+                const authContainer = loginContainer || registerContainer || forgotContainer || resetContainer;
                 
                 if (window._authTransition) {
                     // Transição entre auth: não animar (View Transitions cuida)
