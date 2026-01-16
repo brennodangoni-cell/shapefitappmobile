@@ -1,0 +1,31 @@
+{
+  "name": "shapefit-mobile",
+  "version": "1.0.0",
+  "description": "ShapeFit Mobile App - iOS & Android",
+  "main": "www/index.html",
+  "scripts": {
+    "build": "npx cap sync",
+    "sync": "npx cap sync",
+    "sync:ios": "npx cap sync ios",
+    "sync:android": "npx cap sync android",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "generate:assets": "npx capacitor-assets generate"
+  },
+  "dependencies": {
+    "@capacitor/app": "^7.0.2",
+    "@capacitor/camera": "^7.0.1",
+    "@capacitor/core": "^7.4.2",
+    "@capacitor/filesystem": "^7.0.1",
+    "@capacitor/network": "^7.0.2",
+    "@capacitor/share": "^7.0.2",
+    "@capacitor/splash-screen": "^7.0.2",
+    "@capacitor/status-bar": "^7.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.4.2",
+    "@capacitor/ios": "^7.4.4"
+  }
+}

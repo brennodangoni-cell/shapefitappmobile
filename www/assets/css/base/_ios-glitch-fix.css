@@ -1,0 +1,159 @@
+/* ============================================
+   iOS GLITCH FIX - Correções de Composição
+   Resolve quadrados piscando no iOS WebView
+   ============================================ */
+
+/* === 1. FORÇAR GPU PARA TUDO === */
+body,
+html,
+#app-container,
+.page-root,
+.app-container {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+}
+
+/* === 2. CARDS COM GPU ACCELERATION === */
+.glass-card,
+.card {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+    /* ✅ Prevenir clipping agressivo */
+    contain: paint;
+    isolation: isolate;
+}
+
+/* === 3. REDUZIR BLUR (causa glitches) === */
+.glass-card {
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+    /* ✅ Isolation para isolar blur */
+    isolation: isolate;
+}
+
+/* === 4. OVERFLOW VISIBLE ONDE POSSÍVEL === */
+.glass-card {
+    overflow: visible !important;
+}
+
+/* Se precisar de overflow hidden, use contain */
+.glass-card[data-overflow-hidden] {
+    overflow: hidden;
+    contain: paint;
+}
+
+/* === 5. CONTAINERS PRINCIPAIS === */
+.dashboard-grid,
+.app-container,
+.page-root {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+    contain: layout style paint;
+}
+
+/* ✅ EXCEÇÃO: CARD DE SUGESTÕES NÃO PODE TER CONTAIN */
+.card-suggestions,
+.card-suggestions .carousel-wrapper,
+.dashboard-grid:has(.card-suggestions) {
+    contain: none !important;
+}
+
+/* === 6. PREVENIR GLITCHES EM TRANSIÇÕES === */
+body.page-transitioning .glass-card,
+body.page-loading .glass-card {
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+}
+
+/* === 7. BOTTOM NAV SEMPRE VISÍVEL (EXCETO AUTH) === */
+#bottom-nav-container {
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+    will-change: transform;
+    z-index: 1000 !important;
+}
+
+/* ✅ ESCONDER EM PÁGINAS AUTH */
+html.auth-initial #bottom-nav-container,
+body.auth-mode #bottom-nav-container,
+#bottom-nav-container.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* ✅ SEMPRE VISÍVEL quando não é auth */
+body:not(.auth-mode) #bottom-nav-container:not(.hidden) {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* === 8. BACKGROUND SEMPRE VISÍVEL === */
+html,
+body,
+#app-container {
+    background: #121212 !important;
+    background-color: #121212 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Durante transições também */
+body.page-transitioning,
+html.page-transitioning,
+body.page-loading,
+html.page-loading {
+    background: #121212 !important;
+    background-color: #121212 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* === 9. SKELETON SEMPRE VISÍVEL === */
+.page-skeleton {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: opacity;
+    /* ✅ SEMPRE VISÍVEL quando existe */
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+}
+
+.page-skeleton.skeleton-fade-out {
+    opacity: 0;
+    transition: opacity 0.25s ease-out;
+}
+
+/* === 10. PREVENIR RENDERIZAÇÃO PARCIAL === */
+.page-root,
+.app-container {
+    contain: layout style paint;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/* === 11. GRADIENTS + BORDER-RADIUS FIX === */
+.glass-card,
+.card {
+    /* ✅ Isolar gradient do border-radius */
+    isolation: isolate;
+    position: relative;
+}
+
+/* === 12. MODAIS E OVERLAYS === */
+.modal-overlay,
+.modal {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+}
+
