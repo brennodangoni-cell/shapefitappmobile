@@ -61,6 +61,29 @@
             font-size: 1.8rem;
         }
 
+        .challenges-help-button {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .challenges-help-button:active {
+            transform: scale(0.95);
+            background: rgba(255, 107, 0, 0.2);
+        }
+
         /* Loading */
         .challenges-loading-state {
             text-align: center;
@@ -401,6 +424,149 @@
             color: var(--text-secondary);
         }
 
+        /* Help Modal */
+        .challenges-help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .challenges-help-modal.active {
+            display: flex;
+        }
+
+        .challenges-help-content {
+            background: #1E1E1E;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            max-width: 440px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: challengesModalSlideUp 0.3s ease;
+        }
+
+        @keyframes challengesModalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .challenges-help-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .challenges-help-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .challenges-help-title i {
+            color: var(--accent-orange);
+            font-size: 1.3rem;
+        }
+
+        .challenges-help-close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .challenges-help-close:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .challenges-help-body {
+            padding: 24px;
+        }
+
+        .challenges-help-section {
+            margin-bottom: 24px;
+        }
+
+        .challenges-help-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .challenges-help-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .challenges-help-section-title i {
+            color: var(--accent-orange);
+            font-size: 0.9rem;
+        }
+
+        .challenges-help-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .challenges-help-list li {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .challenges-help-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .challenges-help-list li i {
+            color: var(--accent-orange);
+            font-size: 0.85rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
         @media (max-width: 768px) {
             .challenge-stats-grid {
                 grid-template-columns: 1fr;
@@ -408,6 +574,14 @@
 
             .challenges-page-grid {
                 padding: 20px 12px 100px 12px;
+            }
+
+            .challenges-help-content {
+                max-height: 90vh;
+            }
+
+            .challenges-help-body {
+                padding: 20px;
             }
         }
     </style>
@@ -421,6 +595,9 @@
                 <i class="fas fa-trophy"></i>
                 <span>Meus Desafios</span>
             </h1>
+            <button class="challenges-help-button" id="challenges-help-button" aria-label="Ajuda" style="display: none;">
+                ?
+            </button>
         </header>
 
         <section class="challenges-page-grid">
@@ -445,6 +622,89 @@
             <!-- Challenge Detail Container -->
             <div id="challenge-detail-container" style="display: none;"></div>
         </section>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="challenges-help-modal" id="challenges-help-modal">
+        <div class="challenges-help-content">
+            <div class="challenges-help-header">
+                <h3 class="challenges-help-title">
+                    <i class="fas fa-info-circle"></i>
+                    Como Funciona
+                </h3>
+                <button class="challenges-help-close" id="challenges-help-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="challenges-help-body">
+                <div class="challenges-help-section">
+                    <h4 class="challenges-help-section-title">
+                        <i class="fas fa-trophy"></i>
+                        Ganhando Pontos
+                    </h4>
+                    <ul class="challenges-help-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Complete seus objetivos diários para ganhar pontos</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Registre suas refeições, água e treinos no app</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Quanto mais consistente você for, mais pontos acumula</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="challenges-help-section">
+                    <h4 class="challenges-help-section-title">
+                        <i class="fas fa-medal"></i>
+                        Ranking
+                    </h4>
+                    <ul class="challenges-help-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Compare seu progresso com outros participantes</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Sua posição melhora conforme você ganha pontos</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Acompanhe quantos dias você está ativo no desafio</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="challenges-help-section">
+                    <h4 class="challenges-help-section-title">
+                        <i class="fas fa-bullseye"></i>
+                        Objetivos
+                    </h4>
+                    <ul class="challenges-help-list">
+                        <li>
+                            <i class="fas fa-fire"></i>
+                            <span><strong>Calorias:</strong> Atinja sua meta calórica diária</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-tint"></i>
+                            <span><strong>Água:</strong> Beba a quantidade de água recomendada</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-dumbbell"></i>
+                            <span><strong>Exercício:</strong> Complete seus treinos programados</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-bed"></i>
+                            <span><strong>Sono:</strong> Durma as horas necessárias</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

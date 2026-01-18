@@ -57,6 +57,13 @@
     // Renderizar lista de desafios
     function renderChallengesList(challenges) {
         const container = document.getElementById('challenges-list-container');
+        
+        // Esconder botão de ajuda na lista
+        const helpButton = document.getElementById('challenges-help-button');
+        if (helpButton) {
+            helpButton.style.display = 'none';
+        }
+        
         const goalIcons = {
             'calories': 'fas fa-fire',
             'water': 'fas fa-tint',
@@ -141,12 +148,41 @@
         container.style.display = 'block';
     }
     
+    // Controlar modal de ajuda
+    function setupHelpModal() {
+        const helpButton = document.getElementById('challenges-help-button');
+        const helpModal = document.getElementById('challenges-help-modal');
+        const closeButton = document.getElementById('challenges-help-close');
+        
+        if (helpButton && helpModal && closeButton) {
+            helpButton.addEventListener('click', () => {
+                helpModal.classList.add('active');
+            });
+            
+            closeButton.addEventListener('click', () => {
+                helpModal.classList.remove('active');
+            });
+            
+            helpModal.addEventListener('click', (e) => {
+                if (e.target === helpModal) {
+                    helpModal.classList.remove('active');
+                }
+            });
+        }
+    }
+    
     // Renderizar detalhes do desafio
     function renderChallengeDetail(challenge, participants) {
         const container = document.getElementById('challenge-detail-container');
         const status = getChallengeStatus(challenge.start_date, challenge.end_date);
         const progress = calculateChallengeProgress(challenge.start_date, challenge.end_date);
         const goals = Array.isArray(challenge.goals) ? challenge.goals : (challenge.goals ? JSON.parse(challenge.goals) : []);
+        
+        // Mostrar botão de ajuda
+        const helpButton = document.getElementById('challenges-help-button');
+        if (helpButton) {
+            helpButton.style.display = 'flex';
+        }
         
         const goalIcons = {
             'calories': 'fas fa-fire',
@@ -386,6 +422,9 @@
     
     // Inicializar página
     function initChallengePage() {
+        // Setup do modal de ajuda
+        setupHelpModal();
+        
         const challengeId = getChallengeIdFromUrl();
         
         if (challengeId) {
