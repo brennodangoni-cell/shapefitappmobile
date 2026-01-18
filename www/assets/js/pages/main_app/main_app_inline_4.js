@@ -2196,7 +2196,7 @@ function renderChallenges(data) {
             };
             
             html += `
-                <a href="./challenges.html?id=${challenge.id}" class="challenge-item">
+                <a href="javascript:void(0)" onclick="window.SPARouter.navigate('/fragments/challenges.html?id=${challenge.id}')" class="challenge-item">
                     <div class="challenge-item-header">
                         <h4>${escapeHtml(challenge.name)}</h4>
                         <span class="challenge-status" style="color: ${statusColor};">
