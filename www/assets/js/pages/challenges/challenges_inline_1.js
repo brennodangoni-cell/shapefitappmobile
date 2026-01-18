@@ -111,8 +111,8 @@
                                 <span>${progress.daysRemaining} dia${progress.daysRemaining !== 1 ? 's' : ''} restante${progress.daysRemaining !== 1 ? 's' : ''}</span>
                                 <span>${progress.percentage}%</span>
                             </div>
-                            <div class="progress-bar">
-                                <div class="progress-bar-fill" style="width: ${progress.percentage}%;"></div>
+                            <div class="challenge-progress-bar">
+                                <div class="challenge-progress-fill" style="width: ${progress.percentage}%;"></div>
                             </div>
                         </div>
                     ` : ''}
@@ -124,7 +124,7 @@
                                 const label = goalLabels[goal.type] || goal.type;
                                 const unit = goalUnits[goal.type] || '';
                                 return `
-                                    <span class="goal-badge">
+                                    <span class="challenge-goal-badge">
                                         <i class="${icon}"></i>
                                         <span>${label}</span>
                                         ${goal.value ? `<span>${goal.value} ${unit}</span>` : ''}
@@ -168,7 +168,7 @@
         };
         
         // Atualizar título da página
-        const titleSpan = document.querySelector('.page-title span');
+        const titleSpan = document.querySelector('.challenges-page-title span');
         if (titleSpan) {
             titleSpan.textContent = challenge.name;
         }
@@ -201,8 +201,8 @@
                             <span>${progress.daysRemaining} dia${progress.daysRemaining !== 1 ? 's' : ''} restante${progress.daysRemaining !== 1 ? 's' : ''}</span>
                             <span>${progress.percentage}%</span>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress-bar-fill" style="width: ${progress.percentage}%;"></div>
+                        <div class="challenge-progress-bar">
+                            <div class="challenge-progress-fill" style="width: ${progress.percentage}%;"></div>
                         </div>
                     </div>
                 ` : ''}
@@ -214,7 +214,7 @@
                             const label = goalLabels[goal.type] || goal.type;
                             const unit = goalUnits[goal.type] || '';
                             return `
-                                <span class="goal-badge">
+                                <span class="challenge-goal-badge">
                                     <i class="${icon}"></i>
                                     <span>${label}</span>
                                     ${goal.value ? `<span>${goal.value} ${unit}</span>` : ''}
@@ -225,42 +225,42 @@
                 ` : ''}
                 
                 <!-- Progresso do Usuário -->
-                <div class="progress-dashboard-section">
-                    <h3 class="dashboard-title">
+                <div class="challenge-dashboard-section">
+                    <h3 class="challenge-dashboard-title">
                         <i class="fas fa-chart-line"></i>
                         Meu Progresso
                     </h3>
                     
-                    <div class="progress-stats-grid">
-                        <div class="progress-stat-card">
-                            <div class="stat-icon" style="background: rgba(255, 107, 0, 0.1);">
+                    <div class="challenge-stats-grid">
+                        <div class="challenge-stat-card">
+                            <div class="challenge-stat-icon" style="background: rgba(255, 107, 0, 0.1);">
                                 <i class="fas fa-trophy" style="color: var(--accent-orange);"></i>
                             </div>
-                            <div class="stat-value">${challenge.user_total_points || 0}</div>
-                            <div class="stat-label">Pontos Totais</div>
+                            <div class="challenge-stat-value">${challenge.user_total_points || 0}</div>
+                            <div class="challenge-stat-label">Pontos</div>
                         </div>
-                        <div class="progress-stat-card">
-                            <div class="stat-icon" style="background: rgba(34, 197, 94, 0.1);">
+                        <div class="challenge-stat-card">
+                            <div class="challenge-stat-icon" style="background: rgba(34, 197, 94, 0.1);">
                                 <i class="fas fa-medal" style="color: #22C55E;"></i>
                             </div>
-                            <div class="stat-value">#${challenge.user_rank || '-'}</div>
-                            <div class="stat-label">Posição</div>
+                            <div class="challenge-stat-value">#${challenge.user_rank || '-'}</div>
+                            <div class="challenge-stat-label">Posição</div>
                         </div>
-                        <div class="progress-stat-card">
-                            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1);">
+                        <div class="challenge-stat-card">
+                            <div class="challenge-stat-icon" style="background: rgba(59, 130, 246, 0.1);">
                                 <i class="fas fa-calendar-check" style="color: #3B82F6;"></i>
                             </div>
-                            <div class="stat-value">${challenge.days_active || 0}</div>
-                            <div class="stat-label">Dias Ativos</div>
+                            <div class="challenge-stat-value">${challenge.days_active || 0}</div>
+                            <div class="challenge-stat-label">Dias</div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Participantes -->
                 ${participants && participants.length > 0 ? `
-                    <div class="participants-section">
-                        <h3 class="participants-title">Participantes</h3>
-                        <div class="participants-list">
+                    <div class="challenge-participants-section">
+                        <h3 class="challenge-participants-title">Participantes</h3>
+                        <div class="challenge-participants-list">
                             ${participants.map((p, index) => {
                                 const rank = index + 1;
                                 const colors = ['#FF6B00', '#3B82F6', '#22C55E', '#A855F7', '#EC4899', '#F59E0B'];
@@ -280,14 +280,14 @@
                                 const photoUrl = hasPhoto ? `https://appshapefit.com/assets/images/users/${p.profile_image_filename}` : '';
                                 
                                 return `
-                                    <div class="participant-item">
-                                        <div class="participant-rank">#${rank}</div>
-                                        <div class="participant-avatar" style="background-color: ${hasPhoto ? 'transparent' : bgColor}; color: white;">
+                                    <div class="challenge-participant-item">
+                                        <div class="challenge-participant-rank">#${rank}</div>
+                                        <div class="challenge-participant-avatar" style="background-color: ${hasPhoto ? 'transparent' : bgColor}; color: white;">
                                             ${hasPhoto ? `<img src="${photoUrl}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'; this.parentElement.textContent='${initials}'; this.parentElement.style.backgroundColor='${bgColor}';">` : initials}
                                         </div>
-                                        <div class="participant-info">
-                                            <div class="participant-name">${escapeHtml(p.name)}</div>
-                                            <div class="participant-points">${(p.challenge_points || 0).toLocaleString('pt-BR')} pontos</div>
+                                        <div class="challenge-participant-info">
+                                            <div class="challenge-participant-name">${escapeHtml(p.name)}</div>
+                                            <div class="challenge-participant-points">${(p.challenge_points || 0).toLocaleString('pt-BR')} pontos</div>
                                         </div>
                                     </div>
                                 `;
