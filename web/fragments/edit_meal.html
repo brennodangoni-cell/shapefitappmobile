@@ -1,0 +1,492 @@
+<div class="page-root">
+    
+    <!-- PWA Meta Tags -->
+    
+    <!-- PWA Manifest -->
+    
+    <!-- Script Critical -->
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Ícones -->
+    
+    <!-- CSS Principal -->
+    
+    <!-- Variáveis Globais -->
+
+    <!-- Auth Script -->
+
+    <style>
+        body {
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        a, button, .btn, [role="button"] {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+    
+    <style>
+        /* === EDIT MEAL PAGE - DESIGN HARMONIZADO COM O APP === */
+        .app-container {
+    padding: calc(24px + env(safe-area-inset-top)) 0 calc(60px + env(safe-area-inset-bottom)) 0;
+    min-height: 100vh;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    margin-bottom: 24px;
+}
+
+.back-button {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    margin-right: 16px;
+    text-decoration: none;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.edit-form {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    margin: 0 24px 24px 24px;
+    padding: 24px;
+    overflow: hidden;
+}
+
+.form-section {
+    margin-bottom: 24px;
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.form-grid.two-cols {
+    grid-template-columns: 1fr 1fr;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Select com setinha branca */
+select.form-control {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+/* Inputs de data e hora - sem ícones visíveis mas clicáveis */
+input[type="date"].form-control,
+input[type="time"].form-control {
+    color-scheme: dark;
+    position: relative;
+    cursor: pointer;
+}
+
+/* Esconde o ícone visualmente mas mantém clicável em todo o campo */
+input[type="date"].form-control::-webkit-calendar-picker-indicator,
+input[type="time"].form-control::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+input[type="date"].form-control::-webkit-datetime-edit,
+input[type="time"].form-control::-webkit-datetime-edit {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+input[type="date"].form-control::-webkit-datetime-edit-fields-wrapper,
+input[type="time"].form-control::-webkit-datetime-edit-fields-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Todos os inputs - remover espaço extra à esquerda */
+input.form-control,
+select.form-control {
+    text-indent: 0 !important;
+    padding-left: 16px !important;
+}
+
+input.form-control::-webkit-textfield-decoration-container {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Remover inner padding do input text */
+input[type="text"].form-control::-webkit-input-placeholder {
+    padding: 0;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+}
+
+.form-control[readonly] {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+/* Wrapper para campos de data e hora para evitar overflow */
+.date-time-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.nutrition-display {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.nutrition-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.nutrition-item {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 16px 8px;
+}
+
+.nutrition-item-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nutrition-item-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.nutrition-item-unit {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--accent-orange);
+    margin-left: 2px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn {
+    flex: 1;
+    height: 48px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-primary {
+    background: var(--accent-orange);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #ff7a1a;
+}
+
+.btn-danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:hover {
+    background: rgba(220, 53, 69, 0.2);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .app-container {
+        padding: calc(20px + env(safe-area-inset-top)) 0 calc(60px + env(safe-area-inset-bottom)) 0;
+    }
+
+    .header {
+        padding: 0 20px;
+        margin-bottom: 20px;
+    }
+
+    .page-title {
+        font-size: 1.3rem;
+    }
+
+    .edit-form {
+        margin: 0 20px 20px 20px;
+        padding: 20px;
+    }
+
+    .form-grid.two-cols {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .date-time-wrapper {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .nutrition-grid {
+        gap: 12px;
+    }
+
+    .nutrition-item {
+        padding: 14px 6px;
+    }
+
+    .nutrition-item-value {
+        font-size: 1.1rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 16px;
+    }
+
+    .btn {
+        height: 44px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Fallbacks para safe area */
+@supports (padding: max(0px)) {
+    .app-container {
+        padding-top: max(calc(24px + env(safe-area-inset-top)), 44px);
+        padding-bottom: max(calc(60px + env(safe-area-inset-bottom)), 110px);
+    }
+}
+
+@supports (-webkit-touch-callout: none) {
+    .app-container {
+        padding-top: calc(24px + env(safe-area-inset-top));
+        padding-bottom: calc(60px + env(safe-area-inset-bottom));
+    }
+}
+    </style>
+    
+    <div id="alert-container"></div>
+    
+    <div class="app-container">
+    <div class="header">
+        <a href="#" id="back-button" class="back-button" aria-label="Voltar">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <h1 class="page-title">Editar Refeição</h1>
+    </div>
+
+    <div class="edit-form" id="edit-form" style="display: none;">
+        <form id="edit-meal-form">
+            <input type="hidden" name="meal_id" id="meal_id" value="">
+
+            <!-- Informações Básicas -->
+            <div class="form-section">
+                <h3 class="section-title">Informações Básicas</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="meal_name">Nome da Refeição</label>
+                        <input type="text" id="meal_name" name="meal_name" class="form-control" 
+                               value="" placeholder="Ex: Arroz com frango grelhado">
+                    </div>
+                    <div class="form-group">
+                        <label for="meal_type">Tipo de Refeição</label>
+                        <select id="meal_type" name="meal_type" class="form-control">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="date-time-wrapper">
+                    <div class="form-group">
+                        <label for="date_consumed">Data</label>
+                        <input type="date" id="date_consumed" name="date_consumed" class="form-control" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="time_consumed">Horário</label>
+                        <input type="time" id="time_consumed" name="time_consumed" class="form-control" value="">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="servings">Quantidade (porções)</label>
+                        <input type="number" id="servings" name="servings" class="form-control" 
+                               value="" min="0.1" step="0.1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações Nutricionais -->
+            <div class="form-section">
+                <h3 class="section-title">Informações Nutricionais</h3>
+                <div class="nutrition-display">
+                    <div class="nutrition-grid">
+                        <div class="nutrition-item">
+                            <div class="nutrition-item-label">Calorias</div>
+                            <div class="nutrition-item-value" id="total-kcal">
+                                0 <span class="nutrition-item-unit">kcal</span>
+                            </div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-item-label">Proteínas</div>
+                            <div class="nutrition-item-value" id="total-protein">
+                                0 <span class="nutrition-item-unit">g</span>
+                            </div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-item-label">Carboidratos</div>
+                            <div class="nutrition-item-value" id="total-carbs">
+                                0 <span class="nutrition-item-unit">g</span>
+                            </div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-item-label">Gorduras</div>
+                            <div class="nutrition-item-value" id="total-fat">
+                                0 <span class="nutrition-item-unit">g</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" class="btn btn-secondary" id="cancel-btn">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" onclick="deleteMeal()">
+                    <i class="fas fa-trash"></i>
+                    Excluir
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <!-- Bottom Navigation -->
+
+    <!-- Scripts -->
+
+
+</div>
+
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/bottom-nav.js"></script>
+<script src="/https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- ✅ Lottie removido - só main_app usa -->
+<script src="/assets/js/pages/edit_meal/edit_meal_inline_0.js"></script>
+<script src="/assets/js/pages/edit_meal/edit_meal_inline_1.js"></script>
+<script src="/assets/js/pages/edit_meal/edit_meal_inline_2.js"></script>

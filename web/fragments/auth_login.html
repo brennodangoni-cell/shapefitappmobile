@@ -1,0 +1,135 @@
+<div class="page-root">
+
+    <link rel="preload" href="/assets/images/icon-512x512.png" as="image">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <style>
+    :root {
+    --bg-color: #101010;
+    --bg-gradient-start: #222222;
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --primary-orange-gradient: linear-gradient(45deg, #FFAE00, #F83600);
+    --text-primary: #F5F5F5;
+    --text-secondary: #A3A3A3;
+    --font-family: 'Montserrat', sans-serif;
+    --accent-orange: #FF6B00;
+    --danger-color: #F44336;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    .login-page {
+    width: 100%;
+                min-height: 100vh;
+                height: 100vh;
+                height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+                padding: 40px 24px;
+                padding-bottom: calc(40px + env(safe-area-inset-bottom));
+                padding: 20px;
+                padding-top: env(safe-area-inset-top, 20px);
+                padding-bottom: env(safe-area-inset-bottom, 20px);
+                overflow: hidden;
+    }
+    
+    .login-container { 
+    width: 100%; 
+    max-width: 480px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    text-align: center;
+    }
+    
+    /* Animação só na primeira vez (quando não é View Transition) */
+    .login-container.animate-in {
+    opacity: 0;
+    animation: fadeInContainer 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    @keyframes fadeInContainer { 
+    0% { opacity: 0; transform: translateY(40px) scale(0.96); } 
+    60% { opacity: 1; }
+    100% { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+    @keyframes logoFadeIn {
+    0% { opacity: 0; transform: scale(0.7) rotate(-5deg); }
+    50% { opacity: 1; transform: scale(1.05) rotate(2deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .login-logo { 
+    display: block; 
+                width: 160px; 
+                height: 160px; 
+                margin-bottom: 35px; 
+                width: 120px; 
+                height: 120px; 
+                margin-bottom: 24px; 
+    object-fit: contain;
+    view-transition-name: auth-logo;
+    }
+    
+    /* Animação só na primeira vez (quando não vem de outra página auth) */
+    .login-logo.animate-in {
+    opacity: 0;
+    animation: logoFadeIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+    }
+            .page-title { font-size: 32px; font-weight: 700; margin-bottom: 40px; color: var(--text-primary); view-transition-name: auth-title; }
+            .page-title { font-size: 26px; font-weight: 700; margin-bottom: 28px; color: var(--text-primary); view-transition-name: auth-title; }
+    .login-form { width: 100%; view-transition-name: auth-form; }
+            .form-group { margin-bottom: 20px; position: relative; }
+            .form-group { margin-bottom: 16px; position: relative; }
+    .form-group .icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 1rem; transition: color 0.3s ease; }
+    .form-control { width: 100%; padding: 16px 20px 16px 50px; font-size: 1rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 16px; color: var(--text-primary); transition: border-color 0.3s ease; outline: none; font-family: var(--font-family); }
+    .form-control::placeholder { color: var(--text-secondary); }
+    .form-control:focus { border-color: var(--accent-orange); }
+    .form-control:focus + .icon { color: var(--accent-orange); }
+    .form-control:-webkit-autofill, .form-control:-webkit-autofill:hover, .form-control:-webkit-autofill:focus { -webkit-text-fill-color: var(--text-primary); box-shadow: 0 0 0px 1000px rgba(30, 30, 30, 0.8) inset; -webkit-box-shadow: 0 0 0px 1000px rgba(30, 30, 30, 0.8) inset; transition: background-color 5000s ease-in-out 0s; border-color: var(--glass-border); }
+    .form-control:-webkit-autofill:focus { border-color: var(--accent-orange); }
+    .error-message { color: var(--danger-color); font-size: 0.85rem; margin-top: 8px; text-align: left; padding-left: 5px; display: block; }
+    .form-error { background-color: rgba(244, 67, 54, 0.1); border: 1px solid rgba(244, 67, 54, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 20px; font-size: 0.9rem; color: var(--danger-color); }
+    .btn-primary { background-image: var(--primary-orange-gradient); background-size: 150% auto; color: var(--text-primary); border: none; border-radius: 16px; padding: 16px 24px; font-size: 1.1rem; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.2s ease, background-position 0.4s ease; margin-top: 15px; font-family: var(--font-family); }
+    .btn-primary:hover { background-position: right center; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+            .link-text { color: var(--text-secondary); margin-top: 40px; font-size: 1rem; }
+            .link-text { color: var(--text-secondary); margin-top: 28px; font-size: 0.95rem; }
+    .link-text a { color: var(--accent-orange); text-decoration: none; font-weight: 600; transition: color 0.3s ease; }
+    .link-text a:hover { color: #ff9e3d; }
+    </style>
+    
+    <div class="login-page">
+    <main class="login-container">
+    <img src="/assets/images/icon-512x512.png" alt="Shape Fit Logo" class="login-logo">
+    <h1 class="page-title">Acesse sua conta</h1>
+    <form id="loginForm" class="login-form">
+    <div id="formError" class="form-error" style="display: none;"></div>
+    <div class="form-group">
+    <i class="fas fa-envelope icon"></i>
+    <input type="email" name="email" id="email" class="form-control" placeholder="Email" required autocomplete="email">
+    <span id="emailError" class="error-message" style="display: none;"></span>
+    </div>
+    <div class="form-group">
+    <i class="fas fa-lock icon"></i>
+    <input type="password" name="password" id="password" class="form-control" placeholder="Senha" required autocomplete="current-password">
+    <span id="passwordError" class="error-message" style="display: none;"></span>
+    </div>
+    <button type="submit" class="btn-primary" id="submitBtn">Entrar</button>
+    <p class="link-text" style="margin-top: 16px;">
+    <a href="#" id="forgotPasswordLink">Esqueci minha senha</a>
+    </p>
+    <p class="link-text">
+    Não tem uma conta? <a href="./auth_register.html">Cadastre-se</a>
+    </p>
+    </form>
+    </main>
+    </div>
+    
+    </div>
+    
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/pages/auth_login/auth_login_inline_0.js"></script>
+    <script src="/assets/js/pages/auth_login/auth_login_inline_1.js"></script>

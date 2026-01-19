@@ -1,0 +1,91 @@
+/* ============================================
+   ANTI-GLITCH SYSTEM - CLEAN VERSION
+   Previne glitches sem quebrar animações
+   ============================================ */
+
+/* === BACKGROUND CONSISTENTE === */
+html,
+body,
+#app-container,
+.page-skeleton,
+.page-root,
+.app-container {
+    background: #121212 !important;
+    background-color: #121212 !important;
+}
+
+body.page-transitioning,
+html.page-transitioning,
+body.page-loading,
+html.page-loading {
+    background: #121212 !important;
+    background-color: #121212 !important;
+    background-image: none !important;
+}
+
+/* === CONTEÚDO ESCONDIDO DURANTE LOADING === */
+body.page-loading .page-root > *:not(.page-skeleton):not(.skeleton),
+body.page-loading .app-container > *:not(.page-skeleton):not(.skeleton),
+body.page-transitioning .page-root > *:not(.page-skeleton):not(.skeleton),
+body.page-transitioning .app-container > *:not(.page-skeleton):not(.skeleton) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* === CONTEÚDO APARECE COM ANIMAÇÃO === */
+body.page-loaded .page-root > *:not(.page-skeleton):not(.skeleton),
+body.page-loaded .app-container > *:not(.page-skeleton):not(.skeleton) {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    /* ✅ ANIMAÇÃO SUAVE DE ENTRADA */
+    animation: fade-in 0.3s ease-out forwards;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* === CARDS === */
+body.page-loading .glass-card,
+body.page-loading .card,
+body.page-transitioning .glass-card,
+body.page-transitioning .card {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+body.page-loaded .glass-card,
+body.page-loaded .card {
+    opacity: 1 !important;
+    visibility: visible !important;
+    animation: fade-in 0.3s ease-out forwards;
+}
+
+/* === IMAGENS === */
+body.page-loading img,
+body.page-transitioning img {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+body.page-loaded img {
+    opacity: 1;
+    animation: fade-in 0.3s ease-out forwards;
+}
+
+/* === ELEMENTOS FIXOS SEMPRE VISÍVEIS === */
+body.page-loading #bottom-nav-container,
+body.page-transitioning #bottom-nav-container,
+body.page-loading .page-skeleton,
+body.page-transitioning .page-skeleton {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}

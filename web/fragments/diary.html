@@ -1,0 +1,370 @@
+<div class="page-root">
+    
+    <!-- PWA Meta Tags -->
+    
+    <!-- PWA Manifest -->
+    
+    <!-- Script Critical - Define altura real do viewport -->
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Ícones -->
+    
+    <!-- CSS Principal -->
+    
+    <!-- Variáveis Globais -->
+
+    <!-- Auth Script -->
+
+<style>
+        body {
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        a, button, .btn, [role="button"] {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+/* === DIARY PAGE - ESTILO COMPACTO E MODERNO === */
+        .app-container {
+            padding-top: 24px;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: calc(60px + env(safe-area-inset-bottom));
+        }
+
+.diary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+            padding: 0 24px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.date-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.date-nav-arrow {
+    color: var(--text-secondary);
+    font-size: 16px;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.date-nav-arrow:hover {
+    color: var(--accent-orange);
+}
+
+.date-nav-arrow.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+#current-diary-date {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.nutrition-summary {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 16px;
+            margin: 0 24px 20px 24px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    text-align: center;
+}
+
+.nutrition-card {
+    padding: 12px 8px;
+}
+
+.nutrition-card h3 {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin: 0 0 6px 0;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nutrition-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.nutrition-goal {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.meals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+            padding: 0 24px;
+}
+
+.meal-group {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.meal-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.meal-group-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.meal-group-total {
+    font-size: 12px;
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+
+.meal-items {
+    padding: 12px 16px;
+}
+
+.meal-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.meal-item:last-child {
+    border-bottom: none;
+}
+
+.meal-item-info {
+    flex: 1;
+}
+
+.meal-item-name {
+    font-size: 14px;
+    color: var(--text-primary);
+    margin: 0 0 2px 0;
+    font-weight: 500;
+}
+
+.meal-item-details {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.meal-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.meal-item-kcal {
+    font-size: 12px;
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+
+.meal-edit-btn {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.meal-edit-btn:hover {
+    color: var(--accent-orange);
+    background: rgba(255, 107, 0, 0.1);
+}
+
+.add-meal-section {
+            margin: 20px 24px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+}
+
+.add-meal-btn-integrated {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--accent-orange);
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.add-meal-btn-integrated:hover {
+    background: #ff7a1a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: var(--accent-orange);
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.empty-state p {
+    font-size: 14px;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .nutrition-summary {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 12px;
+    }
+    
+    .nutrition-value {
+        font-size: 14px;
+    }
+    
+    .page-title {
+        font-size: 20px;
+    }
+}
+</style>
+    
+    <div id="alert-container"></div>
+
+<div class="app-container">
+    <!-- Header com navegação de data -->
+    <div class="diary-header">
+        <h1 class="page-title">Diário</h1>
+        <div class="date-selector">
+            <a href="#" id="prev-date" class="date-nav-arrow">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <span id="current-diary-date">Carregando...</span>
+            <a href="#" id="next-date" class="date-nav-arrow">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Resumo nutricional compacto -->
+    <div class="nutrition-summary">
+        <div class="nutrition-card">
+            <h3>Calorias</h3>
+            <div class="nutrition-value" id="kcal-consumed">0</div>
+            <div class="nutrition-goal">/ <span id="kcal-goal">0</span> kcal</div>
+        </div>
+        <div class="nutrition-card">
+            <h3>Proteínas</h3>
+            <div class="nutrition-value" id="protein-consumed">0g</div>
+            <div class="nutrition-goal">/ <span id="protein-goal">0</span>g</div>
+        </div>
+        <div class="nutrition-card">
+            <h3>Carboidratos</h3>
+            <div class="nutrition-value" id="carbs-consumed">0g</div>
+            <div class="nutrition-goal">/ <span id="carbs-goal">0</span>g</div>
+        </div>
+        <div class="nutrition-card">
+            <h3>Gorduras</h3>
+            <div class="nutrition-value" id="fat-consumed">0g</div>
+            <div class="nutrition-goal">/ <span id="fat-goal">0</span>g</div>
+        </div>
+    </div>
+
+    <!-- Lista de refeições -->
+    <div class="meals-list" id="meals-list">
+        <div class="empty-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h3>Carregando...</h3>
+        </div>
+    </div>
+
+    <!-- Botão de adicionar refeição integrado -->
+    <div class="add-meal-section">
+        <button class="add-meal-btn-integrated" id="add-meal-btn">
+            <i class="fas fa-plus"></i>
+            <span>Adicionar Refeição</span>
+        </button>
+    </div>
+</div>
+
+    <!-- Bottom Navigation -->
+
+    <!-- Scripts -->
+
+
+</div>
+
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/bottom-nav.js"></script>
+<script src="/https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- ✅ Lottie removido - só main_app usa -->
+<script src="/assets/js/pages/diary/diary_inline_0.js"></script>
+<script src="/assets/js/pages/diary/diary_inline_1.js"></script>
+<script src="/assets/js/pages/diary/diary_inline_2.js"></script>
