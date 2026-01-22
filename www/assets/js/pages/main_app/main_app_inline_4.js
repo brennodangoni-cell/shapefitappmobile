@@ -12,10 +12,46 @@ let savedResponses = {};
 let answeredQuestionIds = [];
 
 function openCheckinModal() {
-    const modal = document.getElementById('checkinModal');
+    let modal = document.getElementById('checkinModal');
+    
+    // ✅ CRIAR MODAL SE NÃO EXISTIR
     if (!modal) {
-        console.error('Modal de checkin não encontrado');
-        return;
+        console.log('[Check-in] Modal não encontrado, criando...');
+        if (!checkinData && window.checkinData) {
+            checkinData = window.checkinData;
+        }
+        
+        if (!checkinData) {
+            console.error('[Check-in] Não é possível criar modal: checkinData não disponível');
+            return;
+        }
+        
+        modal = document.createElement('div');
+        modal.id = 'checkinModal';
+        modal.className = 'checkin-modal';
+        modal.innerHTML = `
+            <div class="checkin-chat-container">
+                <div class="checkin-chat-header">
+                    <h3 id="checkin-title">${checkinData.name || 'Check-in'}</h3>
+                    <button class="checkin-close-btn" id="checkin-close-btn" style="display: none !important;">&times;</button>
+                </div>
+                <div class="checkin-messages" id="checkinMessages"></div>
+                <div class="checkin-input-container" id="checkinInputContainer">
+                    <input type="text" class="checkin-text-input" id="checkinTextInput" placeholder="Digite sua resposta..." onkeypress="if(event.key === 'Enter') sendCheckinResponse()" disabled>
+                    <button class="checkin-send-btn" onclick="sendCheckinResponse()" id="checkinSendBtn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        // Inserir no body
+        const appContainer = document.getElementById('app-container');
+        if (appContainer && appContainer.nextSibling) {
+            document.body.insertBefore(modal, appContainer.nextSibling);
+        } else {
+            document.body.appendChild(modal);
+        }
+        console.log('[Check-in] Modal criado dinamicamente em openCheckinModal');
     }
     
     // Verificar se há checkin disponível
@@ -24,28 +60,63 @@ function openCheckinModal() {
     }
     
     if (!checkinData) {
-        console.error('Nenhum checkin disponível');
-        alert('Nenhum check-in disponível no momento.');
-        // Remover o botão se não há checkin disponível
-        const floatingBtn = document.getElementById('checkin-floating-btn');
-        if (floatingBtn && floatingBtn.parentNode) {
-            floatingBtn.parentNode.removeChild(floatingBtn);
-            console.log('[Check-in] Botão removido - não há check-in disponível');
-        }
+        console.error('[Check-in] Nenhum checkin disponível');
+        // NÃO mostrar alert - apenas logar
+        console.log('[Check-in] checkinData não disponível, fechando modal');
+        modal.style.display = 'none';
         return;
     }
     
-    // Abrir modal - garantir que está visível e acima de tudo
-    modal.classList.add('active');
-    modal.style.display = 'flex !important';
-    modal.style.visibility = 'visible !important';
-    modal.style.opacity = '1 !important';
-    modal.style.zIndex = '999999 !important';
-    modal.style.position = 'fixed !important';
-    modal.setAttribute('aria-hidden', 'false');
+    console.log('[Check-in] Abrindo modal com checkinData:', checkinData.id);
     
-        // Bloquear scroll do body (sem alterar posicionamento fixo do layout)
-        document.body.classList.add('checkin-modal-open');
+    // ✅ RESETAR FLAG DE COMPLETADO quando modal é aberto (novo checkin ou continuação)
+    isCheckinCompleted = false;
+    
+    // Abrir modal - garantir que está visível e acima de tudo
+    console.log('[Check-in] Aplicando estilos para exibir modal');
+    modal.classList.add('active');
+    modal.style.cssText = `
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 999999 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    `;
+    modal.setAttribute('aria-hidden', 'false');
+    console.log('[Check-in] Modal deve estar visível agora. display:', modal.style.display, 'z-index:', modal.style.zIndex);
+    
+    // Bloquear scroll do body (sem alterar posicionamento fixo do layout)
+    document.body.classList.add('checkin-modal-open');
+    
+    // ✅ BLOQUEAR APP COMPLETAMENTE quando checkin não está completo (obrigatório)
+    if (checkinData && checkinData.questions) {
+        const totalQuestions = checkinData.questions.length;
+        const answeredCount = Object.keys(checkinResponses).length;
+        
+        if (answeredCount < totalQuestions) {
+            // Bloquear interação com o app
+            const appContainer = document.getElementById('app-container');
+            if (appContainer) {
+                appContainer.style.pointerEvents = 'none';
+                appContainer.style.opacity = '0.3';
+            }
+            
+            // Esconder botão X
+            const closeBtn = modal.querySelector('.checkin-close-btn');
+            if (closeBtn) {
+                closeBtn.style.display = 'none !important';
+                closeBtn.style.visibility = 'hidden';
+                closeBtn.style.opacity = '0';
+                closeBtn.style.pointerEvents = 'none';
+            }
+        }
+    }
     
     // Limpar mensagens anteriores
     const messagesContainer = document.getElementById('checkinMessages');
@@ -115,33 +186,83 @@ function setupCheckinModalEvents() {
         return;
     }
     
-    // Fechar ao clicar no background (fora do container)
-    modal.addEventListener('click', function modalClickHandler(e) {
-        // Se clicou diretamente no modal (background), fechar
-        // MAS não fechar se o clique foi no container ou dentro dele
-        const container = modal.querySelector('.checkin-chat-container');
-        if (e.target === modal || (e.target.classList.contains('checkin-modal') && !container.contains(e.target))) {
-            e.preventDefault();
-            e.stopPropagation();
-            closeCheckinModal();
-            return false;
+    // ✅ IMPEDIR FECHAR AO CLICAR NO BACKGROUND (check-in obrigatório)
+    // NUNCA permitir fechar ao clicar fora quando check-in não está completo
+    if (checkinData && checkinData.questions) {
+        const totalQuestions = checkinData.questions.length;
+        const answeredCount = Object.keys(checkinResponses).length;
+        
+        // Se não está completo, IMPEDIR fechar ao clicar fora
+        if (answeredCount < totalQuestions) {
+            // Bloquear qualquer tentativa de fechar ao clicar fora
+            modal.addEventListener('click', function modalClickHandler(e) {
+                // Se clicou no background, PREVENIR fechamento
+                const container = modal.querySelector('.checkin-chat-container');
+                if (e.target === modal || (e.target.classList.contains('checkin-modal') && !container.contains(e.target))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // NÃO fechar - checkin obrigatório
+                    return false;
+                }
+            }, true);
+            
+            // Também bloquear touch
+            modal.addEventListener('touchend', function modalTouchHandler(e) {
+                const container = modal.querySelector('.checkin-chat-container');
+                if ((e.target === modal || e.target.classList.contains('checkin-modal')) && !container.contains(e.target)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // NÃO fechar - checkin obrigatório
+                    return false;
+                }
+            }, { passive: false, capture: true });
+        } else {
+            // Só permitir fechar ao clicar fora se estiver completo
+            modal.addEventListener('click', function modalClickHandler(e) {
+                const container = modal.querySelector('.checkin-chat-container');
+                if (e.target === modal || (e.target.classList.contains('checkin-modal') && !container.contains(e.target))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeCheckinModal();
+                    return false;
+                }
+            });
+            
+            modal.addEventListener('touchend', function modalTouchHandler(e) {
+                const container = modal.querySelector('.checkin-chat-container');
+                if ((e.target === modal || e.target.classList.contains('checkin-modal')) && !container.contains(e.target)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeCheckinModal();
+                    return false;
+                }
+            }, { passive: false });
         }
-    });
+    }
     
-    // Também funcionar com touch - mas só se não foi no container
-    modal.addEventListener('touchend', function modalTouchHandler(e) {
-        const container = modal.querySelector('.checkin-chat-container');
-        if ((e.target === modal || e.target.classList.contains('checkin-modal')) && !container.contains(e.target)) {
-            e.preventDefault();
-            e.stopPropagation();
-            closeCheckinModal();
-            return false;
-        }
-    }, { passive: false });
-    
-    // Garantir que o botão de fechar funcione
+    // ✅ BOTÃO DE FECHAR - SEMPRE ESCONDIDO quando check-in não está completo (obrigatório)
     const closeBtn = modal.querySelector('.checkin-close-btn');
     if (closeBtn) {
+        // Verificar se check-in está completo
+        if (checkinData && checkinData.questions) {
+            const totalQuestions = checkinData.questions.length;
+            const answeredCount = Object.keys(checkinResponses).length;
+            
+            // Se não completou, SEMPRE esconder botão de fechar (obrigatório)
+            if (answeredCount < totalQuestions) {
+                closeBtn.style.display = 'none !important';
+                closeBtn.style.visibility = 'hidden';
+                closeBtn.style.opacity = '0';
+                closeBtn.style.pointerEvents = 'none';
+            } else {
+                // Só mostrar quando completo
+                closeBtn.style.display = 'block';
+                closeBtn.style.visibility = 'visible';
+                closeBtn.style.opacity = '1';
+                closeBtn.style.pointerEvents = 'auto';
+            }
+        }
+        
         // Remover todos os event listeners antigos
         const newCloseBtn = closeBtn.cloneNode(true);
         closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
@@ -197,6 +318,37 @@ function closeCheckinModal() {
         return;
     }
     
+    // ✅ VERIFICAR SE CHECK-IN ESTÁ COMPLETO ANTES DE PERMITIR FECHAR
+    if (checkinData && checkinData.questions) {
+        const totalQuestions = checkinData.questions.length;
+        const answeredCount = Object.keys(checkinResponses).length;
+        
+        // Se não completou todas as perguntas, NÃO PERMITIR FECHAR (OBRIGATÓRIO)
+        if (answeredCount < totalQuestions) {
+            // Verificar se todas as perguntas visíveis foram respondidas
+            let visibleQuestionsCount = 0;
+            let answeredVisibleCount = 0;
+            
+            for (let i = 0; i < checkinData.questions.length; i++) {
+                const question = checkinData.questions[i];
+                if (shouldShowQuestion(question)) {
+                    visibleQuestionsCount++;
+                    const questionId = Number(question.id);
+                    if (checkinResponses[questionId]) {
+                        answeredVisibleCount++;
+                    }
+                }
+            }
+            
+            // Se ainda há perguntas visíveis não respondidas, não permitir fechar
+            if (answeredVisibleCount < visibleQuestionsCount) {
+                // Mostrar mensagem informando que precisa completar
+                alert('Por favor, complete o check-in antes de fechar. É obrigatório responder todas as perguntas.');
+                return;
+            }
+        }
+    }
+    
     // Salvar progresso antes de fechar o modal
     if (checkinData && Object.keys(checkinResponses).length > 0) {
         saveCheckinProgressToLocalStorage();
@@ -212,6 +364,13 @@ function closeCheckinModal() {
     
     // Restaurar scroll do body
     document.body.classList.remove('checkin-modal-open');
+    
+    // ✅ LIBERAR APP (permitir interação novamente)
+    const appContainer = document.getElementById('app-container');
+    if (appContainer) {
+        appContainer.style.pointerEvents = 'auto';
+        appContainer.style.opacity = '1';
+    }
     
     // Modal fechado
     
@@ -472,9 +631,24 @@ function restoreChatFromProgress() {
         textInput.value = '';
         textInput.placeholder = 'Check-in finalizado';
         
+        // ✅ MOSTRAR BOTÃO DE FECHAR AGORA QUE ESTÁ COMPLETO
+        const closeBtn = document.getElementById('checkin-close-btn');
+        if (closeBtn) {
+            closeBtn.style.display = 'block';
+        }
+        
         // Marcar como completo
         markCheckinComplete();
     } else {
+        // ✅ GARANTIR QUE BOTÃO X ESTÁ ESCONDIDO (ainda há perguntas pendentes)
+        const closeBtn = document.getElementById('checkin-close-btn');
+        if (closeBtn) {
+            closeBtn.style.display = 'none !important';
+            closeBtn.style.visibility = 'hidden';
+            closeBtn.style.opacity = '0';
+            closeBtn.style.pointerEvents = 'none';
+        }
+        
         // Renderizar próxima pergunta
         renderNextQuestion();
     }
@@ -556,12 +730,27 @@ function renderNextQuestion() {
         textInput.value = '';
         textInput.placeholder = 'Check-in finalizado';
         
+        // ✅ MOSTRAR BOTÃO DE FECHAR AGORA QUE ESTÁ COMPLETO
+        const closeBtn = document.getElementById('checkin-close-btn');
+        if (closeBtn) {
+            closeBtn.style.display = 'block';
+        }
+        
         // Marcar como completo (todas as respostas já foram salvas individualmente)
         markCheckinComplete();
         return;
     }
     
     const question = checkinData.questions[currentQuestionIndex];
+    
+    // ✅ GARANTIR QUE BOTÃO X ESTÁ ESCONDIDO (ainda há perguntas pendentes)
+    const closeBtn = document.getElementById('checkin-close-btn');
+    if (closeBtn) {
+        closeBtn.style.display = 'none !important';
+        closeBtn.style.visibility = 'hidden';
+        closeBtn.style.opacity = '0';
+        closeBtn.style.pointerEvents = 'none';
+    }
     
     // Adicionar mensagem da pergunta
     addMessage(question.question_text, 'bot');
@@ -668,12 +857,23 @@ function sendCheckinResponse() {
 
 // Variável para controlar debounce do salvamento
 let saveCheckinProgressTimeout = null;
+// ✅ Flag para indicar que o checkin foi completado (evitar salvar após conclusão)
+let isCheckinCompleted = false;
 
 function saveCheckinProgressToLocalStorage() {
+    // ✅ NÃO SALVAR se o checkin já foi completado
+    if (isCheckinCompleted) {
+        console.log('[Check-in] Checkin já foi completado, não salvando progresso');
+        return;
+    }
+    
     // Salvar progresso no localStorage em vez de salvar individualmente no backend
     // Fazer deep copy para garantir que o objeto seja salvo corretamente
-    if (!checkinData || !checkinData.id) {
-        console.error('[Check-in] checkinData não está disponível para salvar');
+    
+    // ✅ Usar window.checkinData como fallback se checkinData local não estiver disponível
+    const dataToUse = checkinData || window.checkinData;
+    if (!dataToUse || !dataToUse.id) {
+        console.warn('[Check-in] checkinData não está disponível para salvar (pode ter sido completado)');
         return;
     }
     
@@ -684,18 +884,28 @@ function saveCheckinProgressToLocalStorage() {
     
     // Executar salvamento após pequeno delay para evitar múltiplas escritas
     saveCheckinProgressTimeout = setTimeout(() => {
-        _saveCheckinProgressToLocalStorage();
+        // ✅ Verificar novamente se foi completado antes de salvar
+        if (!isCheckinCompleted) {
+            _saveCheckinProgressToLocalStorage();
+        }
         saveCheckinProgressTimeout = null;
     }, 100);
 }
 
 function _saveCheckinProgressToLocalStorage() {
+    // ✅ VERIFICAÇÃO DE SEGURANÇA: Garantir que checkinData existe
+    const dataToUse = checkinData || window.checkinData;
+    if (!dataToUse || !dataToUse.id) {
+        console.warn('[Check-in] Não é possível salvar progresso: checkinData não está disponível (pode ter sido completado)');
+        return; // Sair silenciosamente se não houver dados
+    }
+    
     // Incluir a semana atual na chave para isolar progresso por semana
     const currentWeek = getCurrentWeekStart();
-    const storageKey = `checkin_progress_${checkinData.id}_${currentWeek}`;
+    const storageKey = `checkin_progress_${dataToUse.id}_${currentWeek}`;
     
     // Limpar progressos antigos de outras semanas para o mesmo checkin
-    clearOldCheckinProgressForConfig(checkinData.id, currentWeek);
+    clearOldCheckinProgressForConfig(dataToUse.id, currentWeek);
     
     // Criar uma cópia profunda das respostas para garantir que seja salva corretamente
     // Filtrar apenas chaves numéricas válidas
@@ -715,7 +925,7 @@ function _saveCheckinProgressToLocalStorage() {
         responses: responsesCopy,
         currentQuestionIndex: Number(currentQuestionIndex) || 0,
         timestamp: Date.now(),
-        config_id: Number(checkinData.id),
+        config_id: Number(dataToUse.id),
         week_start: currentWeek // Salvar a semana para validação
     };
     
@@ -768,17 +978,22 @@ function clearOldCheckinProgress() {
 
 function clearCheckinProgressFromLocalStorage() {
     // Limpar progresso do localStorage após completar o checkin
-    if (!checkinData || !checkinData.id) return;
+    // ✅ Usar window.checkinData como fallback se checkinData local não estiver disponível
+    const dataToUse = checkinData || window.checkinData;
+    if (!dataToUse || !dataToUse.id) {
+        console.warn('[Check-in] Não é possível limpar progresso: checkinData não disponível');
+        return;
+    }
     
     const currentWeek = getCurrentWeekStart();
-    const storageKey = `checkin_progress_${checkinData.id}_${currentWeek}`;
+    const storageKey = `checkin_progress_${dataToUse.id}_${currentWeek}`;
     
     try {
         localStorage.removeItem(storageKey);
-        // Progresso removido do localStorage
+        console.log('[Check-in] Progresso removido do localStorage');
         
         // Limpar também chave antiga sem semana (compatibilidade)
-        const oldKey = `checkin_progress_${checkinData.id}`;
+        const oldKey = `checkin_progress_${dataToUse.id}`;
         localStorage.removeItem(oldKey);
     } catch (error) {
         console.error('[Check-in] Erro ao limpar localStorage:', error);
@@ -822,6 +1037,27 @@ function addMessage(text, type) {
 }
 
 function markCheckinComplete() {
+    // ✅ VERIFICAÇÃO DE SEGURANÇA: Garantir que checkinData existe
+    if (!checkinData || !checkinData.id) {
+        // Tentar usar window.checkinData como fallback
+        if (window.checkinData && window.checkinData.id) {
+            checkinData = window.checkinData;
+        } else {
+            console.error('[Check-in] Não é possível completar check-in: checkinData não está disponível');
+            alert('Erro: Dados do check-in não estão disponíveis. Por favor, recarregue a página.');
+            return;
+        }
+    }
+    
+    // ✅ MARCAR COMO COMPLETADO ANTES DE ENVIAR (evitar salvar progresso durante envio)
+    isCheckinCompleted = true;
+    
+    // ✅ CANCELAR QUALQUER TIMEOUT PENDENTE DE SALVAMENTO
+    if (saveCheckinProgressTimeout) {
+        clearTimeout(saveCheckinProgressTimeout);
+        saveCheckinProgressTimeout = null;
+    }
+    
     const formData = new FormData();
     formData.append('action', 'submit_checkin');
     formData.append('config_id', checkinData.id);
@@ -839,28 +1075,45 @@ function markCheckinComplete() {
         if (data.success) {
             // Check-in completo
             
+            // ✅ SALVAR checkinData ANTES DE LIMPAR (para usar nas funções abaixo)
+            const savedCheckinData = checkinData || window.checkinData;
+            
             // Limpar progresso do localStorage após enviar com sucesso
-            clearCheckinProgressFromLocalStorage();
+            // (usar savedCheckinData se checkinData já foi limpo)
+            if (savedCheckinData && savedCheckinData.id) {
+                const currentWeek = getCurrentWeekStart();
+                const storageKey = `checkin_progress_${savedCheckinData.id}_${currentWeek}`;
+                try {
+                    localStorage.removeItem(storageKey);
+                    const oldKey = `checkin_progress_${savedCheckinData.id}`;
+                    localStorage.removeItem(oldKey);
+                    console.log('[Check-in] Progresso removido do localStorage após completar');
+                } catch (error) {
+                    console.error('[Check-in] Erro ao limpar localStorage:', error);
+                }
+            }
+            
+            // ✅ LIBERAR APP (permitir interação novamente)
+            const appContainer = document.getElementById('app-container');
+            if (appContainer) {
+                appContainer.style.pointerEvents = 'auto';
+                appContainer.style.opacity = '1';
+            }
+            
+            // ✅ MOSTRAR BOTÃO DE FECHAR AGORA QUE ESTÁ COMPLETO
+            const closeBtn = document.getElementById('checkin-close-btn');
+            if (closeBtn) {
+                closeBtn.style.display = 'block';
+                closeBtn.style.visibility = 'visible';
+                closeBtn.style.opacity = '1';
+                closeBtn.style.pointerEvents = 'auto';
+            }
             
             // Fechar o modal imediatamente
             closeCheckinModal();
             
-            // ANIMAÇÃO DE FADE-OUT e REMOÇÃO do botão flutuante
-            const floatingBtn = document.getElementById('checkin-floating-btn');
-            if (floatingBtn) {
-                // Adicionar animação de fade-out
-                floatingBtn.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
-                floatingBtn.style.opacity = '0';
-                floatingBtn.style.transform = 'scale(0.8)';
-                
-                // Remover do DOM após a animação
-                setTimeout(() => {
-                    if (floatingBtn.parentNode) {
-                        floatingBtn.parentNode.removeChild(floatingBtn);
-                        console.log('[Check-in] Botão removido do DOM após conclusão');
-                    }
-                }, 300);
-            }
+            // ✅ NÃO REMOVER O BOTÃO - Ele agora é para WhatsApp e deve ficar sempre visível
+            // O botão flutuante agora é para suporte WhatsApp, não para check-in
             
             // Esconder o modal
             const modal = document.getElementById('checkinModal');
@@ -869,9 +1122,13 @@ function markCheckinComplete() {
                 modal.classList.remove('active');
             }
             
-            // Limpar dados do check-in
+            // ✅ Limpar dados do check-in APÓS todas as operações necessárias
             window.checkinData = null;
             checkinData = null;
+            
+            // ✅ Limpar também as respostas e índice
+            checkinResponses = {};
+            currentQuestionIndex = 0;
             
             // Salvar dados da resposta para usar na animação
             window.lastCheckinResponse = data;
@@ -1314,6 +1571,136 @@ async function loadDashboardData() {
     }
 }
 
+// ✅ Função para verificar e abrir check-in pendente
+function checkAndOpenPendingCheckin() {
+    if (!checkinData && window.checkinData) {
+        checkinData = window.checkinData;
+    }
+    
+    if (!checkinData || !checkinData.id) {
+        console.log('[Check-in] Nenhum check-in disponível para abrir');
+        return; // Não há check-in disponível
+    }
+    
+    let modal = document.getElementById('checkinModal');
+    
+    // ✅ CRIAR MODAL SE NÃO EXISTIR
+    if (!modal) {
+        console.log('[Check-in] Modal não existe, criando...');
+        modal = document.createElement('div');
+        modal.id = 'checkinModal';
+        modal.className = 'checkin-modal';
+        modal.innerHTML = `
+            <div class="checkin-chat-container">
+                <div class="checkin-chat-header">
+                    <h3 id="checkin-title">${checkinData.name || 'Check-in'}</h3>
+                    <button class="checkin-close-btn" id="checkin-close-btn" style="display: none !important;">&times;</button>
+                </div>
+                <div class="checkin-messages" id="checkinMessages"></div>
+                <div class="checkin-input-container" id="checkinInputContainer">
+                    <input type="text" class="checkin-text-input" id="checkinTextInput" placeholder="Digite sua resposta..." onkeypress="if(event.key === 'Enter') sendCheckinResponse()" disabled>
+                    <button class="checkin-send-btn" onclick="sendCheckinResponse()" id="checkinSendBtn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        // Inserir no body
+        const appContainer = document.getElementById('app-container');
+        if (appContainer && appContainer.nextSibling) {
+            document.body.insertBefore(modal, appContainer.nextSibling);
+        } else {
+            document.body.appendChild(modal);
+        }
+        console.log('[Check-in] Modal criado dinamicamente em checkAndOpenPendingCheckin');
+    }
+    
+    // Verificar se modal já está aberto
+    if (modal.classList.contains('active') || modal.style.display === 'flex') {
+        console.log('[Check-in] Modal já está aberto');
+        return; // Já está aberto
+    }
+    
+    // Verificar se check-in está completo
+    const currentWeek = getCurrentWeekStart();
+    const storageKey = `checkin_progress_${checkinData.id}_${currentWeek}`;
+    const savedProgress = localStorage.getItem(storageKey);
+    
+    let isCheckinComplete = false;
+    if (savedProgress) {
+        try {
+            const progress = JSON.parse(savedProgress);
+            const totalQuestions = checkinData.questions ? checkinData.questions.length : 0;
+            const answeredCount = progress.responses ? Object.keys(progress.responses).length : 0;
+            
+            if (answeredCount >= totalQuestions && totalQuestions > 0) {
+                isCheckinComplete = true;
+            }
+        } catch (e) {
+            console.error('[Check-in] Erro ao verificar progresso:', e);
+        }
+    }
+    
+    // Se não está completo, abrir modal OBRIGATORIAMENTE
+    if (!isCheckinComplete) {
+        // Esconder botão X
+        const closeBtn = modal.querySelector('.checkin-close-btn');
+        if (closeBtn) {
+            closeBtn.style.display = 'none !important';
+            closeBtn.style.visibility = 'hidden';
+            closeBtn.style.opacity = '0';
+            closeBtn.style.pointerEvents = 'none';
+        }
+        
+        // Bloquear app
+        const appContainer = document.getElementById('app-container');
+        if (appContainer) {
+            appContainer.style.pointerEvents = 'none';
+            appContainer.style.opacity = '0.3';
+        }
+        
+        // Configurar eventos
+        setupCheckinModalEvents();
+        
+        // ✅ FORÇAR ABERTURA DO MODAL - checkin obrigatório
+        console.log('[Check-in] FORÇANDO abertura do modal obrigatório via checkAndOpenPendingCheckin');
+        
+        // Abrir imediatamente
+        openCheckinModal();
+        
+        // Verificar se realmente abriu e forçar se necessário
+        setTimeout(() => {
+            const modalCheck = document.getElementById('checkinModal');
+            if (modalCheck) {
+                const isVisible = modalCheck.style.display === 'flex' || 
+                                 modalCheck.classList.contains('active') ||
+                                 window.getComputedStyle(modalCheck).display === 'flex';
+                
+                if (!isVisible) {
+                    console.log('[Check-in] Modal não está visível, FORÇANDO abertura');
+                    modalCheck.style.cssText = `
+                        display: flex !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                        z-index: 999999 !important;
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        right: 0 !important;
+                        bottom: 0 !important;
+                        width: 100% !important;
+                        height: 100% !important;
+                    `;
+                    modalCheck.classList.add('active');
+                    document.body.classList.add('checkin-modal-open');
+                }
+            }
+        }, 200);
+    } else {
+        console.log('[Check-in] Check-in já está completo');
+    }
+}
+
 // Inicialização principal
 (async function() {
     // Aguardar um pouco para garantir que www-config.js foi executado
@@ -1353,6 +1740,12 @@ async function loadDashboardData() {
     
     // Carregar dados inicialmente
     await loadDashboardData();
+    
+    // ✅ Verificar check-in pendente após carregar dados (com delay maior para garantir que renderDashboardOptimized terminou)
+    setTimeout(() => {
+        console.log('[Check-in] Verificando check-in pendente após loadDashboardData');
+        checkAndOpenPendingCheckin();
+    }, 2000);
     
     // ✅ FORÇAR INICIALIZAÇÃO DO CARROSSEL APÓS DADOS CARREGAREM
     // Aguardar um pouco para garantir que o DOM está pronto
@@ -1398,10 +1791,36 @@ async function loadDashboardData() {
                     const hasError = container.innerHTML.includes('Erro ao carregar dados');
                     if (hasError) {
                         await loadDashboardData();
+                        // Verificar check-in pendente após recarregar
+                        setTimeout(() => {
+                            checkAndOpenPendingCheckin();
+                        }, 1000);
                     }
                 }
             }
         }, 1000);
+    });
+    
+    // ✅ ESCUTAR EVENTO DE APP VOLTANDO DO BACKGROUND (Capacitor)
+    if (typeof window.Capacitor !== 'undefined' && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                // App voltou para foreground, verificar check-in pendente
+                setTimeout(() => {
+                    checkAndOpenPendingCheckin();
+                }, 500);
+            }
+        });
+    }
+    
+    // ✅ ESCUTAR VISIBILITY CHANGE (fallback para web)
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            // Página voltou a ficar visível, verificar check-in pendente
+            setTimeout(() => {
+                checkAndOpenPendingCheckin();
+            }, 500);
+        }
     });
 })();
 
@@ -1475,7 +1894,7 @@ async function renderDashboardOptimized(data) {
             () => {
                 renderChallenges(data);
             },
-            // Passo 8: Check-in e finalização
+            // Passo 8: Botão WhatsApp (SEMPRE) e Check-in obrigatório
             () => {
                 // Verificar se estamos na página main_app antes de criar/exibir o botão
                 const isMainAppPage = document.getElementById('dashboard-container') || 
@@ -1495,29 +1914,45 @@ async function renderDashboardOptimized(data) {
                     return;
                 }
                 
-                // PRIMEIRO verificar se há check-in disponível
-                if (data.available_checkin) {
-                    // SÓ criar/mostrar botão se houver check-in disponível
-                    let checkinBtn = document.getElementById('checkin-floating-btn');
-                    if (!checkinBtn) {
-                        // Criar o botão se não existir
-                        checkinBtn = document.createElement('button');
-                        checkinBtn.id = 'checkin-floating-btn';
-                        checkinBtn.className = 'checkin-floating-btn';
-                        checkinBtn.setAttribute('onclick', 'openCheckinModal()');
-                        checkinBtn.setAttribute('aria-label', 'Abrir Check-in');
-                        checkinBtn.innerHTML = '<i class="fas fa-comments"></i>';
-                        
-                        // Inserir no body, DEPOIS do app-container (não dentro dele)
-                        const appContainer = document.getElementById('app-container');
-                        if (appContainer && appContainer.nextSibling) {
-                            document.body.insertBefore(checkinBtn, appContainer.nextSibling);
-                        } else {
-                            document.body.appendChild(checkinBtn);
-                        }
-                        console.log('[Check-in] Botão criado dinamicamente e adicionado ao body');
-                    }
+                // ✅ BOTÃO WHATSAPP SEMPRE VISÍVEL - Criar/garantir que existe sempre (independente de checkin)
+                let whatsappBtn = document.getElementById('checkin-floating-btn');
+                if (!whatsappBtn) {
+                    // Criar o botão se não existir
+                    whatsappBtn = document.createElement('button');
+                    whatsappBtn.id = 'checkin-floating-btn';
+                    whatsappBtn.className = 'checkin-floating-btn';
+                    whatsappBtn.setAttribute('aria-label', 'Abrir WhatsApp Suporte');
+                    whatsappBtn.innerHTML = '<i class="fas fa-comments"></i>';
                     
+                    // Inserir no body, DEPOIS do app-container (não dentro dele)
+                    const appContainer = document.getElementById('app-container');
+                    if (appContainer && appContainer.nextSibling) {
+                        document.body.insertBefore(whatsappBtn, appContainer.nextSibling);
+                    } else {
+                        document.body.appendChild(whatsappBtn);
+                    }
+                    console.log('[WhatsApp] Botão criado dinamicamente e adicionado ao body');
+                }
+                
+                // ✅ BOTÃO SEMPRE REDIRECIONA PARA WHATSAPP (independente de checkin)
+                whatsappBtn.onclick = function() {
+                    const whatsappNumber = '5534984426408';
+                    const whatsappUrl = `https://wa.me/${whatsappNumber}`;
+                    window.open(whatsappUrl, '_blank');
+                };
+                
+                // Forçar estilos do botão para garantir que fique fixo e sempre visível
+                whatsappBtn.style.position = 'fixed';
+                whatsappBtn.style.bottom = '90px';
+                whatsappBtn.style.right = '20px';
+                whatsappBtn.style.zIndex = '9999';
+                whatsappBtn.style.display = 'flex';
+                whatsappBtn.style.visibility = 'visible';
+                whatsappBtn.style.opacity = '1';
+                console.log('[WhatsApp] Botão sempre visível configurado');
+                
+                // ✅ VERIFICAR SE HÁ CHECK-IN DISPONÍVEL (para modal obrigatório)
+                if (data.available_checkin) {
                     // Garantir que o modal existe
                     let checkinModal = document.getElementById('checkinModal');
                     if (!checkinModal) {
@@ -1529,7 +1964,7 @@ async function renderDashboardOptimized(data) {
                             <div class="checkin-chat-container">
                                 <div class="checkin-chat-header">
                                     <h3 id="checkin-title">Check-in</h3>
-                                    <button class="checkin-close-btn" onclick="closeCheckinModal()">&times;</button>
+                                    <button class="checkin-close-btn" id="checkin-close-btn" style="display: none !important;">&times;</button>
                                 </div>
                                 <div class="checkin-messages" id="checkinMessages"></div>
                                 <div class="checkin-input-container" id="checkinInputContainer">
@@ -1549,17 +1984,11 @@ async function renderDashboardOptimized(data) {
                         }
                         console.log('[Check-in] Modal criado dinamicamente');
                     }
+                    
                     console.log('[Check-in] Check-in disponível encontrado:', data.available_checkin);
                     
-                    // Forçar estilos do botão para garantir que fique fixo
-                    checkinBtn.style.position = 'fixed';
-                    checkinBtn.style.bottom = '90px';
-                    checkinBtn.style.right = '20px';
-                    checkinBtn.style.zIndex = '9999';
-                    checkinBtn.style.display = 'flex';
-                    checkinBtn.style.visibility = 'visible';
-                    checkinBtn.style.opacity = '1';
-                    console.log('[Check-in] Botão exibido e posicionado fixo');
+                    // ✅ RESETAR FLAG DE COMPLETADO quando novo checkin é carregado
+                    isCheckinCompleted = false;
                     
                     window.checkinData = data.available_checkin;
                     checkinData = data.available_checkin;
@@ -1569,21 +1998,88 @@ async function renderDashboardOptimized(data) {
                         checkinTitle.textContent = data.available_checkin.name;
                     }
                     
-                    checkinModal.style.display = 'none';
+                    // ✅ VERIFICAR SE CHECK-IN JÁ FOI COMPLETADO
+                    const currentWeek = getCurrentWeekStart();
+                    const storageKey = `checkin_progress_${data.available_checkin.id}_${currentWeek}`;
+                    const savedProgress = localStorage.getItem(storageKey);
+                    
+                    // Verificar se há progresso salvo e se está completo
+                    let isCheckinComplete = false;
+                    if (savedProgress) {
+                        try {
+                            const progress = JSON.parse(savedProgress);
+                            // Verificar se todas as perguntas foram respondidas
+                            const totalQuestions = data.available_checkin.questions ? data.available_checkin.questions.length : 0;
+                            const answeredCount = progress.responses ? Object.keys(progress.responses).length : 0;
+                            
+                            // Se todas as perguntas foram respondidas, considerar completo
+                            if (answeredCount >= totalQuestions && totalQuestions > 0) {
+                                isCheckinComplete = true;
+                            }
+                        } catch (e) {
+                            console.error('[Check-in] Erro ao verificar progresso:', e);
+                        }
+                    }
+                    
+                    // ✅ CONFIGURAR EVENTOS DO MODAL ANTES DE ABRIR
+                    setupCheckinModalEvents();
+                    
+                    // ✅ ABRIR MODAL AUTOMATICAMENTE E BLOQUEAR APP SE NÃO ESTIVER COMPLETO
+                    if (!isCheckinComplete) {
+                        // Esconder botão X (checkin obrigatório)
+                        const closeBtn = checkinModal.querySelector('.checkin-close-btn');
+                        if (closeBtn) {
+                            closeBtn.style.display = 'none !important';
+                            closeBtn.style.visibility = 'hidden';
+                            closeBtn.style.opacity = '0';
+                            closeBtn.style.pointerEvents = 'none';
+                        }
+                        
+                        // Bloquear navegação do app (impedir cliques em outros elementos)
+                        const appContainer = document.getElementById('app-container');
+                        if (appContainer) {
+                            appContainer.style.pointerEvents = 'none';
+                            appContainer.style.opacity = '0.3';
+                        }
+                        
+                        // ✅ ABRIR IMEDIATAMENTE - checkin obrigatório
+                        // Forçar abertura do modal imediatamente
+                        console.log('[Check-in] Abrindo modal automaticamente (obrigatório) - FORÇADO');
+                        
+                        // Tentar abrir imediatamente
+                        openCheckinModal();
+                        
+                        // Backup: tentar novamente após um pequeno delay para garantir
+                        setTimeout(() => {
+                            const modal = document.getElementById('checkinModal');
+                            if (modal && (modal.style.display === 'none' || !modal.classList.contains('active'))) {
+                                console.log('[Check-in] Modal não abriu, forçando abertura novamente');
+                                openCheckinModal();
+                            }
+                        }, 300);
+                    } else {
+                        // Se já está completo, esconder modal e liberar app
+                        checkinModal.style.display = 'none';
+                        const appContainer = document.getElementById('app-container');
+                        if (appContainer) {
+                            appContainer.style.pointerEvents = 'auto';
+                            appContainer.style.opacity = '1';
+                        }
+                    }
                 } else {
                     console.log('[Check-in] Nenhum check-in disponível');
-                    // REMOVER botão completamente do DOM se existir
-                    const existingBtn = document.getElementById('checkin-floating-btn');
-                    if (existingBtn && existingBtn.parentNode) {
-                        existingBtn.parentNode.removeChild(existingBtn);
-                        console.log('[Check-in] Botão REMOVIDO do DOM');
-                    }
                     // Esconder modal se existir
                     const existingModal = document.getElementById('checkinModal');
                     if (existingModal) {
                         existingModal.style.display = 'none';
                     }
-                    // Limpar dados do check-in para evitar que o botão apareça com dados antigos
+                    // Liberar app (sem checkin pendente)
+                    const appContainer = document.getElementById('app-container');
+                    if (appContainer) {
+                        appContainer.style.pointerEvents = 'auto';
+                        appContainer.style.opacity = '1';
+                    }
+                    // Limpar dados do check-in
                     window.checkinData = null;
                     checkinData = null;
                     console.log('[Check-in] Dados limpos');
@@ -1595,6 +2091,46 @@ async function renderDashboardOptimized(data) {
                         window.initializeMissionsCarousel();
                     }
                 }, 100);
+                
+                // ✅ GARANTIR QUE CHECKIN ABRE AUTOMATICAMENTE APÓS RENDERIZAÇÃO
+                // Aguardar um pouco para garantir que tudo foi renderizado
+                setTimeout(() => {
+                    if (data.available_checkin && window.checkinData) {
+                        console.log('[Check-in] Verificando check-in após renderização completa');
+                        checkAndOpenPendingCheckin();
+                        
+                        // ✅ VERIFICAÇÃO EXTRA: Forçar abertura se ainda não abriu
+                        setTimeout(() => {
+                            const modal = document.getElementById('checkinModal');
+                            if (modal && window.checkinData) {
+                                const isVisible = modal.style.display === 'flex' || 
+                                                 modal.classList.contains('active') ||
+                                                 window.getComputedStyle(modal).display === 'flex';
+                                
+                                if (!isVisible) {
+                                    console.log('[Check-in] Modal ainda não está visível após verificação, FORÇANDO abertura');
+                                    const currentWeek = getCurrentWeekStart();
+                                    const storageKey = `checkin_progress_${window.checkinData.id}_${currentWeek}`;
+                                    const savedProgress = localStorage.getItem(storageKey);
+                                    
+                                    let isComplete = false;
+                                    if (savedProgress) {
+                                        try {
+                                            const progress = JSON.parse(savedProgress);
+                                            const totalQuestions = window.checkinData.questions ? window.checkinData.questions.length : 0;
+                                            const answeredCount = progress.responses ? Object.keys(progress.responses).length : 0;
+                                            isComplete = answeredCount >= totalQuestions && totalQuestions > 0;
+                                        } catch (e) {}
+                                    }
+                                    
+                                    if (!isComplete) {
+                                        openCheckinModal();
+                                    }
+                                }
+                            }
+                        }, 500);
+                    }
+                }, 1500);
                 
                 resolve();
             }
@@ -2480,11 +3016,11 @@ window.openCheckinModal = openCheckinModal;
 window.closeCheckinModal = closeCheckinModal;
 window.sendCheckinResponse = sendCheckinResponse;
 
-// Listener global para esconder o botão de check-in quando não estiver na página main_app
+// Listener global para mostrar/esconder o botão WhatsApp baseado na página
 (function() {
-    function hideCheckinButtonIfNotMainApp() {
-        const checkinBtn = document.getElementById('checkin-floating-btn');
-        if (!checkinBtn) return;
+    function updateWhatsAppButtonVisibility() {
+        const whatsappBtn = document.getElementById('checkin-floating-btn');
+        if (!whatsappBtn) return;
         
         const isMainAppPage = document.getElementById('dashboard-container') || 
                              document.querySelector('.main-app-container') ||
@@ -2492,19 +3028,29 @@ window.sendCheckinResponse = sendCheckinResponse;
                              window.location.pathname === '/' ||
                              window.location.pathname === '/index.html';
         
-        if (!isMainAppPage) {
-            checkinBtn.style.display = 'none';
-            checkinBtn.style.visibility = 'hidden';
-            checkinBtn.style.opacity = '0';
+        if (isMainAppPage) {
+            // ✅ SEMPRE VISÍVEL na página main_app (independente de checkin)
+            whatsappBtn.style.display = 'flex';
+            whatsappBtn.style.visibility = 'visible';
+            whatsappBtn.style.opacity = '1';
+            whatsappBtn.style.position = 'fixed';
+            whatsappBtn.style.bottom = '90px';
+            whatsappBtn.style.right = '20px';
+            whatsappBtn.style.zIndex = '9999';
+        } else {
+            // Esconder quando não está na main_app
+            whatsappBtn.style.display = 'none';
+            whatsappBtn.style.visibility = 'hidden';
+            whatsappBtn.style.opacity = '0';
         }
     }
     
-    // Esconder botão quando a página carregar (se não for main_app)
-    window.addEventListener('pageLoaded', hideCheckinButtonIfNotMainApp);
-    window.addEventListener('fragmentReady', hideCheckinButtonIfNotMainApp);
+    // Atualizar visibilidade quando a página carregar
+    window.addEventListener('pageLoaded', updateWhatsAppButtonVisibility);
+    window.addEventListener('fragmentReady', updateWhatsAppButtonVisibility);
     
     // Verificar imediatamente também
-    setTimeout(hideCheckinButtonIfNotMainApp, 100);
+    setTimeout(updateWhatsAppButtonVisibility, 100);
 })();
 
 })();
