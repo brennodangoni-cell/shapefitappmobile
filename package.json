@@ -1,6 +1,6 @@
 {
   "name": "shapefit-mobile",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ShapeFit Mobile App - iOS & Android",
   "main": "www/index.html",
   "scripts": {
