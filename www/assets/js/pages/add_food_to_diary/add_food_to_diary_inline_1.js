@@ -12,13 +12,14 @@ let userSelectedMealType = false;
 function selectRecipe(recipe) {
     selectedRecipe = {
         ...recipe,
-        is_food: recipe.is_food === true
+        is_food: recipe.is_food === true,
+        is_custom_meal: recipe.is_custom_meal === true
     };
     document.getElementById('modal-recipe-name').textContent = selectedRecipe.name;
-    document.getElementById('selected-recipe-id').value = selectedRecipe.id;
+    document.getElementById('selected-recipe-id').value = selectedRecipe.id || '';
     
     // Preencher nome da refeição automaticamente
-    document.getElementById('custom_meal_name').value = selectedRecipe.name;
+    document.getElementById('custom_meal_name').value = selectedRecipe.custom_meal_name || selectedRecipe.name;
     
     // RESETAR ESTADO ANTERIOR - CORRIGIR BUG DA COR VERMELHA E LEGENDA
     const quantityLabel = document.getElementById('quantity-label');
@@ -39,11 +40,20 @@ function selectRecipe(recipe) {
         document.getElementById('quantity').classList.remove('quantity-input-full-width');
         loadUnitsForFood(selectedRecipe.id, '0');
     } else {
-        // Para receitas, ocultar seletor de unidade e usar "porções"
+        // Para receitas ou refeições customizadas, ocultar seletor de unidade e usar "porções"
         unitSelect.style.display = 'none';
         quantityLabel.textContent = 'Porções';
         document.getElementById('quantity').classList.add('quantity-input-full-width');
-        updateMacros(); // Usar cálculo direto para receitas
+        updateMacros(); // Usar cálculo direto para receitas/refeições customizadas
+    }
+    
+    // Se for refeição customizada favorita, preencher tipo de refeição
+    if (selectedRecipe.is_custom_meal && selectedRecipe.meal_type) {
+        const mealTypeSelect = document.getElementById('meal-type');
+        if (mealTypeSelect) {
+            mealTypeSelect.value = selectedRecipe.meal_type;
+            userSelectedMealType = true; // Marcar que foi selecionado manualmente
+        }
     }
     
     // Mostrar modal
@@ -135,7 +145,7 @@ function calculateNutritionWithUnits(quantity, unitId) {
         unit_id: resolvedUnitId,
         is_recipe: selectedRecipe.is_food ? '0' : '1'
     };
-    authenticatedFetch(`/api/calculate_nutrition.php`, {
+    authenticatedFetch(`${window.API_BASE_URL}/calculate_nutrition.php`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
@@ -197,7 +207,7 @@ function loadUnitsForFood(foodId, isRecipe) {
     const unitSelect = document.getElementById('unit-select');
     unitSelect.innerHTML = '<option value="">Carregando...</option>';
     
-    const url = `/api/get_units.php?action=for_food&food_id=${numericId}`;
+    const url = `${window.API_BASE_URL}/get_units.php?action=for_food&food_id=${numericId}`;
     authenticatedFetch(url)
     .then(response => {
         if (!response) throw new Error('Não autenticado');
@@ -271,7 +281,7 @@ function showNoUnitsMessage() {
 
 function loadDefaultUnits(onComplete) {
     const unitSelect = document.getElementById('unit-select');
-    const url = `/api/get_units.php?action=all`;
+    const url = `${window.API_BASE_URL}/get_units.php?action=all`;
     console.log('URL da API (todas as unidades):', url);
     
     authenticatedFetch(url)
@@ -369,26 +379,29 @@ function confirmMeal() {
         ? (unitSelect.options[unitSelect.selectedIndex]?.textContent || '')
         : 'Porção';
 
+    // Para refeições customizadas favoritas, tratar como alimento customizado (is_food = 1)
+    const isCustomMeal = selectedRecipe.is_custom_meal === true;
+    
     const pendingItem = {
         id: Date.now() + Math.random(),
         display_name: customMealName,
         custom_meal_name: customMealName,
-        is_food: selectedRecipe.is_food ? 1 : 0,
-        food_name: selectedRecipe.is_food ? selectedRecipe.name : '',
-        recipe_id: selectedRecipe.is_food ? '' : selectedRecipe.id,
+        is_food: selectedRecipe.is_food ? 1 : (isCustomMeal ? 1 : 0), // Ref customizada = is_food = 1
+        food_name: selectedRecipe.is_food ? selectedRecipe.name : (isCustomMeal ? customMealName : ''),
+        recipe_id: selectedRecipe.is_food || isCustomMeal ? '' : (selectedRecipe.id || ''),
         meal_type: mealType,
         meal_type_label: mealTypeLabel,
         meal_time: mealTime,
         meal_time_label: mealTime || 'Sem horário',
         date_consumed: dateConsumed,
-        servings_consumed: selectedRecipe.is_food ? 1 : quantity,
+        servings_consumed: quantity,
         quantity: quantity,
         unit_id: selectedRecipe.is_food ? unitId : '',
         unit_name: unitLabel,
-        kcal_per_serving: selectedRecipe.is_food ? totalKcal : selectedRecipe.kcal_per_serving,
-        protein_per_serving: selectedRecipe.is_food ? totalProtein : selectedRecipe.protein_g_per_serving,
-        carbs_per_serving: selectedRecipe.is_food ? totalCarbs : selectedRecipe.carbs_g_per_serving,
-        fat_per_serving: selectedRecipe.is_food ? totalFat : selectedRecipe.fat_g_per_serving,
+        kcal_per_serving: selectedRecipe.is_food ? totalKcal : (isCustomMeal ? selectedRecipe.kcal_per_serving : selectedRecipe.kcal_per_serving),
+        protein_per_serving: selectedRecipe.is_food ? totalProtein : (isCustomMeal ? selectedRecipe.protein_per_serving : selectedRecipe.protein_g_per_serving),
+        carbs_per_serving: selectedRecipe.is_food ? totalCarbs : (isCustomMeal ? selectedRecipe.carbs_per_serving : selectedRecipe.carbs_g_per_serving),
+        fat_per_serving: selectedRecipe.is_food ? totalFat : (isCustomMeal ? selectedRecipe.fat_per_serving : selectedRecipe.fat_g_per_serving),
         total_kcal: totalKcal,
         total_protein: totalProtein,
         total_carbs: totalCarbs,
@@ -398,6 +411,9 @@ function confirmMeal() {
     pendingItems.push(pendingItem);
     renderPendingItems();
     showPendingFeedback('Refeição adicionada à lista. Clique em "Salvar no Diário" para registrar tudo de uma vez.', true);
+    
+    // Verificar se está favoritada após adicionar item
+    setTimeout(() => checkIfCurrentMealIsFavorited(), 100);
 
     closeModal();
 }
@@ -529,12 +545,29 @@ function renderPendingItems() {
 
     saveBtn.disabled = false;
     saveBtn.innerHTML = `<i class="fas fa-save"></i> Salvar no Diário (${pendingItems.length})`;
+    
+    // Habilitar/desabilitar botão de favoritar baseado nos itens
+    const favoriteBtn = document.getElementById('favorite-meal-btn');
+    if (favoriteBtn) {
+        if (pendingItems.length === 0) {
+            favoriteBtn.disabled = true;
+            favoriteBtn.classList.remove('favorited');
+            favoriteBtn.innerHTML = '<i class="far fa-heart"></i> Favoritar Refeição';
+        } else {
+            favoriteBtn.disabled = false;
+            // Verificar se já está favoritada
+            checkIfCurrentMealIsFavorited();
+        }
+    }
 }
 
 function removePendingItem(index) {
     pendingItems.splice(index, 1);
     renderPendingItems();
     showPendingFeedback('Item removido da lista.', true);
+    
+    // Verificar se ainda está favoritada após remover item
+    setTimeout(() => checkIfCurrentMealIsFavorited(), 100);
 }
 
 function showPendingFeedback(message, isSuccess = true) {
@@ -566,7 +599,7 @@ async function submitAllMeals() {
             items: pendingItems
         };
         
-        const response = await authenticatedFetch(`/api/log_meal_batch.php`, {
+        const response = await authenticatedFetch(`${window.API_BASE_URL}/log_meal_batch.php`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -599,8 +632,32 @@ async function submitAllMeals() {
         }
 
         if (data.success) {
+            // Fechar qualquer modal aberto antes de redirecionar
+            closeFavoriteMealModal();
+            const favoriteModal = document.getElementById('favorite-meal-modal');
+            if (favoriteModal) {
+                favoriteModal.classList.remove('visible');
+                document.body.classList.remove('recipe-modal-open');
+                document.body.style.overflow = '';
+            }
+            
             showPendingFeedback('Refeições registradas com sucesso! Redirecionando...', true);
             const dateConsumed = pendingItems[0]?.date_consumed || new Date().toISOString().split('T')[0];
+            
+            // Fechar todos os modais ANTES de navegar (sem delay e sem transição)
+            const allModals = document.querySelectorAll('.recipe-modal');
+            allModals.forEach(modal => {
+                modal.classList.remove('visible');
+                modal.style.transition = 'none';
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                modal.style.pointerEvents = 'none';
+            });
+            document.body.classList.remove('recipe-modal-open', 'modal-open');
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
             
             // Usar SPA router para navegar de volta ao diário
             setTimeout(() => {
@@ -644,7 +701,7 @@ function resetModalState() {
     quantityInfo.style.display = 'none';
 }
 
-let currentTab = 'recipes';
+let currentTab = 'foods';
 let searchTimeout = null;
 
 // Função para alternar entre abas
@@ -861,7 +918,7 @@ async function loadPageData() {
         const urlParams = new URLSearchParams(window.location.search);
         const date = urlParams.get('date') || pageData.date;
         const mealType = urlParams.get('meal_type') || pageData.meal_type;
-        const response = await authenticatedFetch(`/api/get_add_food_data.php?date=${date}&meal_type=${mealType}`);
+        const response = await authenticatedFetch(`${window.API_BASE_URL}/get_add_food_data.php?date=${date}&meal_type=${mealType}`);
         if (!response) return;
         
         if (!response.ok) {
@@ -922,6 +979,9 @@ async function loadPageData() {
             backBtn.href = `/diario${pageData.date ? `?date=${encodeURIComponent(pageData.date)}` : ''}`;
         }
         
+        // Carregar e renderizar refeições customizadas favoritas
+        loadFavoriteCustomMeals();
+        
         // Renderizar receitas favoritas
         if (pageData.favorite_recipes.length > 0) {
             renderRecipes(pageData.favorite_recipes, 'favorite-recipes');
@@ -957,6 +1017,71 @@ async function loadPageData() {
     }
 }
 
+async function loadFavoriteCustomMeals() {
+    try {
+        const response = await authenticatedFetch(`${window.API_BASE_URL}/get_favorite_custom_meals.php`);
+        if (!response) return;
+        
+        const result = await response.json();
+        
+        if (result.success && result.favorite_meals && result.favorite_meals.length > 0) {
+            renderFavoriteCustomMeals(result.favorite_meals);
+            document.getElementById('favorite-custom-meals-section').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Erro ao carregar refeições favoritas:', error);
+    }
+}
+
+function renderFavoriteCustomMeals(meals) {
+    const container = document.getElementById('favorite-custom-meals');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    meals.forEach(meal => {
+        const mealCard = document.createElement('div');
+        mealCard.className = 'recipe-card';
+        mealCard.onclick = () => {
+            // Criar objeto compatível com selectRecipe para refeição customizada
+            selectRecipe({
+                id: null, // Não tem ID de receita
+                name: meal.meal_name,
+                is_food: false,
+                is_custom_meal: true,
+                kcal_per_serving: meal.kcal_per_serving,
+                protein_g_per_serving: meal.protein_per_serving,
+                carbs_g_per_serving: meal.carbs_per_serving,
+                fat_g_per_serving: meal.fat_per_serving,
+                meal_type: meal.meal_type,
+                custom_meal_name: meal.meal_name
+            });
+        };
+        
+        // Usar imagem placeholder para refeições customizadas (SVG inline para evitar 404)
+        const placeholderSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEzYzRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZvb2Q8L3RleHQ+PC9zdmc+';
+        const imageUrl = placeholderSvg;
+        
+        mealCard.innerHTML = `
+            <div class="recipe-image-wrapper" style="position: relative;">
+                <img src="${imageUrl}" alt="${escapeHtml(meal.meal_name)}" class="recipe-image">
+                <div class="custom-meal-badge" style="position: absolute; top: 8px; right: 8px; background: rgba(255, 107, 0, 0.9); color: white; padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 600;">
+                    <i class="fas fa-heart"></i>
+                </div>
+            </div>
+            <h3 class="recipe-name">${escapeHtml(meal.meal_name)}</h3>
+            <p class="recipe-macros">
+                P: ${Math.round(meal.protein_per_serving || 0)}g | 
+                C: ${Math.round(meal.carbs_per_serving || 0)}g | 
+                G: ${Math.round(meal.fat_per_serving || 0)}g
+            </p>
+            <div class="recipe-kcal">${Math.round(meal.kcal_per_serving || 0)} kcal</div>
+        `;
+        
+        container.appendChild(mealCard);
+    });
+}
+
 function renderRecipes(recipes, containerId) {
     const container = document.getElementById(containerId);
     container.innerHTML = '';
@@ -968,9 +1093,10 @@ function renderRecipes(recipes, containerId) {
             selectRecipe({...recipe, is_food: false});
         };
         
+        const placeholderSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEzYzRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZvb2Q8L3RleHQ+PC9zdmc+';
         const imageUrl = recipe.image_filename 
             ? `${IMAGES_BASE_URL}/assets/images/recipes/${recipe.image_filename}`
-            : `${IMAGES_BASE_URL}/assets/images/recipes/placeholder_food.jpg`;
+            : placeholderSvg;
         
         recipeCard.innerHTML = `
             <img src="${imageUrl}" alt="${escapeHtml(recipe.name)}" class="recipe-image">
@@ -978,7 +1104,7 @@ function renderRecipes(recipes, containerId) {
             <p class="recipe-macros">
                 P: ${Math.round(recipe.protein_g_per_serving || 0)}g | 
                 C: ${Math.round(recipe.carbs_g_per_serving || 0)}g | 
-                G: ${Math.round(recipe.fat_g_per_serving || 0)}g
+                G: ${Math.round(recipe.fat_per_serving || 0)}g
             </p>
             <div class="recipe-kcal">${Math.round(recipe.kcal_per_serving || 0)} kcal</div>
         `;
@@ -1026,6 +1152,36 @@ async function initAddFoodPage() {
     if (saveAllBtn) {
         saveAllBtn.addEventListener('click', submitAllMeals);
     }
+    
+    // Botão de favoritar refeição
+    const favoriteBtn = document.getElementById('favorite-meal-btn');
+    if (favoriteBtn) {
+        favoriteBtn.addEventListener('click', openFavoriteMealModal);
+    }
+    
+    // Event listener para fechar modal de favoritar clicando fora
+    const favoriteModal = document.getElementById('favorite-meal-modal');
+    if (favoriteModal) {
+        favoriteModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFavoriteMealModal();
+            }
+        });
+    }
+    
+    // Event listener para Enter no input de nome
+    const favoriteMealNameInput = document.getElementById('favorite-meal-name');
+    if (favoriteMealNameInput) {
+        favoriteMealNameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmFavoriteMeal();
+            }
+        });
+    }
+    
+    // Carregar refeições completas favoritas
+    loadFavoriteCompleteMeals();
 
     const mealTimeInput = document.getElementById('meal_time');
     if (mealTimeInput) {
@@ -1044,7 +1200,15 @@ async function initAddFoodPage() {
         });
     }
 
-    autoSetMealType(true);
+    // ✅ Só auto-definir meal_type se não veio na URL (respeitar o que o usuário clicou no main_app)
+    const mealTypeFromUrl = urlParams.get('meal_type');
+    if (!mealTypeFromUrl) {
+        // Se não veio meal_type na URL, auto-definir baseado no horário
+        autoSetMealType(true);
+    } else {
+        // Se veio meal_type na URL, marcar como selecionado pelo usuário para não sobrescrever
+        userSelectedMealType = true;
+    }
     
     // Atualizar links de criar alimento com data e meal_type atuais
     function updateCustomFoodLinks() {
@@ -1095,19 +1259,25 @@ async function initAddFoodPage() {
     });
     
     // ✅ Event listeners para busca (movidos para dentro de initAddFoodPage)
-    const searchInput = document.getElementById('search-input');
+    let searchInput = document.getElementById('search-input');
     if (searchInput) {
         // Remover listener antigo se existir
         const newSearchInput = searchInput.cloneNode(true);
         searchInput.parentNode.replaceChild(newSearchInput, searchInput);
         
         // Adicionar listener novamente
-        document.getElementById('search-input').addEventListener('input', function() {
+        searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 performSearch();
             }, 300);
         });
+        
+        // ✅ Garantir que o placeholder inicial está correto (Alimentos é a aba padrão)
+        if (currentTab === 'foods') {
+            searchInput.placeholder = 'Buscar alimentos...';
+        }
     }
     
     // ✅ Event listeners para modal (movidos para dentro de initAddFoodPage)
@@ -1131,11 +1301,16 @@ async function initAddFoodPage() {
     }
 }
 
-// ✅ Mover modal para fora do page-root para funcionar corretamente com position: fixed
+// ✅ Mover modais para fora do page-root para funcionar corretamente com position: fixed
 function moveModalToBody() {
-    const modal = document.getElementById('recipe-modal');
-    if (modal && modal.parentElement && modal.parentElement.classList.contains('page-root')) {
-        document.body.appendChild(modal);
+    const recipeModal = document.getElementById('recipe-modal');
+    if (recipeModal && recipeModal.parentElement && recipeModal.parentElement.classList.contains('page-root')) {
+        document.body.appendChild(recipeModal);
+    }
+    
+    const favoriteModal = document.getElementById('favorite-meal-modal');
+    if (favoriteModal && favoriteModal.parentElement && favoriteModal.parentElement.classList.contains('page-root')) {
+        document.body.appendChild(favoriteModal);
     }
 }
 
@@ -1152,8 +1327,48 @@ if (document.readyState === 'loading') {
 }
 
 // Também escutar eventos do SPA router
-window.addEventListener('fragmentReady', initAddFoodPage);
-window.addEventListener('pageLoaded', initAddFoodPage);
+window.addEventListener('fragmentReady', function(e) {
+    // Fechar e remover modal de detalhes imediatamente ao mudar de página
+    const modal = document.getElementById('favorite-meal-details-modal');
+    if (modal) {
+        modal.classList.remove('visible');
+        document.body.classList.remove('recipe-modal-open');
+        document.body.style.overflow = '';
+        // Remover imediatamente do DOM
+        if (modal.parentNode) {
+            modal.parentNode.removeChild(modal);
+        }
+        // Remover listeners
+        if (modal._closeOnNavigation) {
+            window.removeEventListener('beforeunload', modal._closeOnNavigation);
+            window.removeEventListener('popstate', modal._closeOnNavigation);
+            window.removeEventListener('pageChange', modal._closeOnNavigation);
+            window.removeEventListener('fragmentReady', modal._closeOnNavigation);
+        }
+    }
+    initAddFoodPage();
+});
+window.addEventListener('pageLoaded', function(e) {
+    // Fechar e remover modal de detalhes imediatamente ao mudar de página
+    const modal = document.getElementById('favorite-meal-details-modal');
+    if (modal) {
+        modal.classList.remove('visible');
+        document.body.classList.remove('recipe-modal-open');
+        document.body.style.overflow = '';
+        // Remover imediatamente do DOM
+        if (modal.parentNode) {
+            modal.parentNode.removeChild(modal);
+        }
+        // Remover listeners
+        if (modal._closeOnNavigation) {
+            window.removeEventListener('beforeunload', modal._closeOnNavigation);
+            window.removeEventListener('popstate', modal._closeOnNavigation);
+            window.removeEventListener('pageChange', modal._closeOnNavigation);
+            window.removeEventListener('fragmentReady', modal._closeOnNavigation);
+        }
+    }
+    initAddFoodPage();
+});
 
 // ✅ Recarregar dados quando internet volta
 window.addEventListener('reloadPageData', function(e) {
@@ -1183,10 +1398,783 @@ window.addEventListener('pageReload', function(e) {
     }
 });
 
+// ========== FUNCIONALIDADE DE REFEIÇÕES COMPLETAS FAVORITAS ==========
+
+// Variável para armazenar se a refeição atual está favoritada
+let currentMealFavoriteId = null;
+
+async function checkIfCurrentMealIsFavorited() {
+    if (!pendingItems || pendingItems.length === 0) {
+        currentMealFavoriteId = null;
+        updateFavoriteButtonState();
+        return;
+    }
+    
+    // Gerar hash único baseado nos itens para identificar a refeição
+    const mealSignature = JSON.stringify(pendingItems.map(item => ({
+        name: item.display_name || item.custom_meal_name,
+        quantity: item.quantity || item.servings_consumed,
+        unit: item.unit_name || '',
+        meal_type: item.meal_type
+    })).sort((a, b) => a.name.localeCompare(b.name)));
+    
+    try {
+        const response = await authenticatedFetch(`${window.API_BASE_URL}/get_favorite_complete_meals.php`);
+        if (!response) return;
+        
+        const result = await response.json();
+        if (result.success && result.meals) {
+            // Verificar se existe uma refeição favorita com os mesmos itens
+            const matchingMeal = result.meals.find(meal => {
+                const mealItems = meal.items || [];
+                const mealSignature2 = JSON.stringify(mealItems.map(item => ({
+                    name: item.display_name || item.custom_meal_name,
+                    quantity: item.quantity || item.servings_consumed,
+                    unit: item.unit_name || '',
+                    meal_type: item.meal_type
+                })).sort((a, b) => a.name.localeCompare(b.name)));
+                return mealSignature === mealSignature2;
+            });
+            
+            if (matchingMeal) {
+                currentMealFavoriteId = matchingMeal.id;
+            } else {
+                currentMealFavoriteId = null;
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao verificar se está favoritada:', error);
+        currentMealFavoriteId = null;
+    }
+    
+    updateFavoriteButtonState();
+}
+
+function updateFavoriteButtonState() {
+    const favoriteBtn = document.getElementById('favorite-meal-btn');
+    if (!favoriteBtn) return;
+    
+    if (currentMealFavoriteId) {
+        favoriteBtn.classList.add('favorited');
+        favoriteBtn.innerHTML = '<i class="fas fa-heart"></i> Favoritada';
+    } else {
+        favoriteBtn.classList.remove('favorited');
+        favoriteBtn.innerHTML = '<i class="far fa-heart"></i> Favoritar Refeição';
+    }
+}
+
+function openFavoriteMealModal() {
+    if (!pendingItems || pendingItems.length === 0) {
+        showPendingFeedback('Adicione pelo menos um item antes de favoritar a refeição.', false);
+        return;
+    }
+    
+    // Se já está favoritada, mostrar modal de confirmação para desfavoritar
+    if (currentMealFavoriteId) {
+        showUnfavoriteConfirmModal();
+        return;
+    }
+    
+    // Gerar sugestão de nome baseado nos itens
+    const suggestedName = pendingItems.map(item => item.display_name).join(' + ').substring(0, 50);
+    const nameInput = document.getElementById('favorite-meal-name');
+    if (nameInput) {
+        nameInput.value = suggestedName;
+    }
+    
+    // Abrir modal
+    const modal = document.getElementById('favorite-meal-modal');
+    if (modal) {
+        modal.classList.add('visible');
+        document.body.classList.add('recipe-modal-open');
+        document.body.style.overflow = 'hidden';
+        
+        // Focar no input
+        setTimeout(() => {
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.select();
+            }
+        }, 100);
+    }
+}
+
+function closeFavoriteMealModal() {
+    const modal = document.getElementById('favorite-meal-modal');
+    if (modal) {
+        modal.classList.remove('visible');
+        document.body.classList.remove('recipe-modal-open');
+        document.body.style.overflow = '';
+    }
+    
+    // Limpar input
+    const nameInput = document.getElementById('favorite-meal-name');
+    if (nameInput) {
+        nameInput.value = '';
+    }
+    
+    // Restaurar conteúdo original do modal
+    restoreFavoriteModalContent();
+}
+
+function showUnfavoriteConfirmModal() {
+    const modal = document.getElementById('favorite-meal-modal');
+    const modalTitle = document.getElementById('favorite-modal-title');
+    const modalBody = document.getElementById('favorite-modal-body');
+    
+    if (!modal || !modalTitle || !modalBody) return;
+    
+    // Salvar conteúdo original
+    if (!modalBody.dataset.originalContent) {
+        modalBody.dataset.originalContent = modalBody.innerHTML;
+    }
+    
+    // Alterar conteúdo para confirmação de desfavoritar
+    modalTitle.textContent = 'Remover dos Favoritos';
+    modalTitle.style.textAlign = 'center';
+    modalBody.innerHTML = `
+        <div style="text-align: center; padding: 20px 0;">
+            <i class="fas fa-heart-broken" style="font-size: 48px; color: var(--accent-orange); margin-bottom: 16px;"></i>
+            <p style="color: var(--text-primary); font-size: 16px; margin-bottom: 8px; font-weight: 600;">
+                Deseja remover esta refeição dos favoritos?
+            </p>
+            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;">
+                Você poderá favoritá-la novamente depois.
+            </p>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn-cancel-favorite" onclick="closeFavoriteMealModal()" style="flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: var(--text-primary); font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    Cancelar
+                </button>
+                <button class="btn-confirm-unfavorite" onclick="confirmUnfavoriteMeal()" style="flex: 1; padding: 12px; background: rgba(255, 0, 0, 0.2); border: 1px solid rgba(255, 0, 0, 0.4); border-radius: 12px; color: #ff4444; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    <i class="fas fa-trash"></i> Remover
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Adicionar hover ao botão de remover
+    const removeBtn = modalBody.querySelector('.btn-confirm-unfavorite');
+    if (removeBtn) {
+        removeBtn.addEventListener('mouseenter', function() {
+            this.style.background = 'rgba(255, 0, 0, 0.3)';
+            this.style.borderColor = 'rgba(255, 0, 0, 0.5)';
+        });
+        removeBtn.addEventListener('mouseleave', function() {
+            this.style.background = 'rgba(255, 0, 0, 0.2)';
+            this.style.borderColor = 'rgba(255, 0, 0, 0.4)';
+        });
+    }
+    
+    // Abrir modal
+    modal.classList.add('visible');
+    document.body.classList.add('recipe-modal-open');
+    document.body.style.overflow = 'hidden';
+}
+
+function restoreFavoriteModalContent() {
+    const modalBody = document.getElementById('favorite-modal-body');
+    const modalTitle = document.getElementById('favorite-modal-title');
+    
+    if (modalBody && modalBody.dataset.originalContent) {
+        modalBody.innerHTML = modalBody.dataset.originalContent;
+    }
+    
+    if (modalTitle) {
+        modalTitle.textContent = 'Favoritar Refeição';
+        modalTitle.style.textAlign = 'center';
+    }
+}
+
+async function confirmUnfavoriteMeal() {
+    if (!currentMealFavoriteId) {
+        closeFavoriteMealModal();
+        return;
+    }
+    
+    closeFavoriteMealModal();
+    
+    const favoriteBtn = document.getElementById('favorite-meal-btn');
+    if (favoriteBtn) {
+        favoriteBtn.disabled = true;
+        favoriteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removendo...';
+    }
+    
+    try {
+        await deleteFavoriteCompleteMeal(currentMealFavoriteId);
+        currentMealFavoriteId = null;
+        updateFavoriteButtonState();
+        // Recarregar lista de favoritas (vai esconder a seção se não houver mais refeições)
+        await loadFavoriteCompleteMeals();
+        showPendingFeedback('Refeição removida dos favoritos.', true);
+    } catch (error) {
+        console.error('Erro ao remover favorito:', error);
+        showPendingFeedback(error.message || 'Erro ao remover dos favoritos. Tente novamente.', false);
+    } finally {
+        if (favoriteBtn) {
+            favoriteBtn.disabled = false;
+            updateFavoriteButtonState();
+        }
+    }
+}
+
+function showDeleteFavoriteMealModal(mealId) {
+    const modal = document.getElementById('favorite-meal-modal');
+    const modalTitle = document.getElementById('favorite-modal-title');
+    const modalBody = document.getElementById('favorite-modal-body');
+    
+    if (!modal || !modalTitle || !modalBody) return;
+    
+    // Salvar conteúdo original se ainda não foi salvo
+    if (!modalBody.dataset.originalContent) {
+        modalBody.dataset.originalContent = modalBody.innerHTML;
+    }
+    
+    // Alterar conteúdo para confirmação de deleção
+    modalTitle.textContent = 'Remover dos Favoritos';
+    modalTitle.style.textAlign = 'center';
+    modalBody.innerHTML = `
+        <div style="text-align: center; padding: 20px 0;">
+            <i class="fas fa-trash-alt" style="font-size: 48px; color: #ff4444; margin-bottom: 16px;"></i>
+            <p style="color: var(--text-primary); font-size: 16px; margin-bottom: 8px; font-weight: 600;">
+                Tem certeza que deseja remover esta refeição dos favoritos?
+            </p>
+            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;">
+                Esta ação não pode ser desfeita.
+            </p>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn-cancel-favorite" onclick="closeFavoriteMealModal()" style="flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: var(--text-primary); font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    Cancelar
+                </button>
+                <button class="btn-confirm-delete" onclick="confirmDeleteFavoriteMeal(${mealId})" style="flex: 1; padding: 12px; background: rgba(255, 0, 0, 0.2); border: 1px solid rgba(255, 0, 0, 0.4); border-radius: 12px; color: #ff4444; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    <i class="fas fa-trash"></i> Remover
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Adicionar hover ao botão de remover
+    const removeBtn = modalBody.querySelector('.btn-confirm-delete');
+    if (removeBtn) {
+        removeBtn.addEventListener('mouseenter', function() {
+            this.style.background = 'rgba(255, 0, 0, 0.3)';
+            this.style.borderColor = 'rgba(255, 0, 0, 0.5)';
+        });
+        removeBtn.addEventListener('mouseleave', function() {
+            this.style.background = 'rgba(255, 0, 0, 0.2)';
+            this.style.borderColor = 'rgba(255, 0, 0, 0.4)';
+        });
+    }
+    
+    // Abrir modal
+    modal.classList.add('visible');
+    document.body.classList.add('recipe-modal-open');
+    document.body.style.overflow = 'hidden';
+}
+
+async function confirmDeleteFavoriteMeal(mealId) {
+    closeFavoriteMealModal();
+    
+    try {
+        await deleteFavoriteCompleteMeal(mealId);
+        
+        // Se era a refeição atual, atualizar estado
+        if (currentMealFavoriteId === mealId) {
+            currentMealFavoriteId = null;
+            updateFavoriteButtonState();
+        }
+        
+        // Recarregar lista de favoritas (vai esconder a seção se não houver mais refeições)
+        await loadFavoriteCompleteMeals();
+        
+        showPendingFeedback('Refeição removida dos favoritos.', true);
+    } catch (error) {
+        console.error('Erro ao remover refeição favorita:', error);
+        showPendingFeedback(error.message || 'Erro ao remover refeição. Tente novamente.', false);
+    }
+}
+
+async function confirmFavoriteMeal() {
+    const nameInput = document.getElementById('favorite-meal-name');
+    if (!nameInput) return;
+    
+    const mealName = nameInput.value.trim();
+    
+    if (!mealName || mealName === '') {
+        showPendingFeedback('Por favor, digite um nome para a refeição.', false);
+        nameInput.focus();
+        return;
+    }
+    
+    if (!pendingItems || pendingItems.length === 0) {
+        showPendingFeedback('Adicione pelo menos um item antes de favoritar a refeição.', false);
+        closeFavoriteMealModal();
+        return;
+    }
+    
+    // Verificar se todos os itens têm o mesmo tipo de refeição
+    const firstItem = pendingItems[0];
+    const mealType = firstItem.meal_type;
+    
+    // Fechar modal
+    closeFavoriteMealModal();
+    
+    const favoriteBtn = document.getElementById('favorite-meal-btn');
+    if (favoriteBtn) {
+        favoriteBtn.disabled = true;
+        favoriteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    }
+    
+    try {
+        const payload = {
+            meal_name: mealName.trim(),
+            meal_type: mealType,
+            items: pendingItems.map(item => ({
+                display_name: item.display_name,
+                custom_meal_name: item.custom_meal_name,
+                is_food: item.is_food,
+                food_name: item.food_name,
+                recipe_id: item.recipe_id || '',
+                meal_type: item.meal_type,
+                meal_time: item.meal_time,
+                servings_consumed: item.servings_consumed,
+                quantity: item.quantity,
+                unit_id: item.unit_id || '',
+                unit_name: item.unit_name || '',
+                kcal_per_serving: item.kcal_per_serving,
+                protein_per_serving: item.protein_per_serving,
+                carbs_per_serving: item.carbs_per_serving,
+                fat_per_serving: item.fat_per_serving,
+                total_kcal: item.total_kcal,
+                total_protein: item.total_protein,
+                total_carbs: item.total_carbs,
+                total_fat: item.total_fat
+            }))
+        };
+        
+        const response = await authenticatedFetch(`${window.API_BASE_URL}/save_favorite_complete_meal.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response) {
+            throw new Error('Não autenticado');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showPendingFeedback('Refeição favoritada com sucesso! Você pode carregá-la depois.', true);
+            // Atualizar estado de favoritada
+            currentMealFavoriteId = data.meal_id;
+            updateFavoriteButtonState();
+            // Recarregar lista de favoritas
+            loadFavoriteCompleteMeals();
+        } else {
+            throw new Error(data.message || 'Erro ao favoritar refeição');
+        }
+    } catch (error) {
+        console.error('Erro ao favoritar refeição:', error);
+        showPendingFeedback(error.message || 'Erro ao favoritar refeição. Tente novamente.', false);
+    } finally {
+        if (favoriteBtn) {
+            favoriteBtn.disabled = false;
+            updateFavoriteButtonState();
+        }
+    }
+}
+
+async function loadFavoriteCompleteMeals() {
+    try {
+        const response = await authenticatedFetch(`${window.API_BASE_URL}/get_favorite_complete_meals.php`);
+        
+        if (!response) {
+            return;
+        }
+        
+        const result = await response.json();
+        
+        const sectionEl = document.getElementById('favorite-complete-meals-section');
+        
+        if (result.success && result.meals && result.meals.length > 0) {
+            cachedFavoriteMeals = result.meals; // Armazenar para uso no modal
+            renderFavoriteCompleteMeals(result.meals);
+            if (sectionEl) {
+                sectionEl.style.display = 'block';
+            }
+        } else {
+            cachedFavoriteMeals = [];
+            // Esconder seção se não houver refeições
+            if (sectionEl) {
+                sectionEl.style.display = 'none';
+            }
+            // Limpar container
+            const container = document.getElementById('favorite-complete-meals');
+            if (container) {
+                container.innerHTML = '';
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao carregar refeições favoritas completas:', error);
+        cachedFavoriteMeals = [];
+        // Esconder seção em caso de erro
+        const sectionEl = document.getElementById('favorite-complete-meals-section');
+        if (sectionEl) {
+            sectionEl.style.display = 'none';
+        }
+    }
+}
+
+// Melhorar: armazenar meals globalmente para acesso
+let cachedFavoriteMeals = [];
+
+function renderFavoriteCompleteMeals(meals) {
+    const container = document.getElementById('favorite-complete-meals');
+    
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!meals || meals.length === 0) {
+        return;
+    }
+    
+    meals.forEach((meal, index) => {
+        const mealCard = document.createElement('div');
+        mealCard.className = 'recipe-card';
+        mealCard.style.cssText = 'width: 160px; min-width: 160px; min-height: 240px; flex-shrink: 0; scroll-snap-align: start; cursor: pointer; position: relative; display: flex; flex-direction: column;';
+        
+        const itemCount = meal.items ? meal.items.length : 0;
+        
+        // Card para carrossel - nome completo visível, botões sempre alinhados, altura fixa
+        mealCard.innerHTML = `
+            <div style="background: linear-gradient(135deg, rgba(255, 107, 0, 0.1), rgba(255, 140, 0, 0.05)); border-radius: 10px; padding: 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; min-height: 60px; flex-shrink: 0;">
+                <div style="text-align: center;">
+                    <i class="fas fa-heart" style="font-size: 24px; color: var(--accent-orange); margin-bottom: 6px; display: block;"></i>
+                    <div style="background: rgba(255, 107, 0, 0.9); color: white; padding: 3px 6px; border-radius: 6px; font-size: 9px; font-weight: 600; display: inline-block;">
+                        ${itemCount} ${itemCount === 1 ? 'item' : 'itens'}
+                    </div>
+                </div>
+            </div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; min-height: 0;">
+                <h3 class="recipe-name" style="font-size: 14px; margin-bottom: 6px; line-height: 1.3; word-wrap: break-word; overflow-wrap: break-word; flex-grow: 0; min-height: 36px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${escapeHtml(meal.meal_name)}</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 0; flex-grow: 0;">
+                    <p class="recipe-macros" style="font-size: 11px; margin: 0;">
+                        P: ${Math.round(meal.total_protein || 0)}g | C: ${Math.round(meal.total_carbs || 0)}g | G: ${Math.round(meal.total_fat || 0)}g
+                    </p>
+                    <div class="recipe-kcal" style="font-size: 12px; font-weight: 600; color: var(--accent-orange);">${Math.round(meal.total_kcal || 0)} kcal</div>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 8px; flex-shrink: 0;">
+                    <button class="btn-load-favorite-meal" data-meal-id="${meal.id}" style="flex: 1; padding: 6px; background: var(--accent-orange); color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; z-index: 10; position: relative;">
+                        <i class="fas fa-plus"></i> Carregar
+                    </button>
+                    <button class="btn-delete-favorite-meal" data-meal-id="${meal.id}" style="padding: 6px 10px; background: rgba(255, 0, 0, 0.1); color: #ff4444; border: 1px solid rgba(255, 0, 0, 0.3); border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s ease; z-index: 10; position: relative;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Clique no card (exceto nos botões) abre modal de detalhes
+        mealCard.addEventListener('click', (e) => {
+            // Se clicou em um botão, não abrir modal
+            if (e.target.closest('.btn-load-favorite-meal') || e.target.closest('.btn-delete-favorite-meal')) {
+                return;
+            }
+            showFavoriteMealDetailsModal(meal);
+        });
+        
+        // Event listener para carregar refeição
+        const loadBtn = mealCard.querySelector('.btn-load-favorite-meal');
+        if (loadBtn) {
+            loadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                loadFavoriteCompleteMeal(meal);
+            });
+        }
+        
+        // Event listener para deletar refeição
+        const deleteBtn = mealCard.querySelector('.btn-delete-favorite-meal');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                // Usar modal customizado para confirmar deleção
+                showDeleteFavoriteMealModal(meal.id);
+            });
+        }
+        
+        container.appendChild(mealCard);
+    });
+}
+
+function showFavoriteMealDetailsModal(meal) {
+    // Verificar se estamos na página correta
+    const mealTypeEl = document.getElementById('meal-type');
+    if (!mealTypeEl) {
+        // Não estamos na página de adicionar refeição, não mostrar modal
+        return;
+    }
+    
+    let modal = document.getElementById('favorite-meal-details-modal');
+    if (!modal) {
+        // Criar modal se não existir
+        createFavoriteMealDetailsModal();
+        modal = document.getElementById('favorite-meal-details-modal');
+    }
+    
+    if (!modal) return;
+    
+    const modalTitle = document.getElementById('favorite-meal-details-title');
+    const modalBody = document.getElementById('favorite-meal-details-body');
+    
+    if (!modalTitle || !modalBody) return;
+    
+    modalTitle.textContent = meal.meal_name;
+    
+    const itemCount = meal.items ? meal.items.length : 0;
+    let itemsHtml = '';
+    
+    if (meal.items && meal.items.length > 0) {
+        itemsHtml = meal.items.map(item => {
+            const itemName = item.display_name || item.custom_meal_name || 'Item sem nome';
+            const quantity = item.quantity || item.servings_consumed || 1;
+            const unit = item.unit_name || '';
+            const quantityText = unit ? `${quantity} ${unit}` : `${quantity} porção(ões)`;
+            
+            return `
+                <div style="padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+                        <span style="font-weight: 600; color: var(--text-primary); font-size: 14px;">${escapeHtml(itemName)}</span>
+                        <span style="color: var(--text-secondary); font-size: 12px;">${escapeHtml(quantityText)}</span>
+                    </div>
+                    <div style="display: flex; gap: 12px; font-size: 11px; color: var(--text-secondary);">
+                        <span>${Math.round(item.total_kcal || 0)} kcal</span>
+                        <span>P: ${Math.round(item.total_protein || 0)}g</span>
+                        <span>C: ${Math.round(item.total_carbs || 0)}g</span>
+                        <span>G: ${Math.round(item.total_fat || 0)}g</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        itemsHtml = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Nenhum item encontrado nesta refeição.</p>';
+    }
+    
+    const modalFooter = document.getElementById('favorite-meal-details-footer');
+    
+    modalBody.innerHTML = `
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 12px; background: rgba(255, 107, 0, 0.1); border-radius: 8px;">
+                <div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Total da Refeição</div>
+                    <div style="font-size: 24px; font-weight: 700; color: var(--accent-orange);">${Math.round(meal.total_kcal || 0)} kcal</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Macros</div>
+                    <div style="font-size: 13px; color: var(--text-primary);">
+                        P: ${Math.round(meal.total_protein || 0)}g | 
+                        C: ${Math.round(meal.total_carbs || 0)}g | 
+                        G: ${Math.round(meal.total_fat || 0)}g
+                    </div>
+                </div>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">
+                    <i class="fas fa-list" style="margin-right: 8px; color: var(--accent-orange);"></i>
+                    Itens (${itemCount})
+                </h4>
+                ${itemsHtml}
+            </div>
+        </div>
+    `;
+    
+    // Botões sempre visíveis no footer
+    if (modalFooter) {
+        modalFooter.innerHTML = `
+            <button onclick="closeFavoriteMealDetailsModal()" style="flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: var(--text-primary); font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                Fechar
+            </button>
+            <button onclick="loadFavoriteMealFromDetails(${meal.id})" style="flex: 1; padding: 12px; background: var(--accent-orange); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                <i class="fas fa-plus"></i> Carregar Refeição
+            </button>
+        `;
+    }
+    
+    modal.classList.add('visible');
+    document.body.classList.add('recipe-modal-open');
+    document.body.style.overflow = 'hidden';
+}
+
+function createFavoriteMealDetailsModal() {
+    const modal = document.createElement('div');
+    modal.className = 'recipe-modal';
+    modal.id = 'favorite-meal-details-modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="display: flex; flex-direction: column; max-height: 90vh;">
+            <div class="modal-header" style="position: relative; padding: 20px 50px 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-shrink: 0;">
+                <h2 class="modal-title" id="favorite-meal-details-title" style="text-align: center; margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--text-primary); padding: 0 10px; word-wrap: break-word; overflow-wrap: break-word;">Detalhes da Refeição</h2>
+                <button class="modal-close-btn" onclick="closeFavoriteMealDetailsModal()" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s ease; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="favorite-meal-details-body" style="padding: 20px; overflow-y: auto; flex: 1; min-height: 0;"></div>
+            <div class="modal-footer" id="favorite-meal-details-footer" style="padding: 16px 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); flex-shrink: 0; display: flex; gap: 12px;"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Fechar modal quando sair da página
+    const closeOnNavigation = () => {
+        closeFavoriteMealDetailsModal();
+    };
+    
+    // Listener para mudanças de rota SPA
+    window.addEventListener('beforeunload', closeOnNavigation);
+    window.addEventListener('popstate', closeOnNavigation);
+    
+    // Listener para eventos customizados de navegação SPA
+    window.addEventListener('pageChange', closeOnNavigation);
+    window.addEventListener('fragmentReady', closeOnNavigation);
+    
+    // Armazenar função de limpeza no modal
+    modal._closeOnNavigation = closeOnNavigation;
+}
+
+function closeFavoriteMealDetailsModal() {
+    const modal = document.getElementById('favorite-meal-details-modal');
+    if (modal) {
+        modal.classList.remove('visible');
+        document.body.classList.remove('recipe-modal-open');
+        document.body.style.overflow = '';
+        
+        // Remover listeners de navegação se existirem
+        if (modal._closeOnNavigation) {
+            window.removeEventListener('beforeunload', modal._closeOnNavigation);
+            window.removeEventListener('popstate', modal._closeOnNavigation);
+            window.removeEventListener('pageChange', modal._closeOnNavigation);
+            window.removeEventListener('fragmentReady', modal._closeOnNavigation);
+        }
+        
+        // Remover modal do DOM após animação
+        setTimeout(() => {
+            if (modal && modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 300); // Tempo da animação de fade
+    }
+}
+
+function loadFavoriteMealFromDetails(mealId) {
+    const meal = cachedFavoriteMeals.find(m => m.id === mealId);
+    if (meal) {
+        closeFavoriteMealDetailsModal();
+        loadFavoriteCompleteMeal(meal);
+    }
+}
+
+function loadFavoriteCompleteMeal(meal) {
+    if (!meal.items || meal.items.length === 0) {
+        showPendingFeedback('Esta refeição favorita não possui itens.', false);
+        return;
+    }
+    
+    // Limpar itens pendentes atuais ou adicionar aos existentes?
+    // Vou adicionar aos existentes para permitir combinar refeições
+    const currentDate = document.getElementById('meal-date')?.value || new Date().toISOString().split('T')[0];
+    const currentMealType = document.getElementById('meal-type')?.value || meal.meal_type;
+    
+    // Adicionar cada item da refeição favorita ao pendingItems
+    meal.items.forEach(item => {
+        const pendingItem = {
+            id: Date.now() + Math.random(),
+            display_name: item.display_name || item.custom_meal_name,
+            custom_meal_name: item.custom_meal_name,
+            is_food: item.is_food || 0,
+            food_name: item.food_name || '',
+            recipe_id: item.recipe_id || '',
+            meal_type: currentMealType, // Usar tipo atual
+            meal_type_label: getMealTypeLabel(currentMealType),
+            meal_time: item.meal_time || document.getElementById('meal_time')?.value || '',
+            meal_time_label: item.meal_time || 'Sem horário',
+            date_consumed: currentDate, // Usar data atual
+            servings_consumed: item.servings_consumed || item.quantity || 1,
+            quantity: item.quantity || item.servings_consumed || 1,
+            unit_id: item.unit_id || '',
+            unit_name: item.unit_name || '',
+            kcal_per_serving: item.kcal_per_serving || 0,
+            protein_per_serving: item.protein_per_serving || 0,
+            carbs_per_serving: item.carbs_per_serving || 0,
+            fat_per_serving: item.fat_per_serving || 0,
+            total_kcal: item.total_kcal || 0,
+            total_protein: item.total_protein || 0,
+            total_carbs: item.total_carbs || 0,
+            total_fat: item.total_fat || 0
+        };
+        
+        pendingItems.push(pendingItem);
+    });
+    
+    renderPendingItems();
+    showPendingFeedback(`${meal.items.length} item(ns) adicionado(s) à lista. Você pode editar as quantidades antes de salvar.`, true);
+    
+    // Verificar se está favoritada após carregar
+    checkIfCurrentMealIsFavorited();
+    
+    // Scroll para a seção de itens pendentes
+    const pendingSection = document.querySelector('.pending-section');
+    if (pendingSection) {
+        pendingSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function getMealTypeLabel(mealType) {
+    const labels = {
+        'breakfast': 'Café da Manhã',
+        'morning_snack': 'Lanche da Manhã',
+        'lunch': 'Almoço',
+        'afternoon_snack': 'Lanche da Tarde',
+        'dinner': 'Jantar',
+        'supper': 'Ceia'
+    };
+    return labels[mealType] || mealType;
+}
+
+async function deleteFavoriteCompleteMeal(mealId) {
+    const response = await authenticatedFetch(`${window.API_BASE_URL}/delete_favorite_complete_meal.php`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ meal_id: mealId })
+    });
+    
+    if (!response) {
+        throw new Error('Não autenticado');
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+        throw new Error(data.message || 'Erro ao remover refeição');
+    }
+    
+    return data;
+}
+
 // Expor funções globalmente para onclick no HTML
 window.confirmMeal = confirmMeal;
 window.performSearch = performSearch;
 window.selectRecipe = selectRecipe;
 window.removePendingItem = removePendingItem;
+window.closeModal = closeModal;
+window.openFavoriteMealModal = openFavoriteMealModal;
+window.closeFavoriteMealModal = closeFavoriteMealModal;
+window.confirmFavoriteMeal = confirmFavoriteMeal;
+window.confirmUnfavoriteMeal = confirmUnfavoriteMeal;
+window.confirmDeleteFavoriteMeal = confirmDeleteFavoriteMeal;
+window.closeFavoriteMealDetailsModal = closeFavoriteMealDetailsModal;
+window.loadFavoriteMealFromDetails = loadFavoriteMealFromDetails;
 
 })();

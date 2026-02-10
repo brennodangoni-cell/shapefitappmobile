@@ -5,6 +5,39 @@
  */
 (function() {
 
+// Remover botão WhatsApp flutuante se existir
+(function() {
+    const whatsappBtn = document.getElementById('checkin-floating-btn');
+    if (whatsappBtn) {
+        whatsappBtn.remove();
+    }
+})();
+
+// ✅ Limpar check-in ao sair da página (evitar estado persistente)
+window.addEventListener('beforeunload', function() {
+    if (window.checkinData) {
+        window.checkinData = null;
+    }
+    if (window.checkinResponses) {
+        window.checkinResponses = {};
+    }
+});
+
+// ✅ Limpar check-in ao navegar via SPA
+window.addEventListener('pageLoaded', function() {
+    const currentPath = window.location.pathname;
+    // Se não estiver na página main_app, limpar check-in
+    if (!currentPath.includes('main_app') && currentPath !== '/' && currentPath !== '/index.html') {
+        if (window.checkinData) {
+            window.checkinData = null;
+        }
+        const checkinModal = document.getElementById('checkinModal');
+        if (checkinModal) {
+            checkinModal.remove();
+        }
+    }
+});
+
 let checkinData = window.checkinData || null;
 let currentQuestionIndex = 0;
 let checkinResponses = {};
@@ -474,7 +507,7 @@ function loadCheckinProgress() {
     formData.append('action', 'load_progress');
     formData.append('config_id', checkinData.id);
     
-    authenticatedFetch(`${window.BASE_APP_URL}/api/checkin.php`, {
+    authenticatedFetch(`${window.API_BASE_URL}/checkin.php`, {
         method: 'POST',
         body: formData
     })
@@ -631,6 +664,12 @@ function restoreChatFromProgress() {
         textInput.value = '';
         textInput.placeholder = 'Check-in finalizado';
         
+        // ✅ ADICIONAR DELAY DE 2 SEGUNDOS ANTES DE COMPLETAR (para usuário ver a mensagem final)
+        setTimeout(() => {
+            markCheckinComplete();
+        }, 2000);
+        return;
+        
         // ✅ MOSTRAR BOTÃO DE FECHAR AGORA QUE ESTÁ COMPLETO
         const closeBtn = document.getElementById('checkin-close-btn');
         if (closeBtn) {
@@ -736,8 +775,11 @@ function renderNextQuestion() {
             closeBtn.style.display = 'block';
         }
         
-        // Marcar como completo (todas as respostas já foram salvas individualmente)
-        markCheckinComplete();
+        // ✅ ADICIONAR DELAY DE 2 SEGUNDOS ANTES DE COMPLETAR (para usuário ver a mensagem final)
+        setTimeout(() => {
+            // Marcar como completo (todas as respostas já foram salvas individualmente)
+            markCheckinComplete();
+        }, 2000);
         return;
     }
     
@@ -1063,16 +1105,23 @@ function markCheckinComplete() {
     formData.append('config_id', checkinData.id);
     formData.append('responses', JSON.stringify(checkinResponses));
     
-    authenticatedFetch(`${window.BASE_APP_URL}/api/checkin.php`, {
+    authenticatedFetch(`${window.API_BASE_URL}/checkin.php`, {
         method: 'POST',
         body: formData
     })
     .then(response => {
-        if (!response) return null;
+        if (!response) {
+            throw new Error('Resposta vazia do servidor');
+        }
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
         return response.json();
     })
     .then(data => {
-        if (data.success) {
+        if (!data || !data.success) {
+            throw new Error(data?.message || 'Erro ao completar check-in');
+        }
             // Check-in completo
             
             // ✅ SALVAR checkinData ANTES DE LIMPAR (para usar nas funções abaixo)
@@ -1112,9 +1161,6 @@ function markCheckinComplete() {
             // Fechar o modal imediatamente
             closeCheckinModal();
             
-            // ✅ NÃO REMOVER O BOTÃO - Ele agora é para WhatsApp e deve ficar sempre visível
-            // O botão flutuante agora é para suporte WhatsApp, não para check-in
-            
             // Esconder o modal
             const modal = document.getElementById('checkinModal');
             if (modal) {
@@ -1135,7 +1181,7 @@ function markCheckinComplete() {
             
             // Sempre mostrar popup de congratulação (com ou sem pontos)
             // Pequeno delay para garantir que o modal fechou antes do popup aparecer
-            setTimeout(() => {
+            const popupTimeout = setTimeout(() => {
                 const points = data.points_awarded || 0;
                 const newTotalPoints = data.new_total_points;
                 
@@ -1155,10 +1201,6 @@ function markCheckinComplete() {
                     }
                 }
             }, 300);
-        } else {
-            console.error('Erro ao marcar check-in como completo:', data.message);
-            alert('Erro ao completar check-in: ' + (data.message || 'Erro desconhecido'));
-        }
     })
     .catch(error => {
         console.error('Erro:', error);
@@ -1491,7 +1533,7 @@ async function loadDashboardData() {
         }
         
         // Carregar dados do dashboard
-        const response = await authenticatedFetch('/api/get_dashboard_data.php');
+        const response = await authenticatedFetch(`${window.API_BASE_URL}/get_dashboard_data.php`);
         if (!response) {
             // Token inválido ou erro de autenticação - redirecionar para login
             if (window.SPARouter && window.SPARouter.navigate) {
@@ -1838,6 +1880,13 @@ async function renderDashboardOptimized(data) {
                 if (pointsDisplay && data.points !== undefined) {
                     pointsDisplay.textContent = new Intl.NumberFormat('pt-BR').format(data.points);
                 }
+                // Deixar claro no dashboard quando os pontos são do desafio (não global)
+                const pointsBadge = document.querySelector('.points-counter-badge');
+                if (pointsBadge && data.ranking && data.ranking.ranking_scope === 'challenge') {
+                    pointsBadge.setAttribute('title', 'Pontos do desafio');
+                } else if (pointsBadge) {
+                    pointsBadge.removeAttribute('title');
+                }
                 
                 // Avatar
                 const IMAGES_BASE_URL = 'https://appshapefit.com';
@@ -1894,62 +1943,13 @@ async function renderDashboardOptimized(data) {
             () => {
                 renderChallenges(data);
             },
-            // Passo 8: Botão WhatsApp (SEMPRE) e Check-in obrigatório
+            // Passo 8: Check-in obrigatório (botão WhatsApp removido)
             () => {
-                // Verificar se estamos na página main_app antes de criar/exibir o botão
-                const isMainAppPage = document.getElementById('dashboard-container') || 
-                                     document.querySelector('.main-app-container') ||
-                                     window.location.pathname.includes('main_app') ||
-                                     window.location.pathname === '/' ||
-                                     window.location.pathname === '/index.html';
-                
-                if (!isMainAppPage) {
-                    // Não estamos na página main_app, esconder o botão se existir
-                    const existingBtn = document.getElementById('checkin-floating-btn');
-                    if (existingBtn) {
-                        existingBtn.style.display = 'none';
-                        existingBtn.style.visibility = 'hidden';
-                        existingBtn.style.opacity = '0';
-                    }
-                    return;
+                // Remover botão WhatsApp se existir
+                const existingBtn = document.getElementById('checkin-floating-btn');
+                if (existingBtn) {
+                    existingBtn.remove();
                 }
-                
-                // ✅ BOTÃO WHATSAPP SEMPRE VISÍVEL - Criar/garantir que existe sempre (independente de checkin)
-                let whatsappBtn = document.getElementById('checkin-floating-btn');
-                if (!whatsappBtn) {
-                    // Criar o botão se não existir
-                    whatsappBtn = document.createElement('button');
-                    whatsappBtn.id = 'checkin-floating-btn';
-                    whatsappBtn.className = 'checkin-floating-btn';
-                    whatsappBtn.setAttribute('aria-label', 'Abrir WhatsApp Suporte');
-                    whatsappBtn.innerHTML = '<i class="fas fa-comments"></i>';
-                    
-                    // Inserir no body, DEPOIS do app-container (não dentro dele)
-                    const appContainer = document.getElementById('app-container');
-                    if (appContainer && appContainer.nextSibling) {
-                        document.body.insertBefore(whatsappBtn, appContainer.nextSibling);
-                    } else {
-                        document.body.appendChild(whatsappBtn);
-                    }
-                    console.log('[WhatsApp] Botão criado dinamicamente e adicionado ao body');
-                }
-                
-                // ✅ BOTÃO SEMPRE REDIRECIONA PARA WHATSAPP (independente de checkin)
-                whatsappBtn.onclick = function() {
-                    const whatsappNumber = '5534984426408';
-                    const whatsappUrl = `https://wa.me/${whatsappNumber}`;
-                    window.open(whatsappUrl, '_blank');
-                };
-                
-                // Forçar estilos do botão para garantir que fique fixo e sempre visível
-                whatsappBtn.style.position = 'fixed';
-                whatsappBtn.style.bottom = '90px';
-                whatsappBtn.style.right = '20px';
-                whatsappBtn.style.zIndex = '9999';
-                whatsappBtn.style.display = 'flex';
-                whatsappBtn.style.visibility = 'visible';
-                whatsappBtn.style.opacity = '1';
-                console.log('[WhatsApp] Botão sempre visível configurado');
                 
                 // ✅ VERIFICAR SE HÁ CHECK-IN DISPONÍVEL (para modal obrigatório)
                 if (data.available_checkin) {
@@ -2496,17 +2496,20 @@ function renderRanking(data) {
         }
     }
     
-    // 2. Atualizar título e posição
+    // 2. Atualizar título e posição (deixar claro se é ranking do desafio ou global)
     const clashTitle = document.getElementById('clash-title');
     const myRankEl = document.getElementById('my-rank');
     const progressBar = document.getElementById('ranking-progress-bar');
     
     if (clashTitle) {
+        const isChallengeScope = ranking.ranking_scope === 'challenge' && ranking.challenge && ranking.challenge.name;
         if (ranking.my_rank == 1) {
-            clashTitle.textContent = 'Você está no Topo!';
+            clashTitle.textContent = isChallengeScope ? 'Você está no Topo! (Desafio)' : 'Você está no Topo!';
             clashTitle.classList.add('winner');
         } else {
-            clashTitle.textContent = 'Disputa de Pontos';
+            clashTitle.textContent = isChallengeScope
+                ? (ranking.challenge.name.length > 20 ? 'Desafio: ' + ranking.challenge.name.substring(0, 17) + '…' : 'Desafio: ' + ranking.challenge.name)
+                : 'Disputa de Pontos';
             clashTitle.classList.remove('winner');
         }
     }
@@ -2634,16 +2637,17 @@ function renderMealSuggestions(data) {
                 let html = '';
                 suggestions.forEach(recipe => {
                     // Construir URL da imagem (usar image_url se disponível, senão construir)
+                    const placeholderSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEzYzRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZvb2Q8L3RleHQ+PC9zdmc+';
                     const imageUrl = recipe.image_url 
                         || (recipe.image_filename 
                             ? `${BASE_URL}/assets/images/recipes/${recipe.image_filename}`
-                            : `${BASE_URL}/assets/images/recipes/placeholder_food.jpg`);
+                            : placeholderSvg);
                     
                     html += `
                         <div class="suggestion-item glass-card">
                             <a href="./view_recipe.html?id=${recipe.id}" class="suggestion-link">
                                 <div class="suggestion-image-container">
-                                    <img src="${imageUrl}" alt="${escapeHtml(recipe.name)}" onerror="this.src='${BASE_URL}/assets/images/recipes/placeholder_food.jpg'">
+                                    <img src="${imageUrl}" alt="${escapeHtml(recipe.name)}" onerror="this.src='${placeholderSvg}'">
                                 </div>
                                 <div class="recipe-info">
                                     <h4>${escapeHtml(recipe.name)}</h4>
@@ -2857,8 +2861,8 @@ function setupWeightModalListeners() {
             newSaveBtn.textContent = 'Salvando...';
             
             try {
-                // Usar /api/ para que o proxy do serve.js intercepte em desenvolvimento
-                const apiUrl = '/api/update_weight.php';
+                // Usar API_BASE_URL para chamar a API remota
+                const apiUrl = `${window.API_BASE_URL}/update_weight.php`;
                 
                 // O PHP espera $_POST['weight'] com form data, não JSON
                 const formData = new FormData();
@@ -3016,41 +3020,6 @@ window.openCheckinModal = openCheckinModal;
 window.closeCheckinModal = closeCheckinModal;
 window.sendCheckinResponse = sendCheckinResponse;
 
-// Listener global para mostrar/esconder o botão WhatsApp baseado na página
-(function() {
-    function updateWhatsAppButtonVisibility() {
-        const whatsappBtn = document.getElementById('checkin-floating-btn');
-        if (!whatsappBtn) return;
-        
-        const isMainAppPage = document.getElementById('dashboard-container') || 
-                             document.querySelector('.main-app-container') ||
-                             window.location.pathname.includes('main_app') ||
-                             window.location.pathname === '/' ||
-                             window.location.pathname === '/index.html';
-        
-        if (isMainAppPage) {
-            // ✅ SEMPRE VISÍVEL na página main_app (independente de checkin)
-            whatsappBtn.style.display = 'flex';
-            whatsappBtn.style.visibility = 'visible';
-            whatsappBtn.style.opacity = '1';
-            whatsappBtn.style.position = 'fixed';
-            whatsappBtn.style.bottom = '90px';
-            whatsappBtn.style.right = '20px';
-            whatsappBtn.style.zIndex = '9999';
-        } else {
-            // Esconder quando não está na main_app
-            whatsappBtn.style.display = 'none';
-            whatsappBtn.style.visibility = 'hidden';
-            whatsappBtn.style.opacity = '0';
-        }
-    }
-    
-    // Atualizar visibilidade quando a página carregar
-    window.addEventListener('pageLoaded', updateWhatsAppButtonVisibility);
-    window.addEventListener('fragmentReady', updateWhatsAppButtonVisibility);
-    
-    // Verificar imediatamente também
-    setTimeout(updateWhatsAppButtonVisibility, 100);
-})();
+// Botão WhatsApp removido - não é mais necessário
 
 })();

@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearTimeout(debounceTimer);
                     debounceTimer = setTimeout(async () => {
                         try {
-                            const response = await fetch('/api/update_water.php', {
+                            const response = await fetch(`${window.API_BASE_URL}/update_water.php`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                                 body: `water_consumed=${newAmount}&csrf_token=${csrfToken}`
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 button.disabled = true;
 
                 try {
-                    const response = await fetch('/api/update_routine_status.php', {
+                    const response = await fetch(`${window.API_BASE_URL}/update_routine_status.php`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: `routine_id=${routineId}&status=1&csrf_token=${csrfToken}`
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             try {
-                const response = await fetch('/api/update_weight.php', {
+                const response = await fetch(`${window.API_BASE_URL}/update_weight.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: `new_weight=${newWeight}&csrf_token=${csrfToken}`

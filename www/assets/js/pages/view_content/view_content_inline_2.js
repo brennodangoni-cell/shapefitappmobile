@@ -39,7 +39,7 @@
             isLoading = true;
             
             try {
-                const apiUrl = `/api/get_view_content_data.php?id=${contentId}`;
+                const apiUrl = `${window.API_BASE_URL}/get_view_content_data.php?id=${contentId}`;
                 
                 const response = await authenticatedFetch(apiUrl);
                 
@@ -212,7 +212,7 @@
                 
                 try {
                     // Chamar endpoint para gerar link temporário
-                    const apiBase = window.API_BASE_URL || window.BASE_APP_URL + '/api';
+                    const apiBase = window.API_BASE_URL;
                     let tempUrlEndpoint = `${apiBase}/serve_pdf.php?`;
                     if (fileId !== '0') {
                         tempUrlEndpoint += `id=${fileId}`;
@@ -521,11 +521,11 @@
             
             // Priorizar ID do arquivo, senão usar path
             if (file.id) {
-                fileUrl = `${window.BASE_APP_URL}/api/serve_video.php?id=${file.id}`;
+                fileUrl = `${window.API_BASE_URL}/serve_video.php?id=${file.id}`;
             } else if (file.file_path) {
                 // Se não tem ID, usar path
                 const encodedPath = encodeURIComponent(file.file_path);
-                fileUrl = `${window.BASE_APP_URL}/api/serve_video.php?path=${encodedPath}`;
+                fileUrl = `${window.API_BASE_URL}/serve_video.php?path=${encodedPath}`;
             } else {
                 return '';
             }
@@ -586,10 +586,10 @@
             // Priorizar ID do arquivo, senão usar path
             if (file.id) {
                 fileId = file.id;
-                fileUrl = `${window.BASE_APP_URL}/api/serve_pdf.php?id=${file.id}`;
+                fileUrl = `${window.API_BASE_URL}/serve_pdf.php?id=${file.id}`;
             } else if (file.content_id) {
                 contentId = file.content_id;
-                fileUrl = `${window.BASE_APP_URL}/api/serve_pdf.php?content_id=${file.content_id}`;
+                fileUrl = `${window.API_BASE_URL}/serve_pdf.php?content_id=${file.content_id}`;
             } else if (file.file_url || file.file_path) {
                 // Fallback: usar URL/path direto
                 fileUrl = file.file_url || file.file_path;
@@ -656,7 +656,7 @@
         
         async function registerContentView(contentId) {
             try {
-                await authenticatedFetch(`/api/register_content_view.php`, {
+                await authenticatedFetch(`${window.API_BASE_URL}/register_content_view.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

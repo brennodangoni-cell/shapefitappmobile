@@ -2,6 +2,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
+    <!-- intl-tel-input CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/css/intlTelInput.css">
+    
     <!-- Auth Script -->
 
     <style>
@@ -448,6 +451,404 @@
             display: flex;
             gap: 10px;
             align-items: flex-start;
+        }
+
+        /* Custom Select Styles para seletor de país */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-select-trigger {
+            padding: 0.8125rem 1rem;
+            font-size: 0.95rem;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            border-radius: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .custom-select-trigger:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .custom-select-trigger.open {
+            border-color: var(--focus-orange);
+            box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.45);
+        }
+
+        .custom-select-trigger::after {
+            content: '▼';
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-left: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .custom-select-trigger.open::after {
+            transform: rotate(180deg);
+        }
+
+        .custom-select-options {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .custom-select-options.open {
+            display: block;
+        }
+
+        .custom-select-option {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .custom-select-option:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .phone-fields-group {
+            display: flex;
+            gap: 0;
+            align-items: flex-end;
+        }
+
+        .phone-field-country {
+            flex: 0 0 140px;
+        }
+
+        .phone-field-number {
+            flex: 1;
+        }
+
+        .phone-field-country .form-control-wrapper,
+        .phone-field-number .form-control-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .phone-field-country .input-label,
+        .phone-field-number .input-label {
+            margin-bottom: 4px;
+            line-height: 1.2;
+            height: 1.2em;
+            display: block;
+        }
+
+        .phone-field-number .form-control {
+            border-radius: 0 14px 14px 0 !important;
+            border-left: none !important;
+            min-height: 48px;
+            height: 48px;
+            box-sizing: border-box;
+        }
+
+        .phone-field-number .form-control:focus,
+        .phone-field-number .form-control:focus-visible {
+            box-shadow: none !important;
+        }
+
+        .phone-field-number .form-control:focus {
+            border-left: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Garantir que quando o campo de número está em foco, a borda esquerda do país também fique destacada */
+        .phone-field-number .form-control:focus ~ *,
+        .phone-field-number .form-control:focus {
+            border-left: none !important;
+        }
+
+        .phone-fields-group:focus-within .country-code-trigger {
+            border-color: var(--focus-orange) !important;
+            box-shadow: none !important;
+        }
+
+        .phone-fields-group:focus-within .phone-field-number .form-control {
+            border-color: var(--focus-orange) !important;
+            box-shadow: none !important;
+        }
+
+        .country-code-trigger {
+            margin-top: 0;
+        }
+
+        /* Seletor de código do país */
+        .country-code-selector {
+            position: relative;
+        }
+
+        .country-code-trigger {
+            width: 100%;
+            padding: 13px 16px;
+            height: 48px;
+            min-height: 48px;
+            box-sizing: border-box;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px 0 0 14px;
+            border-right: none;
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            box-shadow: none;
+        }
+
+        .country-code-trigger:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--focus-orange);
+        }
+
+        .country-code-trigger:focus,
+        .country-code-trigger:focus-visible {
+            outline: none;
+            border-color: var(--focus-orange) !important;
+            background-color: rgba(255, 255, 255, 0.07) !important;
+            box-shadow: none !important;
+        }
+
+        .country-code-display {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .country-flag-emoji {
+            font-size: 1.25rem;
+            line-height: 1;
+            display: inline-block;
+            vertical-align: middle;
+            width: 1.5rem;
+            height: 1.5rem;
+            text-align: center;
+            font-style: normal;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+            flex-shrink: 0;
+        }
+
+        .country-code-arrow {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            transition: transform 0.2s ease;
+        }
+
+        .country-code-trigger.open .country-code-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Modal de seleção de países */
+        .country-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .country-modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .country-modal {
+            width: 100%;
+            max-width: 450px;
+            max-height: 80vh;
+            background: #1a1a1a;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .country-modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .country-modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .country-modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1.2rem;
+        }
+
+        .country-modal-close:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+        }
+
+        .country-modal-search {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .country-search-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .country-search-input:focus {
+            border-color: var(--focus-orange);
+            background: rgba(255, 255, 255, 0.07);
+            box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+        }
+
+        .country-search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .country-modal-list {
+            flex: 1;
+            overflow-y: auto !important;
+            overflow-x: hidden;
+            padding: 0.5rem;
+            max-height: calc(80vh - 200px);
+            min-height: 200px;
+        }
+
+        .country-modal-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .country-modal-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .country-modal-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .country-modal-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .country-item {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding: 0.875rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-bottom: 4px;
+        }
+
+        .country-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .country-item.selected {
+            background: rgba(255, 107, 0, 0.15);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+        }
+
+        .country-item-flag {
+            font-size: 1.25rem;
+            line-height: 1;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            flex-shrink: 0;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+        }
+
+        .country-item-name {
+            flex: 1;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .country-item-code {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
         }
 
         label.input-label {
@@ -1112,16 +1513,27 @@
                             <h1 class="page-title">Seu WhatsApp</h1>
                             <p class="page-subtitle">Usaremos esse contato se o profissional precisar falar com você.</p>
                         </div>
-                        <div class="flex-row">
-                            <div class="form-control-wrapper" style="flex: 0 0 80px;">
-                                <input type="tel" name="phone_ddd" class="form-control" placeholder="DDD" maxlength="2" required pattern="[0-9]*">
+                        <div class="phone-fields-group">
+                            <div class="form-control-wrapper phone-field-country">
+                                <label class="input-label">Código do país</label>
+                                <div class="country-code-selector">
+                                    <button type="button" class="country-code-trigger" id="phone-country-trigger">
+                                        <span class="country-code-display">
+                                            <span class="country-flag-emoji" id="phone-country-flag">🇧🇷</span>
+                                            <span id="phone-country-code-display">+55</span>
+                                        </span>
+                                        <span class="country-code-arrow">▼</span>
+                                    </button>
+                                    <input type="hidden" name="phone_country_code" id="phone-country-code" value="+55">
+                                </div>
                             </div>
-                            <div class="form-control-wrapper" style="flex-grow: 1;">
-                                <input type="tel" name="phone_number" class="form-control" placeholder="Celular" maxlength="9" required pattern="[0-9]*">
+                            <div class="form-control-wrapper phone-field-number">
+                                <label class="input-label">Número completo</label>
+                                <input type="tel" name="phone_number" id="phone-input" class="form-control" placeholder="(34) 99870-9969" required maxlength="20">
                             </div>
                         </div>
                     </div>
-                    <div class="step-helper">Apenas números, sem traços ou parênteses.</div>
+                    <div class="step-helper">Selecione o país e digite o número completo.</div>
                 </div>
             </div>
 
@@ -1164,6 +1576,22 @@
                 <button type="button" id="exit-btn" class="exit-button">Sair do questionário</button>
             </footer>
         </form>
+    </div>
+
+    <!-- Modal de Seleção de País -->
+    <div class="country-modal-overlay" id="phone-country-modal-overlay">
+        <div class="country-modal">
+            <div class="country-modal-header">
+                <h2 class="country-modal-title">Selecione o país</h2>
+                <button type="button" class="country-modal-close" id="phone-country-modal-close">×</button>
+            </div>
+            <div class="country-modal-search">
+                <input type="text" id="phone-country-search-input" class="country-search-input" placeholder="Buscar país...">
+            </div>
+            <div class="country-modal-list" id="phone-country-modal-list">
+                <!-- Países serão inseridos via JavaScript -->
+            </div>
+        </div>
     </div>
 
     <!-- MODAL ATIVIDADES CUSTOMIZADAS -->

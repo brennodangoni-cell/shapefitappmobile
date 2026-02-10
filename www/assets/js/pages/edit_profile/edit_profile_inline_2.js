@@ -61,7 +61,7 @@
                     emailDisplay.textContent = 'Carregando...';
                 }
                 
-                const response = await authenticatedFetch('/api/get_edit_profile_data.php');
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/get_edit_profile_data.php`);
                 
                 if (!response) return;
                 
@@ -739,7 +739,7 @@
                         
                         // Tentativa 1: update_profile.php
                         try {
-                            const response = await authenticatedFetch('/api/update_profile.php', {
+                            const response = await authenticatedFetch(`${window.API_BASE_URL}/update_profile.php`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
@@ -764,7 +764,7 @@
                         // Se não funcionou, tentar remove_profile_photo.php
                         if (!success) {
                             try {
-                                const response = await authenticatedFetch('/api/remove_profile_photo.php', {
+                                const response = await authenticatedFetch(`${window.API_BASE_URL}/remove_profile_photo.php`, {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json'
@@ -874,7 +874,7 @@
                             return;
                         }
                         
-                        const uploadUrl = '/api/upload_profile_photo.php';
+                        const uploadUrl = `${window.API_BASE_URL}/upload_profile_photo.php`;
                         const photoResponse = await fetch(uploadUrl, {
                             method: 'POST',
                             headers: {
@@ -956,7 +956,7 @@
                         restrictions: selectedRestrictions
                     };
                     
-                    const response = await authenticatedFetch('/api/update_profile.php', {
+                    const response = await authenticatedFetch(`${window.API_BASE_URL}/update_profile.php`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -1051,7 +1051,7 @@
                         console.log('[DeleteAccount] Iniciando deleção de conta...');
                         
                         // Usar URL relativa para que o interceptador do config.js faça o trabalho
-                        const deleteUrl = '/api/delete_account.php';
+                        const deleteUrl = `${window.API_BASE_URL}/delete_account.php`;
                         const apiUrl = window.API_BASE_URL || 'https://appshapefit.com/api';
                         const fullUrl = `${apiUrl}/delete_account.php`;
                         

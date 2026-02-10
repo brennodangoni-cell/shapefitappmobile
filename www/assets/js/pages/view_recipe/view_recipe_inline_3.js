@@ -32,7 +32,7 @@
             // Carregar dados da receita
             async function loadRecipeData() {
                 try {
-                    const response = await authenticatedFetch(`/api/get_recipe_data.php?id=${recipeId}`);
+                    const response = await authenticatedFetch(`${window.API_BASE_URL}/get_recipe_data.php?id=${recipeId}`);
                     
                     if (!response) return; // Token inválido, já redirecionou
                     
@@ -84,13 +84,14 @@
                 const BASE_URL = window.BASE_APP_URL;
                 
                 // Imagem
+                const placeholderSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEzYzRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZvb2Q8L3RleHQ+PC9zdmc+';
                 const imageUrl = recipe.image_url 
                     || (recipe.image_filename 
                         ? `${BASE_URL}/assets/images/recipes/${recipe.image_filename}`
-                        : `${BASE_URL}/assets/images/recipes/placeholder_food.jpg`);
+                        : placeholderSvg);
                 document.getElementById('recipe-image').src = imageUrl;
                 document.getElementById('recipe-image').onerror = function() {
-                    this.src = `${BASE_URL}/assets/images/recipes/placeholder_food.jpg`;
+                    this.src = placeholderSvg;
                 };
                 document.getElementById('recipe-image').alt = recipe.name;
                 
@@ -190,7 +191,7 @@
                     e.preventDefault();
                     
                     try {
-                        const response = await authenticatedFetch(`/api/toggle_favorite.php`, {
+                        const response = await authenticatedFetch(`${window.API_BASE_URL}/toggle_favorite.php`, {
                             method: 'POST',
                             body: JSON.stringify({ recipe_id: recipeId })
                         });
@@ -256,7 +257,7 @@
                     };
                     
                     try {
-                        const response = await authenticatedFetch(`/api/log_meal.php`, {
+                        const response = await authenticatedFetch(`${window.API_BASE_URL}/log_meal.php`, {
                             method: 'POST',
                             body: JSON.stringify(formData)
                         });

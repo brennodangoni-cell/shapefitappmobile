@@ -41,7 +41,7 @@
             // Carregar dados da página
             async function loadPageData() {
                 try {
-                    const apiUrl = `${BASE_URL}/api/get_measurements_data.php`;
+                    const apiUrl = `${window.API_BASE_URL}/get_measurements_data.php`;
                     const response = await authenticatedFetch(apiUrl);
                     
                     if (!response) return; // Token inválido, já redirecionou
@@ -372,7 +372,7 @@
                                 headers['Authorization'] = `Bearer ${token}`;
                             }
                             // Enviar usando fetch direto para garantir que FormData funcione corretamente
-                            const response = await fetch(`${BASE_URL}/api/save_measurements.php`, {
+                            const response = await fetch(`${window.API_BASE_URL}/save_measurements.php`, {
                                 method: 'POST',
                                 body: formData,
                                 headers: headers // Apenas Authorization - browser vai adicionar Content-Type automaticamente
@@ -566,7 +566,7 @@
                 }
                 
                 try {
-                    const response = await authenticatedFetch(`${BASE_URL}/api/delete_measurement_photo.php`, {
+                    const response = await authenticatedFetch(`${window.API_BASE_URL}/delete_measurement_photo.php`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

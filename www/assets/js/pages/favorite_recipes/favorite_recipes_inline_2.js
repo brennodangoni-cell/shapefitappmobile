@@ -88,7 +88,7 @@
                     
                     const recipesList = document.getElementById('recipes-list');
                     
-                    const apiUrl = `/api/get_favorite_recipes_data.php?q=${encodeURIComponent(query)}&sort=${encodeURIComponent(sort)}&categories=${encodeURIComponent(categories)}`;
+                    const apiUrl = `${window.API_BASE_URL}/get_favorite_recipes_data.php?q=${encodeURIComponent(query)}&sort=${encodeURIComponent(sort)}&categories=${encodeURIComponent(categories)}`;
                     const response = await authenticatedFetch(apiUrl);
                     
                     if (!response) {
@@ -173,13 +173,14 @@
                     document.getElementById('empty-state').style.display = 'none';
                     
                     const recipesHtml = pageData.recipes.map(recipe => {
+                        const placeholderSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEzYzRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZvb2Q8L3RleHQ+PC9zdmc+';
                         const imageUrl = recipe.image_url 
                             || (recipe.image_filename ? `${BASE_URL}/assets/images/recipes/${recipe.image_filename}` : null)
-                            || `${BASE_URL}/assets/images/recipes/placeholder_food.jpg`;
+                            || placeholderSvg;
                         
                         return `
                             <a href="view_recipe.html?id=${recipe.id}" class="recipe-list-item glass-card">
-                                <img src="${imageUrl}" alt="${escapeHtml(recipe.name)}" class="recipe-list-image" loading="eager" decoding="async" onerror="this.src='${BASE_URL}/assets/images/recipes/placeholder_food.jpg'">
+                                <img src="${imageUrl}" alt="${escapeHtml(recipe.name)}" class="recipe-list-image" loading="eager" decoding="async" onerror="this.src='${placeholderSvg}'">
                                 <div class="recipe-list-info">
                                     <h3>${escapeHtml(recipe.name)}</h3>
                                     <span class="kcal"><i class="fas fa-fire-alt"></i> ${Math.round(recipe.kcal_per_serving || 0)} kcal</span>

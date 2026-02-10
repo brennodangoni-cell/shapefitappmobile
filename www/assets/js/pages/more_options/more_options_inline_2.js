@@ -17,8 +17,8 @@
 
         async function loadMoreOptionsData() {
             try {
-                // Usar URL relativa para passar pelo proxy
-                const response = await authenticatedFetch('/api/get_more_options_data.php');
+                // Usar API_BASE_URL para chamar a API remota
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/get_more_options_data.php`);
                 
                 if (!response) return; // Token inválido, já redirecionou
                 

@@ -150,6 +150,16 @@
     padding: 12px 16px;
     background: rgba(255, 255, 255, 0.02);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.meal-group-header:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.meal-group-header:active {
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .meal-group-title {
@@ -210,18 +220,58 @@
     font-weight: 600;
 }
 
-.meal-edit-btn {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    padding: 6px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    text-decoration: none;
+/* Ocultar lápis individuais dos alimentos - só deve ter no header da refeição */
+.meal-item .meal-edit-btn {
+    display: none !important;
 }
 
-.meal-edit-btn:hover {
-    color: var(--accent-orange);
-    background: rgba(255, 107, 0, 0.1);
+/* Botão de editar no header da refeição */
+.meal-group-edit-btn {
+    background: rgba(255, 107, 0, 0.1) !important;
+    border: 1px solid rgba(255, 107, 0, 0.3) !important;
+    color: var(--accent-orange) !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    flex-shrink: 0 !important;
+}
+
+.meal-group-edit-btn:hover {
+    color: var(--accent-orange) !important;
+    background: rgba(255, 107, 0, 0.2) !important;
+    border-color: rgba(255, 107, 0, 0.5) !important;
+}
+
+.meal-group-edit-btn:active {
+    transform: scale(0.95);
+}
+
+.meal-group-edit-btn i {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+}
+
+/* Fallback caso FontAwesome não esteja carregado */
+.meal-group-edit-btn i:empty,
+.meal-group-edit-btn i:not(.fa-edit):not(.fas) {
+    display: none !important;
+}
+
+.meal-group-edit-btn i:empty ~ .meal-edit-fallback,
+.meal-group-edit-btn i:not(.fa-edit):not(.fas) ~ .meal-edit-fallback {
+    display: inline-block !important;
 }
 
 .add-meal-section {
@@ -291,6 +341,237 @@
     
     .page-title {
         font-size: 20px;
+    }
+}
+
+/* ========== MODAL DE EDIÇÃO RÁPIDA DE REFEIÇÃO ========== */
+.meal-group-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    padding: 20px;
+    margin: 0 !important;
+    overflow-y: auto !important;
+}
+
+.meal-group-modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.meal-group-modal-content {
+    background: var(--bg-color);
+    border-radius: 20px;
+    width: calc(100% - 40px);
+    max-width: 500px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    margin: 20px auto !important;
+    position: relative !important;
+}
+
+.meal-group-modal-overlay.visible .meal-group-modal-content {
+    transform: scale(1);
+}
+
+.meal-group-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.meal-group-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.meal-group-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.meal-group-modal-close:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.meal-group-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.meal-group-type-selector {
+    margin-bottom: 24px;
+}
+
+.meal-group-type-selector label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.meal-group-type-select {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none;
+}
+
+.meal-group-type-select:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.meal-group-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.meal-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.meal-group-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.meal-group-item-info {
+    flex: 1;
+}
+
+.meal-group-item-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.meal-group-item-macros {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.meal-group-item-edit {
+    color: var(--text-secondary);
+    font-size: 16px;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.meal-group-item-edit:hover {
+    color: var(--accent-orange);
+    background: rgba(255, 107, 0, 0.1);
+}
+
+.meal-group-modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.meal-group-modal-footer .btn-secondary,
+.meal-group-modal-footer .btn-primary {
+    flex: 1;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.meal-group-modal-footer .btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.meal-group-modal-footer .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.meal-group-modal-footer .btn-primary {
+    background: var(--accent-orange);
+    color: white;
+}
+
+.meal-group-modal-footer .btn-primary:hover {
+    background: #ff7a1a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+@media (max-width: 480px) {
+    .meal-group-modal-content {
+        max-height: 90vh;
+        border-radius: 20px;
+        width: calc(100% - 32px) !important;
+        margin: 16px auto !important;
+    }
+    
+    .meal-group-modal-overlay {
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 16px !important;
     }
 }
 </style>
@@ -367,4 +648,13 @@
 <!-- ✅ Lottie removido - só main_app usa -->
 <script src="/assets/js/pages/diary/diary_inline_0.js"></script>
 <script src="/assets/js/pages/diary/diary_inline_1.js"></script>
-<script src="/assets/js/pages/diary/diary_inline_2.js"></script>
+<script>
+    // Teste antes de carregar o arquivo
+    console.log('🔍 TESTE: Antes de carregar diary_inline_2.js');
+</script>
+<script src="/assets/js/pages/diary/diary_inline_2.js" onerror="console.error('❌ ERRO ao carregar diary_inline_2.js')" onload="console.log('✅ diary_inline_2.js carregado com sucesso')"></script>
+<script>
+    // Teste depois de carregar o arquivo
+    console.log('🔍 TESTE: Depois de carregar diary_inline_2.js');
+    console.log('window.diaryInline2Loaded:', window.diaryInline2Loaded);
+</script>

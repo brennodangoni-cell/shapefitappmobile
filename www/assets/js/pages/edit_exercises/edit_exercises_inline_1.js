@@ -226,7 +226,7 @@
         // Carregar dados atuais
         async function loadCurrentData() {
             try {
-                const response = await authenticatedFetch(`${BASE_URL}/api/get_edit_profile_data.php`);
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/get_edit_profile_data.php`);
                 if (!response || !response.ok) {
                     throw new Error('Erro ao carregar dados');
                 }
@@ -366,7 +366,7 @@
                 }
 
                 // Enviar para API
-                const response = await authenticatedFetch(`${BASE_URL}/api/update_exercises.php`, {
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/update_exercises.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

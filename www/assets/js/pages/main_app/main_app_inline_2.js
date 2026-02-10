@@ -540,35 +540,67 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
                 document.body.style.overflow = 'hidden'; // Bloquear scroll
                 // Event listener global já cuida do fechamento via [data-action="close-modal"]
                 
-                document.getElementById('confirm-exercise-duration').onclick = () => {
+                // ✅ Função para completar automaticamente quando duração for válida
+                const autoCompleteExercise = () => {
                     const duration = parseInt(durationInput.value);
                     if (duration >= 15 && duration <= 300) {
+                        // Fechar modal
                         modal.classList.remove('modal-visible');
-                        document.body.style.overflow = ''; // Restaurar scroll
-
-                        // Salva a duração no botão para referência futura
-                        durationButton.dataset.durationSet = 'true';
-                        durationButton.dataset.duration = duration;
-
-                        // NOVO: Garante que o botão de duração (agora edição) esteja visível
-                        durationButton.style.display = 'flex'; 
+                        document.body.style.overflow = '';
                         
-                        // Habilita o botão de completar original
-                        const completeBtn = currentSlide.querySelector('.complete-btn.disabled');
-                        if (completeBtn) {
-                            completeBtn.disabled = false;
-                            completeBtn.classList.remove('disabled');
+                        // Completar automaticamente
+                        const completeBtn = currentSlide.querySelector('.complete-btn');
+                        if (completeBtn && !completeBtn.disabled) {
+                            completeExerciseWithDuration(missionId, duration, currentSlide, completeBtn);
+                        } else {
+                            // Se o botão ainda está desabilitado, habilitar e completar
+                            if (completeBtn) {
+                                completeBtn.disabled = false;
+                                completeBtn.classList.remove('disabled');
+                                completeExerciseWithDuration(missionId, duration, currentSlide, completeBtn);
+                            }
                         }
-
-                        // NOVO: Mostra o texto da duração no card
-                        const durationDisplay = currentSlide.querySelector('.mission-duration-display');
-                        if (durationDisplay) {
-                            durationDisplay.innerHTML = `<i class="fas fa-stopwatch" style="font-size: 0.8em;"></i> ${duration} min`;
-                            durationDisplay.style.display = 'flex';
-                        }
-                    } else {
-                        alert('Por favor, insira uma duração entre 15 e 300 minutos.');
                     }
+                };
+                
+                // ✅ Completar ao pressionar Enter no input
+                durationInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        autoCompleteExercise();
+                    }
+                });
+                
+                // ✅ Completar ao mudar o valor (se for válido) - com debounce
+                let blurTimeout;
+                durationInput.addEventListener('blur', () => {
+                    clearTimeout(blurTimeout);
+                    blurTimeout = setTimeout(() => {
+                        const duration = parseInt(durationInput.value);
+                        if (duration >= 15 && duration <= 300) {
+                            autoCompleteExercise();
+                        }
+                    }, 300);
+                });
+                
+                // ✅ Completar ao digitar um valor válido (com debounce para não completar a cada tecla)
+                let inputTimeout;
+                durationInput.addEventListener('input', () => {
+                    clearTimeout(inputTimeout);
+                    inputTimeout = setTimeout(() => {
+                        const duration = parseInt(durationInput.value);
+                        if (duration >= 15 && duration <= 300) {
+                            // Pequeno delay adicional para garantir que o usuário terminou de digitar
+                            setTimeout(() => {
+                                autoCompleteExercise();
+                            }, 500);
+                        }
+                    }, 1000);
+                });
+                
+                // ✅ Botão confirmar (mantém funcionalidade original)
+                document.getElementById('confirm-exercise-duration').onclick = () => {
+                    autoCompleteExercise();
                 };
             }
 
@@ -584,7 +616,7 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
                 completeButton.disabled = true;
                 completeButton.classList.add('processing');
                 
-                authenticatedFetch(`${window.BASE_APP_URL}/api/complete_exercise_with_duration.php`, {
+                authenticatedFetch(`${window.API_BASE_URL}/complete_exercise_with_duration.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -649,13 +681,23 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
                 
                 if (!sleepData || !sleepData.sleep_time || !sleepData.wake_time) {
                     alert('Por favor, registre os horários de sono primeiro.');
-                    return;
+                    return Promise.reject(new Error('Dados de sono não encontrados'));
+                }
+                
+                // ✅ Verificar se já está processando ou já foi completada
+                if (completeButton.disabled && completeButton.classList.contains('processing')) {
+                    return Promise.reject(new Error('Já está processando'));
+                }
+                
+                const currentSlide = pendingSlides[0];
+                if (currentSlide && currentSlide.dataset.completed === '1') {
+                    return Promise.reject(new Error('Rotina já foi completada'));
                 }
                 
                 completeButton.disabled = true;
                 completeButton.classList.add('processing');
                 
-                authenticatedFetch(`${window.BASE_APP_URL}/api/complete_sleep_routine.php`, {
+                return authenticatedFetch(`${window.API_BASE_URL}/complete_sleep_routine.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -673,6 +715,23 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
                     if (!response.ok) {
                         const text = await response.text();
                         console.error('Erro ao completar sono:', text);
+                        
+                        // ✅ Verificar se é erro de duplicação
+                        try {
+                            const errorData = JSON.parse(text);
+                            if (errorData.error && errorData.error.includes('Duplicate entry')) {
+                                // Já foi completada, apenas marcar como completa
+                                const currentSlide = pendingSlides[0];
+                                if (currentSlide) {
+                                    currentSlide.dataset.completed = '1';
+                                }
+                                // Não mostrar erro para o usuário, apenas fechar o modal
+                                return { success: true, message: 'Rotina já foi completada anteriormente' };
+                            }
+                        } catch (e) {
+                            // Não é JSON, continuar com o erro original
+                        }
+                        
                         throw new Error(`Erro de Servidor (${response.status}): ${text.substring(0, 200)}`);
                     }
                     return response.json();
@@ -727,7 +786,7 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
                 completeButton.disabled = true;
                 completeButton.classList.add('processing');
                 
-                authenticatedFetch(`${window.BASE_APP_URL}/api/complete_routine_item.php`, {
+                authenticatedFetch(`${window.API_BASE_URL}/complete_routine_item.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -793,61 +852,108 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
         // Inicializar carrossel de missões (tentará novamente se não encontrar elementos)
         initializeMissionsCarousel();
         
-        // Event listener para o botão de confirmar sono
+        // ✅ Flag para evitar múltiplas chamadas simultâneas
+        let isCompletingSleep = false;
+        
+        // ✅ Função para completar sono automaticamente quando horários forem válidos
+        const autoCompleteSleep = () => {
+            // Prevenir múltiplas chamadas simultâneas
+            if (isCompletingSleep) {
+                return;
+            }
+            
+            const modal = document.getElementById('sleep-modal-main');
+            if (!modal) return;
+            
+            const sleepTimeInput = modal.querySelector('#sleep-time-main');
+            const wakeTimeInput = modal.querySelector('#wake-time-main');
+            
+            if (!sleepTimeInput || !wakeTimeInput) return;
+            
+            const sleepTime = sleepTimeInput.value;
+            const wakeTime = wakeTimeInput.value;
+
+            if (!sleepTime || !wakeTime) {
+                return; // Não completar se não tiver ambos os horários
+            }
+
+            if (sleepTime === wakeTime) {
+                return; // Não completar se horários forem iguais
+            }
+
+            // Verificar se a rotina já foi completada
+            const currentSlide = pendingSlides[0];
+            if (!currentSlide) return;
+            
+            if (currentSlide.dataset.completed === '1') {
+                // Já foi completada, apenas fechar o modal
+                modal.classList.remove('modal-visible');
+                document.body.style.overflow = '';
+                return;
+            }
+            
+            // Marcar como completando
+            isCompletingSleep = true;
+
+            // Salvar dados no sessionStorage
+            const sleepData = {
+                sleep_time: sleepTime,
+                wake_time: wakeTime
+            };
+            sessionStorage.setItem('sleep_data', JSON.stringify(sleepData));
+
+            // Fechar modal
+            modal.classList.remove('modal-visible');
+            document.body.style.overflow = '';
+
+            // Completar automaticamente
+            const completeBtn = currentSlide.querySelector('.complete-btn');
+            if (completeBtn) {
+                // Se o botão está desabilitado, habilitar primeiro
+                if (completeBtn.classList.contains('disabled')) {
+                    completeBtn.classList.remove('disabled');
+                }
+                // Completar a rotina de sono
+                completeSleepRoutine(currentSlide.dataset.missionId, completeBtn).finally(() => {
+                    // Liberar flag após completar (sucesso ou erro)
+                    setTimeout(() => {
+                        isCompletingSleep = false;
+                    }, 1000);
+                });
+            } else {
+                isCompletingSleep = false;
+            }
+        };
+        
+        // ✅ Event listeners para completar automaticamente ao preencher horários
+        const sleepModal = document.getElementById('sleep-modal-main');
+        if (sleepModal) {
+            const sleepTimeInput = sleepModal.querySelector('#sleep-time-main');
+            const wakeTimeInput = sleepModal.querySelector('#wake-time-main');
+            
+            if (sleepTimeInput && wakeTimeInput) {
+                // ✅ Debounce para evitar múltiplas chamadas
+                let completeTimeout;
+                const checkAndComplete = () => {
+                    clearTimeout(completeTimeout);
+                    completeTimeout = setTimeout(() => {
+                        if (sleepTimeInput.value && wakeTimeInput.value && 
+                            sleepTimeInput.value !== wakeTimeInput.value) {
+                            autoCompleteSleep();
+                        }
+                    }, 500); // Delay maior para evitar chamadas duplicadas
+                };
+                
+                sleepTimeInput.addEventListener('change', checkAndComplete);
+                wakeTimeInput.addEventListener('change', checkAndComplete);
+            }
+        }
+        
+        // ✅ Event listener para o botão de confirmar sono (mantém funcionalidade original)
         const confirmSleepBtn = document.getElementById('confirm-sleep-main');
         if (confirmSleepBtn) {
             confirmSleepBtn.addEventListener('click', function() {
-                const modal = document.getElementById('sleep-modal-main');
-                const sleepTime = modal.querySelector('#sleep-time-main').value;
-                const wakeTime = modal.querySelector('#wake-time-main').value;
-
-                if (!sleepTime || !wakeTime) {
-                    alert('Por favor, preencha ambos os horários.');
-                    return;
-                }
-
-                if (sleepTime === wakeTime) {
-                    alert('Os horários de dormir e acordar não podem ser iguais.');
-                    return;
-                }
-
-                // Salvar dados no sessionStorage
-                const sleepData = {
-                    sleep_time: sleepTime,
-                    wake_time: wakeTime
-                };
-                sessionStorage.setItem('sleep_data', JSON.stringify(sleepData));
-
-                // Fechar modal
-                modal.classList.remove('modal-visible');
-                document.body.style.overflow = '';
-
-            // Habilitar o botão de completar (igual aos exercícios)
-            const currentSlide = pendingSlides[0];
-            if (currentSlide) {
-                const completeBtn = currentSlide.querySelector('.complete-btn.disabled');
-                if (completeBtn) {
-                    completeBtn.classList.remove('disabled');
-                }
-                
-                // Mostrar duração do sono (igual aos exercícios)
-                const durationDisplay = currentSlide.querySelector('.mission-duration-display');
-                if (durationDisplay) {
-                    const sleepTime = new Date(`2000-01-01T${sleepData.sleep_time}`);
-                    const wakeTime = new Date(`2000-01-01T${sleepData.wake_time}`);
-                    
-                    // Calcular diferença em horas
-                    let diffMs = wakeTime - sleepTime;
-                    if (diffMs < 0) {
-                        // Se acordou no dia seguinte
-                        diffMs += 24 * 60 * 60 * 1000;
-                    }
-                    const diffHours = Math.round(diffMs / (60 * 60 * 1000) * 10) / 10;
-                    
-                    durationDisplay.innerHTML = `<i class="fas fa-moon" style="font-size: 0.8em;"></i> ${diffHours}h de sono`;
-                    durationDisplay.style.display = 'flex';
-                }
-            }
+                autoCompleteSleep();
             });
         }
 
@@ -902,7 +1008,7 @@ window.initializeMissionsCarousel = window.initializeMissionsCarousel || functio
             // Converter ML de volta para copos para o servidor
             const waterInCups = Math.round(window.currentWater / CUP_SIZE_ML);
             
-            authenticatedFetch(`${window.BASE_APP_URL}/api/update_water.php`, {
+            authenticatedFetch(`${window.API_BASE_URL}/update_water.php`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

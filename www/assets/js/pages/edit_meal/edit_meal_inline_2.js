@@ -62,7 +62,7 @@
             const params = new URLSearchParams();
             params.append('meal_id', mealId);
             
-            const response = await authenticatedFetch('/api/delete_meal.php', {
+            const response = await authenticatedFetch(`${window.API_BASE_URL}/delete_meal.php`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -95,7 +95,7 @@
 
     async function loadMealData() {
         try {
-            const response = await authenticatedFetch(`/api/get_edit_meal_data.php?id=${mealId}`);
+            const response = await authenticatedFetch(`${window.API_BASE_URL}/get_edit_meal_data.php?id=${mealId}`);
             
             if (!response) return; // Token inválido, já redirecionou
             
@@ -139,6 +139,23 @@
             
             // Atualizar valores nutricionais
             updateNutrition();
+            
+            // Atualizar botão de favoritar (apenas se for refeição customizada)
+            const favoriteBtn = document.getElementById('favorite-meal-btn');
+            if (favoriteBtn && result.data.is_custom_meal) {
+                favoriteBtn.style.display = 'flex';
+                if (result.data.is_favorited) {
+                    favoriteBtn.classList.add('favorited');
+                    favoriteBtn.querySelector('i').className = 'fas fa-heart';
+                    favoriteBtn.title = 'Remover dos favoritos';
+                } else {
+                    favoriteBtn.classList.remove('favorited');
+                    favoriteBtn.querySelector('i').className = 'far fa-heart';
+                    favoriteBtn.title = 'Adicionar aos favoritos';
+                }
+            } else if (favoriteBtn) {
+                favoriteBtn.style.display = 'none';
+            }
             
             // Atualizar botão de voltar e cancelar
             const backHref = `/diario?date=${encodeURIComponent(mealData.date_consumed)}`;
@@ -195,7 +212,7 @@ document.getElementById('servings').addEventListener('input', updateNutrition);
             
             console.log('[EditMeal] Enviando dados:', params.toString());
             
-            const response = await authenticatedFetch('/api/edit_meal.php', {
+            const response = await authenticatedFetch(`${window.API_BASE_URL}/edit_meal.php`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -246,6 +263,54 @@ document.getElementById('servings').addEventListener('input', updateNutrition);
             alert('Erro ao atualizar refeição. Tente novamente.');
         }
     });
+    
+    // Event listener para favoritar refeição
+    const favoriteBtn = document.getElementById('favorite-meal-btn');
+    if (favoriteBtn) {
+        favoriteBtn.addEventListener('click', async function() {
+            const mealId = document.getElementById('meal_id').value;
+            if (!mealId) return;
+            
+            try {
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/toggle_favorite_custom_meal.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ meal_id: mealId })
+                });
+                
+                if (!response) return;
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Atualizar estado do botão
+                    if (result.is_favorited) {
+                        favoriteBtn.classList.add('favorited');
+                        favoriteBtn.querySelector('i').className = 'fas fa-heart';
+                        favoriteBtn.title = 'Remover dos favoritos';
+                    } else {
+                        favoriteBtn.classList.remove('favorited');
+                        favoriteBtn.querySelector('i').className = 'far fa-heart';
+                        favoriteBtn.title = 'Adicionar aos favoritos';
+                    }
+                    
+                    // Mostrar feedback visual (opcional)
+                    const icon = favoriteBtn.querySelector('i');
+                    icon.style.transform = 'scale(1.3)';
+                    setTimeout(() => {
+                        icon.style.transform = 'scale(1)';
+                    }, 200);
+                } else {
+                    alert(result.message || 'Erro ao atualizar favoritos.');
+                }
+            } catch (error) {
+                console.error('Erro ao favoritar refeição:', error);
+                alert('Erro ao atualizar favoritos. Tente novamente.');
+            }
+        });
+    }
     
     // Event listeners
     document.getElementById('servings').addEventListener('input', updateNutrition);

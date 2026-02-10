@@ -346,6 +346,68 @@
             
             modal.classList.add('modal-visible');
             document.body.style.overflow = 'hidden';
+            
+            // ✅ Remover listeners antigos para evitar duplicação
+            const newDurationInput = document.getElementById('exercise-duration-input');
+            const newInput = newDurationInput.cloneNode(true);
+            newDurationInput.parentNode.replaceChild(newInput, newDurationInput);
+            
+            // ✅ Função para completar automaticamente quando duração for válida
+            const autoCompleteExercise = () => {
+                const duration = parseInt(newInput.value, 10);
+                const currentMissionId = modal.dataset.currentItemId;
+                
+                if (!currentMissionId) return;
+                const currentListItem = todoList.querySelector(`.routine-list-item[data-routine-id="${currentMissionId}"]`);
+                if (!currentListItem) return;
+                
+                if (duration >= 15 && duration <= 300) {
+                    // Fechar modal
+                    modal.classList.remove('modal-visible');
+                    document.body.style.overflow = '';
+                    
+                    // Completar automaticamente
+                    const completeBtn = currentListItem.querySelector('.complete-btn');
+                    if (completeBtn) {
+                        completeExerciseWithDuration(currentMissionId, duration, currentListItem, completeBtn);
+                    }
+                }
+            };
+            
+            // ✅ Completar ao pressionar Enter no input
+            newInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    autoCompleteExercise();
+                }
+            });
+            
+            // ✅ Completar ao mudar o valor (se for válido) - com debounce
+            let blurTimeout;
+            newInput.addEventListener('blur', () => {
+                clearTimeout(blurTimeout);
+                blurTimeout = setTimeout(() => {
+                    const duration = parseInt(newInput.value, 10);
+                    if (duration >= 15 && duration <= 300) {
+                        autoCompleteExercise();
+                    }
+                }, 300);
+            });
+            
+            // ✅ Completar ao digitar um valor válido (com debounce para não completar a cada tecla)
+            let inputTimeout;
+            newInput.addEventListener('input', () => {
+                clearTimeout(inputTimeout);
+                inputTimeout = setTimeout(() => {
+                    const duration = parseInt(newInput.value, 10);
+                    if (duration >= 15 && duration <= 300) {
+                        // Pequeno delay adicional para garantir que o usuário terminou de digitar
+                        setTimeout(() => {
+                            autoCompleteExercise();
+                        }, 500);
+                    }
+                }, 1000);
+            });
         }
         
         function handleConfirmExerciseDuration(modal) {
@@ -358,17 +420,14 @@
             if (!listItem) return;
             
             if (duration >= 15 && duration <= 300) {
-                const durationButton = listItem.querySelector('.duration-btn');
-                const completeBtn = listItem.querySelector('.complete-btn');
-                const durationDisplay = listItem.querySelector('.routine-duration-display');
-                
-                durationButton.dataset.duration = duration;
-                completeBtn.classList.remove('disabled');
-                durationDisplay.innerHTML = `<i class="fas fa-stopwatch" style="font-size: 0.8em;"></i> ${duration} min`;
-                durationDisplay.style.display = 'flex';
-                
+                // Fechar modal e completar automaticamente
                 modal.classList.remove('modal-visible');
                 document.body.style.overflow = '';
+                
+                const completeBtn = listItem.querySelector('.complete-btn');
+                if (completeBtn) {
+                    completeExerciseWithDuration(missionId, duration, listItem, completeBtn);
+                }
             } else {
                 alert('Por favor, insira uma duração entre 15 e 300 minutos.');
             }
@@ -380,6 +439,103 @@
                 modal.dataset.currentItemId = listItem.dataset.routineId;
                 modal.classList.add('modal-visible');
                 document.body.style.overflow = 'hidden';
+                
+                // ✅ Remover listeners antigos para evitar duplicação
+                const sleepTimeInput = document.getElementById('sleep-time-main');
+                const wakeTimeInput = document.getElementById('wake-time-main');
+                
+                if (sleepTimeInput && wakeTimeInput) {
+                    // ✅ Flag para evitar múltiplas chamadas simultâneas
+                    let isCompletingSleep = false;
+                    
+                    // Remover listeners antigos se existirem
+                    const newSleepTimeInput = sleepTimeInput.cloneNode(true);
+                    const newWakeTimeInput = wakeTimeInput.cloneNode(true);
+                    sleepTimeInput.parentNode.replaceChild(newSleepTimeInput, sleepTimeInput);
+                    wakeTimeInput.parentNode.replaceChild(newWakeTimeInput, wakeTimeInput);
+                    
+                    // ✅ Função para completar automaticamente quando horários forem válidos
+                    const autoCompleteSleep = () => {
+                        // Prevenir múltiplas chamadas simultâneas
+                        if (isCompletingSleep) {
+                            return;
+                        }
+                        
+                        const currentSleepTime = newSleepTimeInput.value;
+                        const currentWakeTime = newWakeTimeInput.value;
+                        const currentMissionId = modal.dataset.currentItemId;
+                        
+                        if (!currentSleepTime || !currentWakeTime) {
+                            return; // Não completar se não tiver ambos os horários
+                        }
+                        
+                        if (currentSleepTime === currentWakeTime) {
+                            return; // Não completar se horários forem iguais
+                        }
+                        
+                        // Verificar se a rotina já foi completada
+                        const currentItem = todoList.querySelector(`.routine-list-item[data-routine-id="${currentMissionId}"]`);
+                        if (!currentItem) return;
+                        
+                        if (currentItem.dataset.completed === '1') {
+                            // Já foi completada, apenas fechar o modal
+                            modal.classList.remove('modal-visible');
+                            document.body.style.overflow = '';
+                            return;
+                        }
+                        
+                        // Marcar como completando
+                        isCompletingSleep = true;
+                        
+                        // Salvar dados no sessionStorage
+                        const sleepData = {
+                            sleep_time: currentSleepTime,
+                            wake_time: currentWakeTime
+                        };
+                        sessionStorage.setItem('sleep_data', JSON.stringify(sleepData));
+                        
+                        // Fechar modal
+                        modal.classList.remove('modal-visible');
+                        document.body.style.overflow = '';
+                        
+                        // Completar automaticamente
+                        const completeBtn = currentItem.querySelector('.complete-btn');
+                        if (completeBtn) {
+                            // Se o botão está desabilitado, habilitar primeiro
+                            if (completeBtn.classList.contains('disabled')) {
+                                completeBtn.classList.remove('disabled');
+                            }
+                            // Completar a rotina de sono
+                            completeSleepRoutine(currentItem, completeBtn).catch(() => {
+                                // Em caso de erro, liberar flag
+                                isCompletingSleep = false;
+                            }).finally(() => {
+                                // Liberar flag após completar (sucesso ou erro)
+                                setTimeout(() => {
+                                    isCompletingSleep = false;
+                                }, 1000);
+                            });
+                        } else {
+                            isCompletingSleep = false;
+                        }
+                    };
+                    
+                    // ✅ Debounce para evitar múltiplas chamadas
+                    let completeTimeout;
+                    const checkAndComplete = () => {
+                        clearTimeout(completeTimeout);
+                        completeTimeout = setTimeout(() => {
+                            if (newSleepTimeInput.value && newWakeTimeInput.value && 
+                                newSleepTimeInput.value !== newWakeTimeInput.value) {
+                                autoCompleteSleep();
+                            }
+                        }, 500); // Delay maior para evitar chamadas duplicadas
+                    };
+                    
+                    // Adicionar novos listeners
+                    newSleepTimeInput.addEventListener('change', checkAndComplete);
+                    newWakeTimeInput.addEventListener('change', checkAndComplete);
+                }
             }
         }
         
@@ -407,30 +563,19 @@
             modal.classList.remove('modal-visible');
             document.body.style.overflow = '';
             
-            // Habilitar o botão de completar
+            // Completar automaticamente
             const missionId = modal.dataset.currentItemId;
             const currentItem = todoList.querySelector(`.routine-list-item[data-routine-id="${missionId}"]`);
             
             if (currentItem) {
-                const completeBtn = currentItem.querySelector('.complete-btn.disabled');
+                const completeBtn = currentItem.querySelector('.complete-btn');
                 if (completeBtn) {
-                    completeBtn.classList.remove('disabled');
-                }
-                
-                // Mostrar duração do sono
-                const durationDisplay = currentItem.querySelector('.routine-duration-display');
-                if (durationDisplay) {
-                    const sleepTimeObj = new Date(`2000-01-01T${sleepData.sleep_time}`);
-                    const wakeTimeObj = new Date(`2000-01-01T${sleepData.wake_time}`);
-                    
-                    let diffMs = wakeTimeObj - sleepTimeObj;
-                    if (diffMs < 0) {
-                        diffMs += 24 * 60 * 60 * 1000;
+                    // Se o botão está desabilitado, habilitar primeiro
+                    if (completeBtn.classList.contains('disabled')) {
+                        completeBtn.classList.remove('disabled');
                     }
-                    const diffHours = Math.round(diffMs / (60 * 60 * 1000) * 10) / 10;
-                    
-                    durationDisplay.innerHTML = `<i class="fas fa-moon" style="font-size: 0.8em;"></i> ${diffHours}h de sono`;
-                    durationDisplay.style.display = 'flex';
+                    // Completar a rotina de sono
+                    completeSleepRoutine(currentItem, completeBtn);
                 }
             }
         }
@@ -439,14 +584,24 @@
             const sleepData = JSON.parse(sessionStorage.getItem('sleep_data'));
             if (!sleepData || !sleepData.sleep_time || !sleepData.wake_time) {
                 alert('Por favor, registre os horários de sono primeiro.');
-                return;
+                return Promise.reject(new Error('Dados de sono não encontrados'));
+            }
+            
+            // ✅ Verificar se já está processando ou já foi completada
+            if (button.disabled && button.classList.contains('processing')) {
+                return Promise.reject(new Error('Já está processando'));
+            }
+            
+            if (listItem.dataset.completed === '1') {
+                return Promise.reject(new Error('Rotina já foi completada'));
             }
             
             button.classList.add('disabled');
+            button.classList.add('processing');
             
             const missionId = listItem.dataset.routineId;
             
-            authenticatedFetch(`${window.API_BASE_URL}/complete_sleep_routine.php`, {
+            return authenticatedFetch(`${window.API_BASE_URL}/complete_sleep_routine.php`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -459,6 +614,24 @@
             })
             .then(async response => {
                 if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Erro ao completar sono:', text);
+                    
+                    // ✅ Verificar se é erro de duplicação
+                    try {
+                        const errorData = JSON.parse(text);
+                        if (errorData.error && errorData.error.includes('Duplicate entry')) {
+                            // Já foi completada, apenas marcar como completa
+                            listItem.dataset.completed = '1';
+                            sessionStorage.removeItem('sleep_data');
+                            moveItem(listItem, todoList, completedList, true);
+                            // Não mostrar erro para o usuário, apenas retornar sucesso
+                            return { success: true, message: 'Rotina já foi completada anteriormente' };
+                        }
+                    } catch (e) {
+                        // Não é JSON, continuar com o erro original
+                    }
+                    
                     throw new Error(`Erro HTTP: ${response.status}`);
                 }
                 return response.json();
@@ -473,10 +646,14 @@
             })
             .catch(error => {
                 console.error('Erro ao completar sono:', error);
-                alert('Erro ao completar tarefa. Tente novamente.');
+                // Não mostrar alerta se já foi completada (tratado acima)
+                if (!error.message.includes('já foi completada')) {
+                    alert('Erro ao completar tarefa. Tente novamente.');
+                }
             })
             .finally(() => {
                 button.classList.remove('disabled');
+                button.classList.remove('processing');
             });
         }
         

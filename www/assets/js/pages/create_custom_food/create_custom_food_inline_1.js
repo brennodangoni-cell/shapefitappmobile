@@ -154,7 +154,7 @@
             }
             
             try {
-                const response = await authenticatedFetch('/api/save_custom_food.php', {
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/save_custom_food.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

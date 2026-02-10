@@ -387,9 +387,11 @@
             document.getElementById('restrictions-modal'),
             document.getElementById('confirm-delete-account-modal'),
             document.getElementById('product-not-found-modal'),
+            document.getElementById('meal-group-modal'),
             document.querySelector('.recipe-modal'),
             document.querySelector('.modal-overlay.visible'),
-            document.querySelector('.ep-modal-overlay.visible')
+            document.querySelector('.ep-modal-overlay.visible'),
+            document.querySelector('.meal-group-modal-overlay')
         ];
         modalsToRemove.forEach(modal => {
             if (modal) {
@@ -822,13 +824,30 @@
                     document.getElementById('crop-modal'),
                     document.getElementById('restrictions-modal'),
                     document.getElementById('confirm-delete-account-modal'),
-                    document.getElementById('product-not-found-modal')
+                    document.getElementById('product-not-found-modal'),
+                    document.getElementById('checkinModal'),
+                    document.getElementById('meal-group-modal')
                 ];
                 modalsToRemove.forEach(modal => {
                     if (modal && modal.parentElement === document.body) {
                         modal.remove();
                     }
                 });
+                
+                // ✅ Limpar dados do check-in ao navegar (evitar estado persistente)
+                if (window.checkinData) {
+                    window.checkinData = null;
+                }
+                // Limpar também variáveis locais do check-in se existirem
+                if (typeof window.sendCheckinResponse === 'function') {
+                    // Resetar estado do check-in
+                    if (window.checkinResponses) {
+                        window.checkinResponses = {};
+                    }
+                    if (window.currentQuestionIndex !== undefined) {
+                        window.currentQuestionIndex = 0;
+                    }
+                }
                 
                 const scripts = extractScriptsFromHTML(html);
                 let htmlWithoutScripts = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');

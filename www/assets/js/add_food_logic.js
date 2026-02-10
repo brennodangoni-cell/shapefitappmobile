@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const apiUrl = `${BASE_APP_URL}/api/ajax_get_food_units.php?food_id=${encodeURIComponent(foodId)}`;
+        const apiUrl = `${window.API_BASE_URL}/ajax_get_food_units.php?food_id=${encodeURIComponent(foodId)}`;
         
         fetch(apiUrl)
             .then(response => {
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const apiUrl = `${BASE_APP_URL}/api/ajax_search_food.php?term=${encodeURIComponent(term)}`;
+        const apiUrl = `${window.API_BASE_URL}/ajax_search_food.php?term=${encodeURIComponent(term)}`;
         
         fetch(apiUrl)
             .then(response => {

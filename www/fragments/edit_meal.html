@@ -90,6 +90,46 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.btn-favorite-meal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-secondary);
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.btn-favorite-meal:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-orange);
+    color: var(--accent-orange);
+}
+
+.btn-favorite-meal.favorited {
+    background: rgba(255, 107, 0, 0.1);
+    border-color: var(--accent-orange);
+    color: var(--accent-orange);
+}
+
+.btn-favorite-meal.favorited i {
+    font-weight: 900; /* solid */
+}
+
+.btn-favorite-meal:not(.favorited) i {
+    font-weight: 400; /* regular */
+}
+
+.btn-favorite-meal i {
+    transition: transform 0.2s ease;
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -391,7 +431,12 @@ input[type="text"].form-control::-webkit-input-placeholder {
 
             <!-- Informações Básicas -->
             <div class="form-section">
-                <h3 class="section-title">Informações Básicas</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 class="section-title" style="margin: 0;">Informações Básicas</h3>
+                    <button type="button" id="favorite-meal-btn" class="btn-favorite-meal" style="display: none;" title="Adicionar aos favoritos">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="meal_name">Nome da Refeição</label>

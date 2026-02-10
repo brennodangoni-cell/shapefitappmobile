@@ -16,7 +16,7 @@
             const BASE_URL = window.BASE_APP_URL;
             
             try {
-                const response = await authenticatedFetch(`${BASE_URL}/api/get_progress_data.php`);
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/get_progress_data.php`);
                 if (!response) return;
                 
                 const result = await response.json();

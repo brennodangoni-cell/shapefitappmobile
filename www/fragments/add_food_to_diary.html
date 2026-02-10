@@ -72,8 +72,9 @@
 }
 
 .form-control {
-    -webkit-appearance: none; /* Adicione esta linha */
-    appearance: none; /* Adicione esta linha */
+    -webkit-appearance: none;
+    appearance: none;
+    -moz-appearance: none;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
@@ -81,8 +82,12 @@
     color: var(--text-primary);
     font-size: 14px;
     transition: all 0.2s ease;
-    width: 100%; /* Garante que ocupe todo o espaço disponível */
-    box-sizing: border-box; /* Evita que o padding cause overflow */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+select.form-control {
+    text-align: center;
 }
 
 .form-control:focus {
@@ -359,14 +364,62 @@ input[type="date"].form-control::-webkit-datetime-edit-year-field {
 
 .pending-actions {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 12px;
     margin-top: 8px;
 }
 
 .pending-actions .btn-save-all {
-    width: 100%;
+    flex: 1;
     justify-content: center;
+}
+
+.btn-favorite-meal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-favorite-meal[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-favorite-meal:not([disabled]):hover {
+    background: rgba(255, 107, 0, 0.1);
+    border-color: var(--accent-orange);
+    color: var(--accent-orange);
+}
+
+.btn-favorite-meal.favorited {
+    background: rgba(255, 107, 0, 0.15);
+    border-color: var(--accent-orange);
+    color: var(--accent-orange);
+}
+
+.btn-favorite-meal.favorited i {
+    color: var(--accent-orange);
+}
+
+@media (max-width: 768px) {
+    .pending-actions {
+        flex-direction: column;
+    }
+    
+    .pending-actions .btn-favorite-meal,
+    .pending-actions .btn-save-all {
+        width: 100%;
+    }
 }
 
 @media (max-width: 768px) {
@@ -631,6 +684,9 @@ body.recipe-modal-open {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: relative;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-drag-indicator {
@@ -647,6 +703,62 @@ body.recipe-modal-open {
     color: var(--text-primary);
     margin: 0;
     padding: 0;
+    flex: 1;
+}
+
+.modal-close-btn {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent-orange);
+}
+
+/* Esconde a barra de rolagem do carrossel */
+.favorite-meals-carousel::-webkit-scrollbar { 
+    display: none; 
+}
+
+.favorite-meals-carousel { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
+
+.btn-load-favorite-meal:hover {
+    background: rgba(255, 107, 0, 0.9);
+    transform: translateY(-1px);
+}
+
+.btn-delete-favorite-meal:hover {
+    background: rgba(255, 0, 0, 0.2);
+    border-color: rgba(255, 0, 0, 0.5);
+}
+
+.btn-cancel-favorite:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-confirm-favorite:hover {
+    background: #ff7a1a;
+    transform: translateY(-1px);
 }
 
 .modal-body {
@@ -1009,6 +1121,10 @@ body.recipe-modal-open {
         </div>
         <div id="pending-totals" class="pending-totals" style="display:none;"></div>
         <div class="pending-actions">
+            <button id="favorite-meal-btn" class="btn-favorite-meal" disabled title="Favoritar esta refeição completa">
+                <i class="far fa-heart"></i>
+                Favoritar Refeição
+            </button>
             <button id="save-all-btn" class="btn-save-all" disabled>
                 <i class="fas fa-save"></i>
                 Salvar no Diário
@@ -1019,8 +1135,8 @@ body.recipe-modal-open {
     <!-- Busca de receitas e alimentos -->
     <div class="search-section">
         <div class="search-tabs">
-            <button class="tab-btn active" data-tab="recipes">Receitas</button>
-            <button class="tab-btn" data-tab="foods">Alimentos</button>
+            <button class="tab-btn active" data-tab="foods">Alimentos</button>
+            <button class="tab-btn" data-tab="recipes">Receitas</button>
         </div>
         <div class="search-input-wrapper">
             <input type="text" class="search-input" id="search-input" placeholder="Buscar receitas e alimentos...">
@@ -1043,6 +1159,27 @@ body.recipe-modal-open {
         </div>
     </div>
 
+    <!-- Refeições Completas Favoritas (com múltiplos alimentos) -->
+    <div class="recipes-section" id="favorite-complete-meals-section" style="display: none;">
+        <h2 class="section-title" style="margin-bottom: 16px; border-bottom: none; padding-bottom: 0;">
+            <i class="fas fa-heart" style="color: var(--accent-orange); margin-right: 8px;"></i>
+            Minhas Refeições Favoritas
+        </h2>
+        <div class="carousel-wrapper" style="position: relative;">
+            <div class="favorite-meals-carousel" id="favorite-complete-meals" style="display: flex; overflow-x: auto; gap: 16px; margin: 0; padding: 20px 24px 20px 24px; scroll-snap-type: x mandatory; scroll-padding-left: 24px; scroll-padding-right: 30px; -webkit-overflow-scrolling: touch;"></div>
+            <div class="carousel-fade" style="position: absolute; top: 0; right: 0; height: 100%; width: 60px; background: linear-gradient(to right, rgba(30, 30, 30, 0), rgba(30, 30, 30, 0.95) 80%); pointer-events: none; z-index: 5;"></div>
+        </div>
+    </div>
+
+    <!-- Refeições Customizadas Favoritas (legado - mantido para compatibilidade) -->
+    <div class="recipes-section" id="favorite-custom-meals-section" style="display: none;">
+        <h2 class="section-title">
+            <i class="fas fa-heart" style="color: var(--accent-orange); margin-right: 8px;"></i>
+            Refeições Simples Favoritas
+        </h2>
+        <div class="recipes-grid" id="favorite-custom-meals"></div>
+    </div>
+
     <!-- Receitas favoritas -->
     <div class="recipes-section" id="favorite-recipes-section" style="display: none;">
         <h2 class="section-title">Favoritas</h2>
@@ -1063,12 +1200,43 @@ body.recipe-modal-open {
     </div>
     </div> 
 
+<!-- Modal para favoritar refeição -->
+<div class="recipe-modal" id="favorite-meal-modal">
+    <div class="modal-content">
+        <div class="modal-header" style="position: relative; padding: 20px 20px 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+            <h2 class="modal-title" id="favorite-modal-title" style="text-align: center; flex: 1; margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">Favoritar Refeição</h2>
+            <button class="modal-close-btn" onclick="closeFavoriteMealModal()" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s ease; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="favorite-modal-body">
+            <div class="form-section">
+                <label for="favorite-meal-name" class="portion-label">Nome da Refeição</label>
+                <input type="text" id="favorite-meal-name" class="portion-input" placeholder="Ex: Café da Manhã Completo" maxlength="100" autocomplete="off">
+                <small class="text-muted" style="display: block; margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                    Digite um nome para identificar esta refeição favorita
+                </small>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 12px;">
+                <button class="btn-cancel-favorite" onclick="closeFavoriteMealModal()" style="flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: var(--text-primary); font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    Cancelar
+                </button>
+                <button class="btn-confirm-favorite" onclick="confirmFavoriteMeal()" style="flex: 1; padding: 12px; background: var(--accent-orange); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    <i class="fas fa-heart"></i> Favoritar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal de configuração -->
 <div class="recipe-modal" id="recipe-modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-drag-indicator"></div>
-            <h2 class="modal-title" id="modal-recipe-name">Nome da Receita</h2>
+        <div class="modal-header" style="position: relative; padding: 20px 50px 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+            <h2 class="modal-title" id="modal-recipe-name" style="text-align: center; margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--text-primary); width: 100%;">Nome da Receita</h2>
+            <button class="modal-close-btn" onclick="closeModal()" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-primary); font-size: 20px; cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s ease; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="modal-body">
             <div class="form-section">

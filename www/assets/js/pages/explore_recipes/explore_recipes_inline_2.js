@@ -174,7 +174,7 @@ async function loadPageData(customParams = null) {
         const categoriesGrid = document.getElementById('categories-grid');
         const loadingState = document.getElementById('loading-state');
         
-        const apiUrl = `/api/get_explore_recipes_data.php?q=${encodeURIComponent(query)}&sort=${encodeURIComponent(sort)}&categories=${encodeURIComponent(categories)}`;
+        const apiUrl = `${window.API_BASE_URL}/get_explore_recipes_data.php?q=${encodeURIComponent(query)}&sort=${encodeURIComponent(sort)}&categories=${encodeURIComponent(categories)}`;
         const response = await authenticatedFetch(apiUrl);
         if (!response) {
             hideFilterSkeleton();
@@ -321,12 +321,12 @@ async function renderFilteredView() {
     if (pageData.recipes && pageData.recipes.length > 0) {
         recipesList.innerHTML = pageData.recipes.map(recipe => `
             <a href="view_recipe.html?id=${recipe.id}" class="recipe-item">
-                <img src="${recipe.image_url || `${BASE_URL}/assets/images/recipes/${recipe.image_filename || 'placeholder_food.jpg'}`}" 
+                <img src="${recipe.image_url || (recipe.image_filename ? `${BASE_URL}/assets/images/recipes/${recipe.image_filename}` : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEzYzRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZvb2Q8L3RleHQ+PC9zdmc+')}" 
                      alt="${escapeHtml(recipe.name)}" 
                      class="recipe-image"
                      loading="eager"
                      decoding="async"
-                     onerror="this.src='${BASE_URL}/assets/images/recipes/placeholder_food.jpg'">
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEzYzRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZvb2Q8L3RleHQ+PC9zdmc+'">
                 <div class="recipe-info">
                     <h3 class="recipe-name">${escapeHtml(recipe.name)}</h3>
                     <span class="recipe-kcal">
@@ -397,8 +397,8 @@ async function renderCarouselView() {
                 <div class="recipes-carousel">
                     ${section.recipes.map(recipe => `
                         <a href="view_recipe.html?id=${recipe.id}" class="recipe-card">
-                            <img src="${recipe.image_url || `${BASE_URL}/assets/images/recipes/${recipe.image_filename || 'placeholder_food.jpg'}`}"
-                                 onerror="this.src='${BASE_URL}/assets/images/recipes/placeholder_food.jpg'" 
+                            <img src="${recipe.image_url || (recipe.image_filename ? `${BASE_URL}/assets/images/recipes/${recipe.image_filename}` : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEzYzRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZvb2Q8L3RleHQ+PC9zdmc+')}"
+                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEzYzRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkZvb2Q8L3RleHQ+PC9zdmc+'" 
                                  alt="${escapeHtml(recipe.name)}" 
                                  class="card-image">
                             <div class="card-info">

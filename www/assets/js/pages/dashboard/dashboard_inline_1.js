@@ -40,7 +40,7 @@
                 if (!authenticated) return;
                 
                 // Usar proxy local
-                const response = await authenticatedFetch('/api/get_dashboard_goals_data.php');
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/get_dashboard_goals_data.php`);
                 
                 if (!response || !response.ok) return;
                 

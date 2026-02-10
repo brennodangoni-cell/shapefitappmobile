@@ -161,7 +161,7 @@
             // Função para carregar dados do ranking
             async function loadRankingData(limit = 15) {
                 try {
-                    const response = await authenticatedFetch(`${BASE_URL}/api/get_ranking_data.php?limit=${limit}`);
+                    const response = await authenticatedFetch(`${window.API_BASE_URL}/get_ranking_data.php?limit=${limit}`);
                     if (!response) {
                         console.error('❌ [Ranking] Resposta vazia da API');
                         return null;

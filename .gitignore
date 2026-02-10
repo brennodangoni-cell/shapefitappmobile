@@ -1,0 +1,22 @@
+# Ignorar pasta web
+web/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Node modules
+node_modules/
+
+# Arquivos de build
+dist/
+build/
+
+# Arquivos de ambiente
+.env
+.env.local
+
+# Arquivos temporários
+*.tmp
+*.temp

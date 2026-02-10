@@ -12,9 +12,15 @@
         return id ? parseInt(id) : null;
     }
     
-    // Formatar data
+    // Formatar data (evitar problemas de timezone)
     function formatDate(dateString) {
-        const date = new Date(dateString);
+        // Se a data já vem no formato YYYY-MM-DD, usar diretamente
+        if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
+            const parts = dateString.split('-');
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        // Fallback: usar Date mas forçar timezone local
+        const date = new Date(dateString + 'T00:00:00');
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
@@ -42,14 +48,33 @@
     
     // Calcular progresso do desafio
     function calculateChallengeProgress(startDate, endDate) {
+        // Normalizar datas para evitar problemas de timezone
         const today = new Date();
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        today.setHours(0, 0, 0, 0);
         
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        
+        const end = new Date(endDate);
+        end.setHours(0, 0, 0, 0);
+        
+        // Calcular total de dias do desafio (inclusive)
         const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-        const daysPassed = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
+        
+        // Calcular dias passados desde o início
+        let daysPassed = 0;
+        if (today >= start) {
+            // Se o desafio já iniciou, contar dias desde o início até hoje (inclusive)
+            daysPassed = Math.ceil((today - start) / (1000 * 60 * 60 * 24)) + 1;
+            // Garantir que não ultrapasse o total de dias
+            daysPassed = Math.min(daysPassed, totalDays);
+        }
+        
+        // Calcular dias restantes
         const daysRemaining = Math.max(0, Math.ceil((end - today) / (1000 * 60 * 60 * 24)));
-        const percentage = Math.min(100, Math.round((daysPassed / totalDays) * 100));
+        
+        // Calcular porcentagem
+        const percentage = totalDays > 0 ? Math.min(100, Math.round((daysPassed / totalDays) * 100)) : 0;
         
         return { totalDays, daysPassed, daysRemaining, percentage };
     }

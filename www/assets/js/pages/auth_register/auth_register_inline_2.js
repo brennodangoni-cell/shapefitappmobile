@@ -73,7 +73,7 @@
             submitBtn.textContent = 'Cadastrando...';
             
             try {
-                const response = await fetch(`${window.BASE_APP_URL}/api/register.php`, {
+                const response = await fetch(`${window.API_BASE_URL}/register.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

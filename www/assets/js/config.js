@@ -5,31 +5,21 @@
     const isCapacitor = window.Capacitor !== undefined;
     
     // Detectar se está em desenvolvimento REAL (localhost COM servidor Node rodando)
-    // No Capacitor, mesmo que hostname seja localhost, NÃO é desenvolvimento
     const isRealDevelopment = !isCapacitor && 
         (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
-        window.location.port === '8100';
-    
-    // ✅ Logs removidos para performance
+        window.location.port === '8000'; // Porta do seu servidor Node.js
     
     // 1. Definição da URL Base (para redirecionamentos internos)
-    // SEMPRE definir, não verificar se já existe (outros scripts podem ter definido errado)
+    if (isRealDevelopment) {
+        window.BASE_APP_URL = window.location.origin; // Ex: http://localhost:8000
+    } else {
     window.BASE_APP_URL = "https://appshapefit.com";
+    }
     
     // 2. API_BASE_URL - SEMPRE usar appshapefit.com/api
     window.API_BASE_URL = 'https://appshapefit.com/api';
     
-    // Congelar as URLs para evitar que outros scripts sobrescrevam
-    Object.defineProperty(window, 'BASE_APP_URL', {
-        value: window.BASE_APP_URL,
-        writable: false,
-        configurable: false
-    });
-    Object.defineProperty(window, 'API_BASE_URL', {
-        value: window.API_BASE_URL,
-        writable: false,
-        configurable: false
-    });
+    // ✅ Logs removidos para performance
     
     // ✅ Logs removidos para performance
 

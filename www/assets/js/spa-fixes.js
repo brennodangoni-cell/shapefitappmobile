@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('amount_ml', amount); // A API espera o delta ou total? Geralmente delta em 'add_water.php'
             
             // Ajuste conforme sua API real. Supondo 'register_water.php' ou similar
-            await fetcher(`${window.BASE_APP_URL}/api/register_water.php`, {
+            await fetcher(`${window.API_BASE_URL}/register_water.php`, {
                 method: 'POST',
                 body: formData
             });
@@ -128,15 +128,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.body.style.overflow = '';
 
-        // Verifica se o check-in deve aparecer
-        // Se não tiver a flag explícita do backend nesta carga, esconde
+        // ✅ Limpar check-in ao navegar (garantir estado limpo)
         const checkinModal = document.getElementById('checkinModal');
         if (checkinModal) {
-            // Só mostra se o JS da página explicitamente o chamou
-            // Por padrão, esconde para evitar o "sempre aberto"
-            if (!checkinModal.classList.contains('force-show')) {
-                checkinModal.style.display = 'none';
-            }
+            // Sempre remover o modal ao navegar (será recriado se necessário)
+            checkinModal.remove();
+        }
+        // Limpar dados do check-in
+        if (window.checkinData) {
+            window.checkinData = null;
+        }
+        // Limpar também variáveis locais do check-in
+        if (window.checkinResponses) {
+            window.checkinResponses = {};
+        }
+        if (window.currentQuestionIndex !== undefined) {
+            window.currentQuestionIndex = 0;
         }
     });
 });

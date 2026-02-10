@@ -41,7 +41,7 @@ if (editWeightModal) {
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
             // A variável BASE_APP_URL é definida no layout_header.php e já está disponível aqui.
-            const apiUrl = `${BASE_APP_URL}/api/update_weight.php`; 
+            const apiUrl = `${window.API_BASE_URL}/update_weight.php`; 
             const csrfToken = document.getElementById('csrf_token_main_app')?.value;
             const newWeight = weightInput.value.trim().replace(',', '.');
 

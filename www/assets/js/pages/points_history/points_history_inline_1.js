@@ -23,7 +23,7 @@
             const BASE_URL = window.BASE_APP_URL;
             
             try {
-                const response = await authenticatedFetch(`${BASE_URL}/api/get_points_history_data.php?month=${currentMonth}`);
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/get_points_history_data.php?month=${currentMonth}`);
                 if (!response) return;
                 
                 const result = await response.json();

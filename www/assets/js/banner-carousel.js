@@ -8,8 +8,6 @@ let currentCarouselElement = null;
 
 // Função para limpar carrossel anterior (IMPORTANTE para SPA)
 function cleanupCarousel() {
-  // ✅ Log removido para performance
-  
   // Parar intervalo
   if (carouselInterval) {
     clearInterval(carouselInterval);
@@ -39,9 +37,9 @@ async function loadBannersFromAPI() {
   try {
     const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const isMobile = typeof window.Capacitor !== 'undefined';
-    const apiUrl = isDev || isMobile
-      ? 'https://appshapefit.com/api/get_banners.php'
-      : '/api/get_banners.php';
+    
+    // Sempre usar API_BASE_URL para garantir que vai para o servidor remoto
+    const apiUrl = `${window.API_BASE_URL || 'https://appshapefit.com/api'}/get_banners.php`;
     
     // ✅ Log removido para performance
     

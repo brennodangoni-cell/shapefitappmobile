@@ -37,7 +37,7 @@
         // Carregar conteúdos
         async function loadContents() {
             try {
-                const response = await authenticatedFetch(`/api/get_content_data.php`);
+                const response = await authenticatedFetch(`${window.API_BASE_URL}/get_content_data.php`);
                 
                 if (!response.ok) {
                     const text = await response.text();
@@ -74,7 +74,7 @@
                 // Se o erro for de parsing JSON, tentar ler como texto
                 if (error.message && error.message.includes('JSON')) {
                     try {
-                        const response = await authenticatedFetch(`/api/get_content_data.php`);
+                        const response = await authenticatedFetch(`${window.API_BASE_URL}/get_content_data.php`);
                         const text = await response.text();
                         console.error('Resposta do servidor (texto):', text.substring(0, 1000));
                     } catch (e) {

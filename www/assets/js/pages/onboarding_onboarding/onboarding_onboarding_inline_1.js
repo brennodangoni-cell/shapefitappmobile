@@ -26,6 +26,502 @@
             }
         }
 
+        // Lista antiga removida - usando lista completa abaixo
+
+        // Função para converter código ISO2 para emoji de bandeira
+        function getCountryFlagEmoji(countryCode) {
+            try {
+                const codePoints = countryCode
+                    .toUpperCase()
+                    .split('')
+                    .map(char => 127397 + char.charCodeAt());
+                const emoji = String.fromCodePoint(...codePoints);
+                if (emoji && emoji.length > 0) {
+                    return emoji;
+                }
+            } catch (e) {
+                console.warn('Erro ao gerar emoji de bandeira:', e);
+            }
+            return countryCode.toUpperCase();
+        }
+
+        // Função para converter formato de string (ex: "(##) #####-####") para função de formatação
+        function createFormatFunction(formatPattern) {
+            return (v) => {
+                const clean = v.replace(/\D/g, '');
+                if (!clean) return '';
+                
+                let result = '';
+                let digitIndex = 0;
+                
+                for (let i = 0; i < formatPattern.length && digitIndex < clean.length; i++) {
+                    const char = formatPattern[i];
+                    if (char === '#') {
+                        result += clean[digitIndex];
+                        digitIndex++;
+                    } else {
+                        result += char;
+                    }
+                }
+                
+                // Adicionar dígitos restantes se houver
+                if (digitIndex < clean.length) {
+                    result += clean.substring(digitIndex);
+                }
+                
+                return result;
+            };
+        }
+
+        // Função para gerar placeholder baseado no formato
+        function generatePlaceholder(formatPattern) {
+            return formatPattern.replace(/#/g, '0');
+        }
+
+        // Lista completa de países (mesma do admin)
+        const countriesListRaw = [
+            { code: 'BR', name: 'Brasil', dialCode: '55', format: '(##) #####-####' },
+            { code: 'US', name: 'Estados Unidos', dialCode: '1', format: '(###) ###-####' },
+            { code: 'CA', name: 'Canadá', dialCode: '1', format: '(###) ###-####' },
+            { code: 'AR', name: 'Argentina', dialCode: '54', format: '(##) ####-####' },
+            { code: 'PT', name: 'Portugal', dialCode: '351', format: '### ### ###' },
+            { code: 'ES', name: 'Espanha', dialCode: '34', format: '### ### ###' },
+            { code: 'MX', name: 'México', dialCode: '52', format: '## #### ####' },
+            { code: 'CL', name: 'Chile', dialCode: '56', format: '# #### ####' },
+            { code: 'CO', name: 'Colômbia', dialCode: '57', format: '### ### ####' },
+            { code: 'PE', name: 'Peru', dialCode: '51', format: '### ### ###' },
+            { code: 'UY', name: 'Uruguai', dialCode: '598', format: '#### ####' },
+            { code: 'PY', name: 'Paraguai', dialCode: '595', format: '#### ######' },
+            { code: 'BO', name: 'Bolívia', dialCode: '591', format: '# #### ####' },
+            { code: 'VE', name: 'Venezuela', dialCode: '58', format: '####-#######' },
+            { code: 'EC', name: 'Equador', dialCode: '593', format: '## ### ####' },
+            { code: 'GB', name: 'Reino Unido', dialCode: '44', format: '#### ######' },
+            { code: 'FR', name: 'França', dialCode: '33', format: '# ## ## ## ##' },
+            { code: 'DE', name: 'Alemanha', dialCode: '49', format: '#### ########' },
+            { code: 'IT', name: 'Itália', dialCode: '39', format: '### ### ####' },
+            { code: 'AU', name: 'Austrália', dialCode: '61', format: '# #### ####' },
+            { code: 'JP', name: 'Japão', dialCode: '81', format: '##-####-####' },
+            { code: 'CN', name: 'China', dialCode: '86', format: '### #### ####' },
+            { code: 'IN', name: 'Índia', dialCode: '91', format: '##### #####' },
+            { code: 'RU', name: 'Rússia', dialCode: '7', format: '(###) ###-##-##' },
+            { code: 'KR', name: 'Coreia do Sul', dialCode: '82', format: '##-####-####' },
+            { code: 'ZA', name: 'África do Sul', dialCode: '27', format: '## ### ####' },
+            { code: 'AE', name: 'Emirados Árabes', dialCode: '971', format: '# ### ####' },
+            { code: 'SA', name: 'Arábia Saudita', dialCode: '966', format: '# ### ####' },
+            { code: 'EG', name: 'Egito', dialCode: '20', format: '### ### ####' },
+            { code: 'NG', name: 'Nigéria', dialCode: '234', format: '### ### ####' },
+            { code: 'NL', name: 'Holanda', dialCode: '31', format: '# #### ####' },
+            { code: 'BE', name: 'Bélgica', dialCode: '32', format: '### ## ## ##' },
+            { code: 'CH', name: 'Suíça', dialCode: '41', format: '## ### ## ##' },
+            { code: 'AT', name: 'Áustria', dialCode: '43', format: '#### ########' },
+            { code: 'SE', name: 'Suécia', dialCode: '46', format: '##-### ## ##' },
+            { code: 'NO', name: 'Noruega', dialCode: '47', format: '### ## ###' },
+            { code: 'DK', name: 'Dinamarca', dialCode: '45', format: '## ## ## ##' },
+            { code: 'FI', name: 'Finlândia', dialCode: '358', format: '## ### ####' },
+            { code: 'PL', name: 'Polônia', dialCode: '48', format: '### ### ###' },
+            { code: 'GR', name: 'Grécia', dialCode: '30', format: '### ### ####' },
+            { code: 'TR', name: 'Turquia', dialCode: '90', format: '(###) ### ## ##' },
+            { code: 'IL', name: 'Israel', dialCode: '972', format: '#-###-####' },
+            { code: 'NZ', name: 'Nova Zelândia', dialCode: '64', format: '### ### ####' },
+            { code: 'SG', name: 'Singapura', dialCode: '65', format: '#### ####' },
+            { code: 'MY', name: 'Malásia', dialCode: '60', format: '#-### ####' },
+            { code: 'TH', name: 'Tailândia', dialCode: '66', format: '## ### ####' },
+            { code: 'PH', name: 'Filipinas', dialCode: '63', format: '### ### ####' },
+            { code: 'ID', name: 'Indonésia', dialCode: '62', format: '###-###-####' },
+            { code: 'VN', name: 'Vietnã', dialCode: '84', format: '### #### ###' },
+            { code: 'IE', name: 'Irlanda', dialCode: '353', format: '## ### ####' },
+            { code: 'CZ', name: 'República Tcheca', dialCode: '420', format: '### ### ###' },
+            { code: 'HU', name: 'Hungria', dialCode: '36', format: '## ### ####' },
+            { code: 'RO', name: 'Romênia', dialCode: '40', format: '### ### ###' },
+            { code: 'BG', name: 'Bulgária', dialCode: '359', format: '### ### ###' },
+            { code: 'HR', name: 'Croácia', dialCode: '385', format: '## ### ####' },
+            { code: 'RS', name: 'Sérvia', dialCode: '381', format: '## ### ####' },
+            { code: 'UA', name: 'Ucrânia', dialCode: '380', format: '(##) ###-##-##' },
+            { code: 'BY', name: 'Bielorrússia', dialCode: '375', format: '(##) ###-##-##' },
+            { code: 'KZ', name: 'Cazaquistão', dialCode: '7', format: '(###) ###-##-##' },
+            { code: 'PK', name: 'Paquistão', dialCode: '92', format: '### #######' },
+            { code: 'BD', name: 'Bangladesh', dialCode: '880', format: '####-######' },
+            { code: 'LK', name: 'Sri Lanka', dialCode: '94', format: '## ### ####' },
+            { code: 'MM', name: 'Myanmar', dialCode: '95', format: '# ### ####' },
+            { code: 'KH', name: 'Camboja', dialCode: '855', format: '## ### ###' },
+            { code: 'LA', name: 'Laos', dialCode: '856', format: '## ## ### ###' },
+            { code: 'MN', name: 'Mongólia', dialCode: '976', format: '#### ####' },
+            { code: 'TW', name: 'Taiwan', dialCode: '886', format: '# #### ####' },
+            { code: 'HK', name: 'Hong Kong', dialCode: '852', format: '#### ####' },
+            { code: 'MO', name: 'Macau', dialCode: '853', format: '#### ####' },
+            { code: 'BN', name: 'Brunei', dialCode: '673', format: '### ####' },
+            { code: 'FJ', name: 'Fiji', dialCode: '679', format: '### ####' },
+            { code: 'PG', name: 'Papua Nova Guiné', dialCode: '675', format: '### ####' },
+            { code: 'NC', name: 'Nova Caledônia', dialCode: '687', format: '##.##.##' },
+            { code: 'PF', name: 'Polinésia Francesa', dialCode: '689', format: '##.##.##' },
+            { code: 'GU', name: 'Guam', dialCode: '1', format: '(###) ###-####' },
+            { code: 'AS', name: 'Samoa Americana', dialCode: '1', format: '(###) ###-####' },
+            { code: 'MP', name: 'Ilhas Marianas', dialCode: '1', format: '(###) ###-####' },
+            { code: 'VI', name: 'Ilhas Virgens', dialCode: '1', format: '(###) ###-####' },
+            { code: 'PR', name: 'Porto Rico', dialCode: '1', format: '(###) ###-####' },
+            { code: 'DO', name: 'República Dominicana', dialCode: '1', format: '(###) ###-####' },
+            { code: 'HT', name: 'Haiti', dialCode: '509', format: '####-####' },
+            { code: 'JM', name: 'Jamaica', dialCode: '1', format: '(###) ###-####' },
+            { code: 'TT', name: 'Trinidad e Tobago', dialCode: '1', format: '(###) ###-####' },
+            { code: 'BB', name: 'Barbados', dialCode: '1', format: '(###) ###-####' },
+            { code: 'BS', name: 'Bahamas', dialCode: '1', format: '(###) ###-####' },
+            { code: 'BZ', name: 'Belize', dialCode: '501', format: '###-####' },
+            { code: 'CR', name: 'Costa Rica', dialCode: '506', format: '#### ####' },
+            { code: 'PA', name: 'Panamá', dialCode: '507', format: '####-####' },
+            { code: 'GT', name: 'Guatemala', dialCode: '502', format: '#### ####' },
+            { code: 'HN', name: 'Honduras', dialCode: '504', format: '####-####' },
+            { code: 'NI', name: 'Nicarágua', dialCode: '505', format: '#### ####' },
+            { code: 'SV', name: 'El Salvador', dialCode: '503', format: '#### ####' },
+            { code: 'CU', name: 'Cuba', dialCode: '53', format: '# ### ####' },
+            { code: 'GY', name: 'Guiana', dialCode: '592', format: '### ####' },
+            { code: 'SR', name: 'Suriname', dialCode: '597', format: '###-####' },
+            { code: 'GF', name: 'Guiana Francesa', dialCode: '594', format: '#### ## ##' },
+            { code: 'FK', name: 'Ilhas Falkland', dialCode: '500', format: '#####' },
+            { code: 'GS', name: 'Geórgia do Sul', dialCode: '500', format: '#####' },
+            { code: 'AQ', name: 'Antártida', dialCode: '672', format: '### ###' },
+            { code: 'TF', name: 'Territórios Franceses', dialCode: '262', format: '#### ## ##' },
+            { code: 'RE', name: 'Reunião', dialCode: '262', format: '#### ## ##' },
+            { code: 'YT', name: 'Mayotte', dialCode: '262', format: '#### ## ##' },
+            { code: 'PM', name: 'Saint Pierre', dialCode: '508', format: '## ## ##' },
+            { code: 'BL', name: 'Saint Barthélemy', dialCode: '590', format: '#### ## ##' },
+            { code: 'MF', name: 'Saint Martin', dialCode: '590', format: '#### ## ##' },
+            { code: 'GP', name: 'Guadalupe', dialCode: '590', format: '#### ## ##' },
+            { code: 'MQ', name: 'Martinica', dialCode: '596', format: '#### ## ##' },
+            { code: 'DM', name: 'Dominica', dialCode: '1', format: '(###) ###-####' },
+            { code: 'GD', name: 'Granada', dialCode: '1', format: '(###) ###-####' },
+            { code: 'LC', name: 'Santa Lúcia', dialCode: '1', format: '(###) ###-####' },
+            { code: 'VC', name: 'São Vicente', dialCode: '1', format: '(###) ###-####' },
+            { code: 'AG', name: 'Antígua', dialCode: '1', format: '(###) ###-####' },
+            { code: 'KN', name: 'São Cristóvão', dialCode: '1', format: '(###) ###-####' },
+            { code: 'AW', name: 'Aruba', dialCode: '297', format: '### ####' },
+            { code: 'CW', name: 'Curaçao', dialCode: '599', format: '### ####' },
+            { code: 'SX', name: 'Sint Maarten', dialCode: '1', format: '(###) ###-####' },
+            { code: 'BQ', name: 'Caribe Holandês', dialCode: '599', format: '### ####' },
+            { code: 'AI', name: 'Anguilla', dialCode: '1', format: '(###) ###-####' },
+            { code: 'VG', name: 'Ilhas Virgens Britânicas', dialCode: '1', format: '(###) ###-####' },
+            { code: 'KY', name: 'Ilhas Cayman', dialCode: '1', format: '(###) ###-####' },
+            { code: 'BM', name: 'Bermudas', dialCode: '1', format: '(###) ###-####' },
+            { code: 'TC', name: 'Turks e Caicos', dialCode: '1', format: '(###) ###-####' },
+            { code: 'MS', name: 'Montserrat', dialCode: '1', format: '(###) ###-####' },
+            { code: 'GL', name: 'Groenlândia', dialCode: '299', format: '## ## ##' },
+            { code: 'IS', name: 'Islândia', dialCode: '354', format: '### ####' },
+            { code: 'FO', name: 'Ilhas Faroe', dialCode: '298', format: '######' },
+            { code: 'SJ', name: 'Svalbard', dialCode: '47', format: '### ## ###' },
+            { code: 'AX', name: 'Ilhas Åland', dialCode: '358', format: '## ### ####' },
+            { code: 'EE', name: 'Estônia', dialCode: '372', format: '#### ####' },
+            { code: 'LV', name: 'Letônia', dialCode: '371', format: '#### ####' },
+            { code: 'LT', name: 'Lituânia', dialCode: '370', format: '(###) #####' },
+            { code: 'MD', name: 'Moldávia', dialCode: '373', format: '#### ####' },
+            { code: 'SK', name: 'Eslováquia', dialCode: '421', format: '### ### ###' },
+            { code: 'SI', name: 'Eslovênia', dialCode: '386', format: '## ### ###' },
+            { code: 'BA', name: 'Bósnia', dialCode: '387', format: '## ### ###' },
+            { code: 'MK', name: 'Macedônia', dialCode: '389', format: '## ### ###' },
+            { code: 'AL', name: 'Albânia', dialCode: '355', format: '## ### ####' },
+            { code: 'ME', name: 'Montenegro', dialCode: '382', format: '## ### ###' },
+            { code: 'XK', name: 'Kosovo', dialCode: '383', format: '## ### ###' },
+            { code: 'AD', name: 'Andorra', dialCode: '376', format: '### ###' },
+            { code: 'LI', name: 'Liechtenstein', dialCode: '423', format: '### ## ##' },
+            { code: 'MC', name: 'Mônaco', dialCode: '377', format: '## ## ## ##' },
+            { code: 'SM', name: 'San Marino', dialCode: '378', format: '#### ######' },
+            { code: 'VA', name: 'Vaticano', dialCode: '39', format: '### ### ####' },
+            { code: 'MT', name: 'Malta', dialCode: '356', format: '#### ####' },
+            { code: 'CY', name: 'Chipre', dialCode: '357', format: '## ### ###' },
+            { code: 'LU', name: 'Luxemburgo', dialCode: '352', format: '### ### ###' },
+            { code: 'GI', name: 'Gibraltar', dialCode: '350', format: '#### ####' },
+            { code: 'IM', name: 'Ilha de Man', dialCode: '44', format: '#### ######' },
+            { code: 'JE', name: 'Jersey', dialCode: '44', format: '#### ######' },
+            { code: 'GG', name: 'Guernsey', dialCode: '44', format: '#### ######' },
+            { code: 'IO', name: 'Território Britânico', dialCode: '246', format: '### ####' },
+            { code: 'SH', name: 'Santa Helena', dialCode: '290', format: '####' },
+            { code: 'AC', name: 'Ilha de Ascensão', dialCode: '247', format: '####' },
+            { code: 'TA', name: 'Tristão da Cunha', dialCode: '290', format: '####' },
+            { code: 'EH', name: 'Saara Ocidental', dialCode: '212', format: '####-######' },
+            { code: 'MA', name: 'Marrocos', dialCode: '212', format: '####-######' },
+            { code: 'DZ', name: 'Argélia', dialCode: '213', format: '### ## ## ##' },
+            { code: 'TN', name: 'Tunísia', dialCode: '216', format: '## ### ###' },
+            { code: 'LY', name: 'Líbia', dialCode: '218', format: '##-###-####' },
+            { code: 'SD', name: 'Sudão', dialCode: '249', format: '### ### ###' },
+            { code: 'SS', name: 'Sudão do Sul', dialCode: '211', format: '### ### ###' },
+            { code: 'ET', name: 'Etiópia', dialCode: '251', format: '### ### ####' },
+            { code: 'ER', name: 'Eritreia', dialCode: '291', format: '# ### ###' },
+            { code: 'DJ', name: 'Djibuti', dialCode: '253', format: '## ## ## ##' },
+            { code: 'SO', name: 'Somália', dialCode: '252', format: '# ### ####' },
+            { code: 'KE', name: 'Quênia', dialCode: '254', format: '### ######' },
+            { code: 'UG', name: 'Uganda', dialCode: '256', format: '### ### ###' },
+            { code: 'TZ', name: 'Tanzânia', dialCode: '255', format: '### ### ###' },
+            { code: 'RW', name: 'Ruanda', dialCode: '250', format: '### ### ###' },
+            { code: 'BI', name: 'Burundi', dialCode: '257', format: '## ## ## ##' },
+            { code: 'MW', name: 'Malawi', dialCode: '265', format: '# #### ####' },
+            { code: 'ZM', name: 'Zâmbia', dialCode: '260', format: '### ### ###' },
+            { code: 'ZW', name: 'Zimbábue', dialCode: '263', format: '# ### ####' },
+            { code: 'BW', name: 'Botsuana', dialCode: '267', format: '## ### ###' },
+            { code: 'NA', name: 'Namíbia', dialCode: '264', format: '## ### ####' },
+            { code: 'LS', name: 'Lesoto', dialCode: '266', format: '# #### ####' },
+            { code: 'SZ', name: 'Essuatíni', dialCode: '268', format: '# #### ####' },
+            { code: 'MZ', name: 'Moçambique', dialCode: '258', format: '## ### ####' },
+            { code: 'MG', name: 'Madagascar', dialCode: '261', format: '## ## ### ##' },
+            { code: 'MU', name: 'Maurício', dialCode: '230', format: '#### ####' },
+            { code: 'SC', name: 'Seicheles', dialCode: '248', format: '# ### ###' },
+            { code: 'KM', name: 'Comores', dialCode: '269', format: '### ## ##' },
+            { code: 'CV', name: 'Cabo Verde', dialCode: '238', format: '### ## ##' },
+            { code: 'ST', name: 'São Tomé', dialCode: '239', format: '### ####' },
+            { code: 'GW', name: 'Guiné-Bissau', dialCode: '245', format: '#### ####' },
+            { code: 'GN', name: 'Guiné', dialCode: '224', format: '### ## ## ##' },
+            { code: 'SL', name: 'Serra Leoa', dialCode: '232', format: '## ######' },
+            { code: 'LR', name: 'Libéria', dialCode: '231', format: '## ### ####' },
+            { code: 'CI', name: 'Costa do Marfim', dialCode: '225', format: '## ## ## ## ##' },
+            { code: 'GH', name: 'Gana', dialCode: '233', format: '### ### ####' },
+            { code: 'TG', name: 'Togo', dialCode: '228', format: '## ## ## ##' },
+            { code: 'BJ', name: 'Benin', dialCode: '229', format: '## ## ## ##' },
+            { code: 'BF', name: 'Burkina Faso', dialCode: '226', format: '## ## ## ##' },
+            { code: 'ML', name: 'Mali', dialCode: '223', format: '## ## ## ##' },
+            { code: 'NE', name: 'Níger', dialCode: '227', format: '## ## ## ##' },
+            { code: 'TD', name: 'Chade', dialCode: '235', format: '## ## ## ##' },
+            { code: 'CF', name: 'República Centro-Africana', dialCode: '236', format: '## ## ## ##' },
+            { code: 'CM', name: 'Camarões', dialCode: '237', format: '#### ## ## ##' },
+            { code: 'GQ', name: 'Guiné Equatorial', dialCode: '240', format: '### ### ###' },
+            { code: 'GA', name: 'Gabão', dialCode: '241', format: '# ## ## ##' },
+            { code: 'CG', name: 'Congo', dialCode: '242', format: '## ### ####' },
+            { code: 'CD', name: 'Congo (DRC)', dialCode: '243', format: '### ### ###' },
+            { code: 'AO', name: 'Angola', dialCode: '244', format: '### ### ###' },
+            { code: 'ZM', name: 'Zâmbia', dialCode: '260', format: '### ### ###' },
+            { code: 'MW', name: 'Malawi', dialCode: '265', format: '# #### ####' },
+            { code: 'MZ', name: 'Moçambique', dialCode: '258', format: '## ### ####' },
+            { code: 'ZW', name: 'Zimbábue', dialCode: '263', format: '# ### ####' },
+            { code: 'BW', name: 'Botsuana', dialCode: '267', format: '## ### ###' },
+            { code: 'NA', name: 'Namíbia', dialCode: '264', format: '## ### ####' },
+            { code: 'LS', name: 'Lesoto', dialCode: '266', format: '# #### ####' },
+            { code: 'SZ', name: 'Essuatíni', dialCode: '268', format: '# #### ####' },
+            { code: 'ZA', name: 'África do Sul', dialCode: '27', format: '## ### ####' },
+            { code: 'MG', name: 'Madagascar', dialCode: '261', format: '## ## ### ##' },
+            { code: 'MU', name: 'Maurício', dialCode: '230', format: '#### ####' },
+            { code: 'SC', name: 'Seicheles', dialCode: '248', format: '# ### ###' },
+            { code: 'KM', name: 'Comores', dialCode: '269', format: '### ## ##' },
+            { code: 'YT', name: 'Mayotte', dialCode: '262', format: '#### ## ##' },
+            { code: 'RE', name: 'Reunião', dialCode: '262', format: '#### ## ##' },
+            { code: 'IO', name: 'Território Britânico', dialCode: '246', format: '### ####' },
+            { code: 'SH', name: 'Santa Helena', dialCode: '290', format: '####' },
+            { code: 'AC', name: 'Ilha de Ascensão', dialCode: '247', format: '####' },
+            { code: 'TA', name: 'Tristão da Cunha', dialCode: '290', format: '####' },
+            { code: 'EH', name: 'Saara Ocidental', dialCode: '212', format: '####-######' },
+            { code: 'MA', name: 'Marrocos', dialCode: '212', format: '####-######' },
+            { code: 'DZ', name: 'Argélia', dialCode: '213', format: '### ## ## ##' },
+            { code: 'TN', name: 'Tunísia', dialCode: '216', format: '## ### ###' },
+            { code: 'LY', name: 'Líbia', dialCode: '218', format: '##-###-####' },
+            { code: 'SD', name: 'Sudão', dialCode: '249', format: '### ### ###' },
+            { code: 'SS', name: 'Sudão do Sul', dialCode: '211', format: '### ### ###' },
+            { code: 'ET', name: 'Etiópia', dialCode: '251', format: '### ### ####' },
+            { code: 'ER', name: 'Eritreia', dialCode: '291', format: '# ### ###' },
+            { code: 'DJ', name: 'Djibuti', dialCode: '253', format: '## ## ## ##' },
+            { code: 'SO', name: 'Somália', dialCode: '252', format: '# ### ####' },
+            { code: 'KE', name: 'Quênia', dialCode: '254', format: '### ######' },
+            { code: 'UG', name: 'Uganda', dialCode: '256', format: '### ### ###' },
+            { code: 'TZ', name: 'Tanzânia', dialCode: '255', format: '### ### ###' },
+            { code: 'RW', name: 'Ruanda', dialCode: '250', format: '### ### ###' },
+            { code: 'BI', name: 'Burundi', dialCode: '257', format: '## ## ## ##' }
+        ];
+
+        // Converter para o formato usado no web/www (com emoji e função de formatação)
+        const countriesListMap = countriesListRaw.reduce((acc, country) => {
+            if (!acc[country.code]) {
+                acc[country.code] = {
+                    code: country.code,
+                    name: country.name,
+                    dial: '+' + country.dialCode,
+                    flag: getCountryFlagEmoji(country.code),
+                    format: createFormatFunction(country.format)
+                };
+            }
+            return acc;
+        }, {});
+        
+        const countriesList = Object.values(countriesListMap)
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        console.log(`✅ Total de países carregados: ${countriesList.length}`);
+
+        let selectedCountry = countriesList.find(c => c.dial === '+55') || countriesList[0];
+        let phoneModalInitialized = false;
+
+        // Inicializar modal de países
+        function initPhoneMasks() {
+            const trigger = document.getElementById('phone-country-trigger');
+            const overlay = document.getElementById('phone-country-modal-overlay');
+            const closeBtn = document.getElementById('phone-country-modal-close');
+            const searchInput = document.getElementById('phone-country-search-input');
+            const listContainer = document.getElementById('phone-country-modal-list');
+            const phoneInput = document.getElementById('phone-input');
+            const flagDisplay = document.getElementById('phone-country-flag');
+
+            if (!trigger || !overlay || !listContainer) {
+                console.warn('Elementos do modal de telefone não encontrados');
+                return;
+            }
+            
+            // Garantir que a bandeira inicial está sendo exibida
+            if (flagDisplay && selectedCountry) {
+                flagDisplay.textContent = selectedCountry.flag;
+                console.log('✅ Bandeira inicial definida:', selectedCountry.flag, selectedCountry.name);
+            }
+            
+            // Definir placeholder inicial baseado no país selecionado
+            if (phoneInput && selectedCountry) {
+                const countryRaw = countriesListRaw.find(c => c.code === selectedCountry.code);
+                if (countryRaw) {
+                    phoneInput.placeholder = generatePlaceholder(countryRaw.format);
+                }
+            }
+
+            // Evitar inicialização duplicada
+            if (phoneModalInitialized) {
+                return;
+            }
+            phoneModalInitialized = true;
+
+            // Popular lista de países
+            function renderCountries(filter = '') {
+                if (!listContainer) {
+                    console.error('❌ listContainer não encontrado!');
+                    return;
+                }
+                
+                if (!countriesList || countriesList.length === 0) {
+                    console.error('❌ countriesList não está disponível ou está vazia!', countriesList);
+                    listContainer.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-secondary);">Erro ao carregar países</div>';
+                    return;
+                }
+                
+                listContainer.innerHTML = '';
+                
+                const search = filter.toLowerCase();
+                const filtered = countriesList.filter(country => {
+                    if (!search) return true; // Se não há filtro, mostrar todos
+                    return country.name.toLowerCase().includes(search) ||
+                           country.dial.toLowerCase().includes(search) ||
+                           country.code.toLowerCase().includes(search);
+                });
+
+                console.log(`📋 Renderizando ${filtered.length} países (total disponível: ${countriesList.length}, filtro: "${filter}")`);
+
+                filtered.forEach(country => {
+                    const item = document.createElement('div');
+                    item.className = `country-item ${selectedCountry && selectedCountry.code === country.code ? 'selected' : ''}`;
+                    item.innerHTML = `
+                        <span class="country-item-flag">${country.flag}</span>
+                        <span class="country-item-name">${country.name}</span>
+                        <span class="country-item-code">${country.dial}</span>
+                    `;
+                    item.addEventListener('click', () => selectCountry(country));
+                    listContainer.appendChild(item);
+                });
+                
+                if (filtered.length === 0) {
+                    listContainer.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-secondary);">Nenhum país encontrado</div>';
+                }
+            }
+
+            // Selecionar país
+            function selectCountry(country) {
+                selectedCountry = country;
+                document.getElementById('phone-country-code').value = country.dial;
+                document.getElementById('phone-country-code-display').textContent = country.dial;
+                document.getElementById('phone-country-flag').textContent = country.flag;
+                
+                // Atualizar placeholder e formatar número existente
+                if (phoneInput) {
+                    const currentValue = phoneInput.value.replace(/\D/g, '');
+                    // Gerar placeholder baseado no formato do país
+                    const countryRaw = countriesListRaw.find(c => c.code === country.code);
+                    const placeholder = countryRaw ? generatePlaceholder(countryRaw.format) : 'Número completo';
+                    phoneInput.placeholder = placeholder;
+                    if (currentValue) {
+                        phoneInput.value = country.format(currentValue);
+                    }
+                }
+                
+                closeModal();
+                renderCountries(searchInput?.value || '');
+            }
+
+            // Abrir modal
+            function openModal() {
+                if (!overlay || !trigger) {
+                    console.error('❌ Elementos do modal não encontrados!', { overlay: !!overlay, trigger: !!trigger });
+                    return;
+                }
+                console.log('🟢 openModal() chamado!');
+                overlay.classList.add('active');
+                    trigger.classList.add('open');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => searchInput?.focus(), 100);
+                renderCountries();
+                console.log('✅ Modal aberto!', overlay.classList.toString());
+            }
+
+            // Fechar modal
+            function closeModal() {
+                if (!overlay || !trigger) return;
+                overlay.classList.remove('active');
+                    trigger.classList.remove('open');
+                document.body.style.overflow = '';
+                if (searchInput) searchInput.value = '';
+            }
+
+            // Event listeners
+            // Função handler para o click
+            const handleClick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🖱️ Trigger clicado!', e);
+                openModal();
+            };
+            
+            // Adicionar listener
+            trigger.addEventListener('click', handleClick);
+            
+            // Também adicionar como onclick para garantir
+            trigger.onclick = handleClick;
+            
+            closeBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                closeModal();
+            });
+            
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeModal();
+                }
+            });
+
+            // Busca
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    renderCountries(e.target.value);
+                });
+            }
+
+            // Máscara para número de telefone com formatação dinâmica
+            if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                    const clean = e.target.value.replace(/\D/g, '');
+                    if (selectedCountry && selectedCountry.format) {
+                        e.target.value = selectedCountry.format(clean);
+                } else {
+                        e.target.value = clean;
+                }
+            });
+            }
+
+            // Renderizar inicialmente
+            console.log('📋 Iniciando renderização de países...');
+            console.log('📋 Total de países na lista:', countriesList.length);
+            renderCountries();
+            console.log('📋 Países renderizados no DOM:', listContainer.children.length);
+        }
+
         // Placeholder pra futuro: carregar nome
         async function loadUserName() {
             // Pode ser ajustado depois com base no token/localStorage
@@ -33,6 +529,7 @@
 
         function initOnboarding() {
             loadStates();
+            initPhoneMasks();
             loadUserName();
 
             // Valores padrão para inputs de horário
@@ -75,7 +572,7 @@
                         return false;
                     }
 
-                    const response = await fetch(`/api/get_user_info.php`, {
+                    const response = await fetch(`${window.API_BASE_URL}/get_user_info.php`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -133,7 +630,7 @@
                             if (weightInput && weightMessage && daysRemaining && daysText) {
                                 if (!weightInfo.can_edit) {
                                     // Buscar peso atual do usuário
-                                    fetch(`/api/get_dashboard_data.php`, {
+                                    fetch(`${window.API_BASE_URL}/get_dashboard_data.php`, {
                                         method: 'GET',
                                         headers: {
                                             'Authorization': `Bearer ${getAuthToken()}`
@@ -171,7 +668,7 @@
                     const token = getAuthToken();
                     if (!token) return null;
 
-                    const response = await fetch(`/api/get_dashboard_data.php`, {
+                    const response = await fetch(`${window.API_BASE_URL}/get_dashboard_data.php`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -813,6 +1310,15 @@
                     }
                 }
                 
+                // Inicializar modal de telefone quando o step de telefone se tornar ativo
+                const currentStepId = currentStep?.dataset?.stepId;
+                if (currentStepId === 'phone') {
+                    // Aguardar um pouco para garantir que o DOM está pronto
+                    setTimeout(() => {
+                        initPhoneMasks();
+                    }, 100);
+                }
+                
                 // Verificar se este é o último step visível
                 let isLastVisibleStep = (stepIndex === steps.length - 1);
                 if (!isLastVisibleStep) {
@@ -857,6 +1363,35 @@
                         }
                     }
 
+                    // Processar telefone
+                    const phone = data.phone_number || '';
+                    let phoneClean = phone.replace(/\D/g, '');
+                    const phone_country_code = data.phone_country_code || '+55';
+                    const countryDialCode = phone_country_code.replace('+', '');
+                    
+                    // Remover código do país se estiver presente no número
+                    if (phoneClean.startsWith(countryDialCode)) {
+                        phoneClean = phoneClean.substring(countryDialCode.length);
+                    }
+                    
+                    // Para Brasil, manter formato DDD + número
+                    if (phone_country_code === '+55') {
+                        if (phoneClean.length >= 10) {
+                        data.phone_ddd = phoneClean.substring(0, 2);
+                        data.phone_number = phoneClean.substring(2);
+                        } else {
+                            // Fallback se não tiver 10 dígitos
+                            data.phone_ddd = phoneClean.length >= 2 ? phoneClean.substring(0, 2) : '00';
+                            data.phone_number = phoneClean.length >= 2 ? phoneClean.substring(2) : phoneClean;
+                        }
+                    } else {
+                        // Para outros países, salvar número completo sem código do país
+                        data.phone_ddd = '00'; // Placeholder para DDD quando não é Brasil
+                        data.phone_number = phoneClean;
+                    }
+                    data.phone_country_code = phone_country_code;
+                    delete data.phone; // Remover campo phone original se existir
+
                     // Atividades customizadas
                     data.custom_activities = customActivities.join(',');
                     // Checkbox "não pratico"
@@ -864,7 +1399,7 @@
 
                     try {
                         const token = getAuthToken();
-                        const response = await fetch(`/api/process_onboarding.php`, {
+                        const response = await fetch(`${window.API_BASE_URL}/process_onboarding.php`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1118,7 +1653,7 @@
 
                     try {
                         const token = typeof getAuthToken === 'function' ? getAuthToken() : null;
-                        const response = await fetch(`/api/process_onboarding.php`, {
+                        const response = await fetch(`${window.API_BASE_URL}/process_onboarding.php`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

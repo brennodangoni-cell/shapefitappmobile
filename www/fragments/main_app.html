@@ -1570,6 +1570,13 @@
             <span>Carregando...</span>
         </div>
 
+        <div class="glass-card card-meal-cta" id="meal-cta-card">
+            <i class="fas fa-utensils"></i>
+            <h2>Carregando...</h2>
+            <p>O que você vai comer agora?</p>
+            <a href="#" class="primary-button" id="add-meal-btn">Registre sua Refeição</a>
+        </div>
+
         <div class="glass-card card-hydration" id="water-card">
             <div class="hydration-content">
                 <div class="hydration-info">
@@ -1734,13 +1741,6 @@
             </div>
         </div>
         
-        <div class="glass-card card-meal-cta" id="meal-cta-card">
-            <i class="fas fa-utensils"></i>
-            <h2>Carregando...</h2>
-            <p>O que você vai comer agora?</p>
-            <a href="#" class="primary-button" id="add-meal-btn">Adicionar Refeição</a>
-        </div>
-        
         <div class="card-suggestions" id="suggestions-card" style="display: none;">
             <div class="card-header">
                 <h3 id="suggestions-title">Sugestões</h3>
@@ -1817,87 +1817,8 @@
 <!-- Bottom Navigation (via JavaScript - funciona como include) -->
 
 <style>
-/* Check-in Floating Button - SEMPRE no body, fixo na viewport */
-#checkin-floating-btn.checkin-floating-btn {
-    position: fixed !important;
-    bottom: 90px !important;
-    right: 20px !important;
-    width: 64px !important;
-    height: 64px !important;
-    border-radius: 50% !important;
-    background: rgba(255, 107, 0, 0.2) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 107, 0, 0.4) !important;
-    color: #FF6B00 !important;
-    font-size: 24px !important;
-    cursor: pointer !important;
-    box-shadow: 0 4px 20px rgba(255, 107, 0, 0.25),
-                0 2px 8px rgba(0, 0, 0, 0.2),
-                0 0 0 0 rgba(255, 107, 0, 0.4) !important;
-    transition: all 0.3s ease !important;
-    z-index: 9999 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    animation: float-gentle 3s ease-in-out infinite !important;
-    pointer-events: auto !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    /* Garantir que não seja afetado por transformações de containers pais */
-    transform: translateZ(0) !important;
-    -webkit-transform: translateZ(0) !important;
-    /* Forçar que seja relativo à viewport, não a qualquer container */
-    top: auto !important;
-    left: auto !important;
-}
-
 #dashboard-container.app-container {
     padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
-}
-
-@keyframes float-gentle {
-    0%, 100% {
-        transform: translateZ(0) translateY(0px);
-    }
-    50% {
-        transform: translateZ(0) translateY(-8px);
-    }
-}
-
-#checkin-floating-btn.checkin-floating-btn:hover {
-    background: rgba(255, 107, 0, 0.3) !important;
-    border-color: rgba(255, 107, 0, 0.6) !important;
-    animation: none !important;
-    transform: translateZ(0) translateY(-4px) !important;
-    box-shadow: 0 6px 24px rgba(255, 107, 0, 0.35),
-                0 4px 12px rgba(0, 0, 0, 0.25),
-                0 0 0 2px rgba(255, 107, 0, 0.2) !important;
-}
-
-#checkin-floating-btn.checkin-floating-btn:active {
-    transform: translateZ(0) translateY(-2px) !important;
-    box-shadow: 0 4px 16px rgba(255, 107, 0, 0.3),
-                0 2px 8px rgba(0, 0, 0, 0.2),
-                0 0 0 1px rgba(255, 107, 0, 0.15) !important;
-}
-
-@media (max-width: 768px) {
-    .checkin-floating-btn {
-        bottom: calc(80px + env(safe-area-inset-bottom));
-        right: 16px;
-        width: 60px;
-        height: 60px;
-        font-size: 22px;
-    }
-}
-
-@media (min-width: 769px) {
-    .checkin-floating-btn {
-        bottom: 100px;
-    }
 }
 
 /* Check-in Modal (Clean Glassmorphism Style) - FORA do page-root */
@@ -2213,11 +2134,6 @@ body.checkin-modal-open .checkin-input-container {
 <!-- Scripts do carrossel de banners -->
 
 </div>
-
-<!-- Botão Flutuante de Check-in - FORA do page-root para garantir position: fixed absoluto -->
-<button class="checkin-floating-btn" id="checkin-floating-btn" onclick="openCheckinModal()" aria-label="Abrir Check-in" style="display: none;">
-    <i class="fas fa-comments"></i>
-</button>
 
 <!-- Check-in Modal - FORA do page-root para garantir position: fixed absoluto -->
 <div class="checkin-modal" id="checkinModal" style="display: none;">
