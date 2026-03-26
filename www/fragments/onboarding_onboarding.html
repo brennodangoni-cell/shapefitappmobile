@@ -387,16 +387,36 @@
             border-color: transparent !important;
         }
 
-        /* Inputs */
+        /* Inputs — não aplicar appearance:none em <select>: no iOS (WKWebView) isso
+           quebra o picker nativo; ancestrais com touch-action:none também bloqueiam o
+           select até forçarmos touch-action abaixo. */
 
         input,
-        select,
         textarea {
             -webkit-appearance: none;
             appearance: none;
             box-shadow: none;
             border-radius: 14px;
             background: var(--card-bg);
+        }
+
+        select.form-control {
+            -webkit-appearance: menulist;
+            appearance: auto;
+            box-shadow: none;
+            border-radius: 14px;
+            background: var(--card-bg);
+            /* Permite o toque chegar ao controle com ancestrais em touch-action: none */
+            touch-action: manipulation;
+        }
+
+        .select-wrapper {
+            touch-action: manipulation;
+        }
+
+        /* Evita seta duplicada (CSS + nativa) nos selects com aparência nativa */
+        .select-wrapper:has(select)::after {
+            display: none;
         }
 
         .form-control {
